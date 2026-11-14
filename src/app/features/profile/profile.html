@@ -168,22 +168,6 @@
     </nav>
 
     @let band = bandOwner();
-    <section class="block" id="sec-vitals" tabindex="-1" aria-labelledby="h-v">
-      <h2 class="sec-title" id="h-v">Vitals history</h2>
-      @defer (on viewport) {
-        <div class="grid g3">
-          <nh-metric-panel [crewId]="crewId()" metric="hr" range="7d" [bandLabel]="band" />
-          <nh-metric-panel [crewId]="crewId()" metric="hrv" range="7d" [bandLabel]="band" />
-          <nh-metric-panel [crewId]="crewId()" metric="spo2" range="7d" [bandLabel]="band" />
-          <nh-metric-panel [crewId]="crewId()" metric="coreTemp" range="7d" [bandLabel]="band" />
-          <nh-metric-panel [crewId]="crewId()" metric="bpSys" title="Blood pressure (systolic)" range="7d" [bandLabel]="band" />
-          <nh-metric-panel [crewId]="crewId()" metric="resp" range="7d" [bandLabel]="band" />
-        </div>
-      } @placeholder {
-        <nh-skeleton h="420px" />
-      }
-    </section>
-
     <section class="block" id="sec-sleep" tabindex="-1" aria-labelledby="h-s">
       <h2 class="sec-title" id="h-s">Sleep</h2>
       @defer (on viewport) {

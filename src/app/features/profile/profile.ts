@@ -24,7 +24,6 @@ import { MetricPanel } from './metric-panel';
 import { VitalsStrip } from './vitals-strip';
 
 const SECTIONS = [
-  { id: 'sec-vitals', label: 'Vitals' },
   { id: 'sec-sleep', label: 'Sleep' },
   { id: 'sec-radiation', label: 'Radiation' },
   { id: 'sec-body', label: 'Bone & muscle' },
