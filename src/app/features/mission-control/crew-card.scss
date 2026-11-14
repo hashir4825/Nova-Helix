@@ -236,3 +236,9 @@
     align-items: center;
   }
 }
+
+.help,
+.status {
+  cursor: help;
+  border-radius: var(--radius-1);
+}

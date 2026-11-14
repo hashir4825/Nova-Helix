@@ -21,10 +21,14 @@ import { Skeleton } from '../../shared/ui/skeleton';
 import { Sparkline } from '../../shared/ui/sparkline';
 import { StatusBadge } from '../../shared/ui/status-badge';
 import { ClockPipe } from '../../shared/pipes';
+import { TipDirective } from '../../shared/tooltip/tip.directive';
+import { TipContent } from '../../shared/tooltip/tooltip.service';
+import { HELP, METRIC_HELP, STATUS_HELP, hazardRingTip, hazardScoreTip } from '../../shared/help';
+import { formatClock } from '../../core/util/format';
 
 @Component({
   selector: 'nh-crew-card',
-  imports: [RouterLink, StatusBadge, Sparkline, HazardRing, MetricValue, Icon, Skeleton, ClockPipe],
+  imports: [RouterLink, StatusBadge, Sparkline, HazardRing, MetricValue, Icon, Skeleton, ClockPipe, TipDirective],
   templateUrl: './crew-card.html',
   styleUrl: './crew-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,6 +75,18 @@ export class CrewCard {
       const def = METRICS[key];
       const value = live?.values[key] ?? samples.at(-1)?.v ?? null;
       const out = baseline && value !== null && (value < baseline.low || value > baseline.high);
+      const fmt = (v: number) => `${v.toFixed(def.decimals)} ${def.unit}`;
+      const vals = samples.map((x) => x.v);
+      const tip: TipContent = {
+        title: def.label,
+        body: METRIC_HELP[key],
+        rows: [
+          ...(value !== null ? [{ label: live ? 'Now (live)' : 'Latest', value: fmt(value), tone: out ? ('watch' as const) : undefined }] : []),
+          ...(baseline ? [{ label: 'Normal for ' + this.astronaut().name, value: `${baseline.low.toFixed(def.decimals)}–${fmt(baseline.high)}` }] : []),
+          ...(vals.length ? [{ label: 'Last 24 h range', value: `${Math.min(...vals).toFixed(def.decimals)}–${fmt(Math.max(...vals))}` }] : []),
+        ],
+        hint: 'Click to open the full trend',
+      };
       return {
         key,
         def,
@@ -78,6 +94,7 @@ export class CrewCard {
         samples,
         baseline,
         out,
+        tip,
         aria: `${def.label} ${value?.toFixed(def.decimals) ?? 'no data'} ${def.unit}${
           baseline ? `, personal baseline ${baseline.low.toFixed(def.decimals)} to ${baseline.high.toFixed(def.decimals)}` : ''
         }${out ? ', outside baseline' : ''}. Open detail.`,
@@ -91,6 +108,29 @@ export class CrewCard {
     const top = hz.reduce((a, b) => (b.score > a.score ? b : a));
     return { ...top, def: HAZARDS[top.hazard], icon: HAZARD_ICON[top.hazard] };
   });
+
+  protected readonly ringTip = computed(() => hazardRingTip(this.astronaut().name, this.hazards()));
+  protected readonly topTip = computed<TipContent | null>(() => {
+    const top = this.topHazard();
+    if (!top) return null;
+    const t = hazardScoreTip(this.astronaut().name, top);
+    return { ...t, title: `Highest hazard: ${top.def.label}` };
+  });
+  protected readonly statusTip = computed<TipContent | null>(() => {
+    const s = this.summary();
+    if (!s) return null;
+    const h = STATUS_HELP[s.status];
+    return { title: `${this.astronaut().name} is ${h.title}`, body: h.body };
+  });
+  protected readonly profileTip = computed(() => `Open ${this.astronaut().name}’s full health profile`);
+  protected readonly checkInTip = computed<TipContent | null>(() => {
+    const s = this.summary();
+    if (!s) return null;
+    return s.checkInHour !== null
+      ? HELP.checkInDone(formatClock(s.checkInHour))
+      : HELP.checkInDue(formatClock(this.checkInDueHour()));
+  });
+  protected readonly liveTip = HELP.live;
 
   protected readonly checkInDueHour = computed(() => {
     const a = this.astronaut();

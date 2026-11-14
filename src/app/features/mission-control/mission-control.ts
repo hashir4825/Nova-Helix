@@ -11,10 +11,16 @@ import { CrewCard } from './crew-card';
 import { HazardMatrix } from './hazard-matrix';
 import { InsightsFeed } from './insights-feed';
 import { MissionHero } from './mission-hero';
+import { HelpHint } from '../../shared/tooltip/help-hint';
+import { HELP } from '../../shared/help';
+import { Icon } from '../../shared/ui/icon';
+import { ICON } from '../../shared/ui/icons';
+
+const INTRO_KEY = 'nh.intro-dismissed';
 
 @Component({
   selector: 'nh-mission-control',
-  imports: [Panel, CrewCard, InsightsFeed, HazardMatrix, MissionHero, Skeleton],
+  imports: [Panel, CrewCard, InsightsFeed, HazardMatrix, MissionHero, Skeleton, HelpHint, Icon],
   templateUrl: './mission-control.html',
   styleUrl: './mission-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +30,19 @@ export class MissionControl {
   private readonly crewApi = inject(CrewApi);
   private readonly assess = inject(AssessmentApi);
   private readonly missionApi = inject(MissionApi);
+  protected readonly help = HELP;
+  protected readonly icons = ICON;
+
+  protected readonly showIntro = signal(readIntro());
+
+  protected dismissIntro(): void {
+    this.showIntro.set(false);
+    try {
+      localStorage.setItem(INTRO_KEY, '1');
+    } catch {
+      /* storage unavailable */
+    }
+  }
 
   /** Bumped by "Retry" in error states. */
   private readonly reload = signal(0);
@@ -68,5 +87,13 @@ export class MissionControl {
 
   protected retry(): void {
     this.reload.update((n) => n + 1);
+  }
+}
+
+function readIntro(): boolean {
+  try {
+    return localStorage.getItem(INTRO_KEY) !== '1';
+  } catch {
+    return true;
   }
 }

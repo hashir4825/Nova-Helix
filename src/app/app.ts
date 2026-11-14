@@ -1,17 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Topbar } from './layout/topbar';
+import { TooltipHost } from './shared/tooltip/tooltip-host';
 import { ThemeStore } from './core/state/theme';
 
 @Component({
   selector: 'nh-root',
-  imports: [RouterOutlet, Topbar],
+  imports: [RouterOutlet, Topbar, TooltipHost],
   template: `
     <a class="skip-link" href="#main">Skip to content</a>
     <nh-topbar />
     <main id="main" tabindex="-1">
       <router-outlet />
     </main>
+    <nh-tooltip-host />
   `,
   styles: `
     :host {

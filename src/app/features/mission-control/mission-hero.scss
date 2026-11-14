@@ -289,3 +289,42 @@
     padding: var(--space-4);
   }
 }
+
+// ── Help affordances ──────────────────────────────────────────────
+.trajectory {
+  position: relative;
+}
+
+.traj-help {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.cs-help {
+  order: 99;
+  align-self: center;
+}
+
+.hot {
+  cursor: help;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.mark.hot:hover text,
+.hot:hover .body-label {
+  fill: var(--text-1);
+}
+
+.day,
+.cs,
+.next,
+.console {
+  border-radius: var(--radius-2);
+  cursor: help;
+}
+
+.hot:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}

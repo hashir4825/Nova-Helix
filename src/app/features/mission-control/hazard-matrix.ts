@@ -4,12 +4,14 @@ import { Astronaut, HAZARDS, HAZARD_KEYS, HazardAssessment, STATUS_LABEL } from 
 import { Icon } from '../../shared/ui/icon';
 import { HAZARD_ICON, STATUS_ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
+import { TipDirective } from '../../shared/tooltip/tip.directive';
+import { hazardColumnTip, hazardScoreTip } from '../../shared/help';
 
 const heat = (score: number): number => (score >= 70 ? 4 : score >= 55 ? 3 : score >= 40 ? 2 : score >= 20 ? 1 : 0);
 
 @Component({
   selector: 'nh-hazard-matrix',
-  imports: [RouterLink, Icon, Skeleton],
+  imports: [RouterLink, Icon, Skeleton, TipDirective],
   templateUrl: './hazard-matrix.html',
   styleUrl: './hazard-matrix.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,7 +21,7 @@ export class HazardMatrix {
   /** Undefined while loading. */
   readonly assessments = input<HazardAssessment[] | undefined>(undefined);
 
-  protected readonly hazards = HAZARD_KEYS.map((k) => ({ ...HAZARDS[k], icon: HAZARD_ICON[k] }));
+  protected readonly hazards = HAZARD_KEYS.map((k) => ({ ...HAZARDS[k], icon: HAZARD_ICON[k], tip: hazardColumnTip(k) }));
   protected readonly statusIcon = STATUS_ICON;
   protected readonly statusLabel = STATUS_LABEL;
 
@@ -38,6 +40,7 @@ export class HazardMatrix {
           status: c?.status ?? 'nominal',
           heat: heat(score),
           driver: c?.drivers[0]?.label ?? '',
+          tip: hazardScoreTip(a.name, c),
         };
       }),
     }));

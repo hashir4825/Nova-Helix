@@ -6,6 +6,8 @@
     @if (top) {
       <a
         class="avatar-ring"
+        [nhTip]="ringTip()"
+        nhTipPlacement="right"
         [routerLink]="[]"
         [queryParams]="{ hazard: top.hazard, crew: a.id }"
         queryParamsHandling="merge"
@@ -21,13 +23,13 @@
 
     <div class="who">
       <h3 class="name" [id]="'crew-' + a.id">
-        <a [routerLink]="['/crew', a.id]">{{ a.name }}</a>
+        <a [routerLink]="['/crew', a.id]" [nhTip]="profileTip()">{{ a.name }}</a>
       </h3>
       <p class="role">{{ roleLabel[a.role] }}</p>
     </div>
 
     @if (s) {
-      <nh-status class="status" [status]="s.status" />
+      <nh-status class="status" tabindex="0" [status]="s.status" [nhTip]="statusTip()" />
     } @else {
       <nh-skeleton w="72px" h="24px" />
     }
@@ -43,6 +45,7 @@
             [queryParams]="{ metric: a.id + ':' + v.key }"
             queryParamsHandling="merge"
             [attr.aria-label]="v.aria"
+            [nhTip]="v.tip"
           >
             <span class="v-k">
               {{ v.def.short }}
@@ -69,7 +72,7 @@
 
   <footer class="foot">
     @if (top) {
-      <span class="fact">
+      <span class="fact help" tabindex="0" [nhTip]="topTip()">
         <nh-icon [icon]="top.icon" [size]="14" />
         <span>{{ top.def.label }}</span>
         <span class="mono" [class]="'mono s-' + top.status">{{ top.score }}</span>
@@ -77,12 +80,12 @@
     }
     @if (s) {
       @if (s.checkInHour !== null) {
-        <span class="fact ok">
+        <span class="fact ok help" tabindex="0" [nhTip]="checkInTip()">
           <nh-icon [icon]="icons.check" [size]="14" [stroke]="2" />
           Checked in <span class="mono">{{ s.checkInHour | clock }}</span>
         </span>
       } @else {
-        <span class="fact due">
+        <span class="fact due help" tabindex="0" [nhTip]="checkInTip()">
           <nh-icon [icon]="icons.clock" [size]="14" />
           Check-in due <span class="mono">{{ checkInDueHour() | clock }}</span>
         </span>

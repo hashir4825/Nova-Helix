@@ -2,7 +2,7 @@
   <div class="intro">
     <p class="eyebrow">{{ cfg.code }} · {{ cfg.name }}</p>
     <h1 id="hero-title" class="visually-hidden">Mission Control</h1>
-    <p class="day" aria-label="Mission day {{ clock.day() }} of {{ cfg.durationDays }}">
+    <p class="day" tabindex="0" [nhTip]="dayTip()" aria-label="Mission day {{ clock.day() }} of {{ cfg.durationDays }}">
       <span class="day-k">Day</span>
       <span class="day-n">{{ clock.day() }}</span>
       <span class="day-of">/ {{ cfg.durationDays }}</span>
@@ -11,7 +11,7 @@
       @if (counts(); as counts) {
         @for (c of counts; track c.status) {
           @if (c.n > 0) {
-            <span class="cs">
+            <span class="cs" tabindex="0" [nhTip]="countTip(c.status, c.n)">
               <span class="cs-n">{{ c.n }}</span>
               <nh-status [status]="c.status" />
             </span>
@@ -20,10 +20,12 @@
       } @else {
         <nh-skeleton w="220px" h="24px" />
       }
+      <nh-help class="cs-help" [tip]="help.crewStatus" label="crew status" />
     </div>
   </div>
 
   <figure class="trajectory">
+    <nh-help class="traj-help" [tip]="help.trajectory" label="the trajectory" />
     <svg viewBox="0 -44 640 264" role="img" [attr.aria-label]="aria()" preserveAspectRatio="xMidYMid meet">
       <defs>
         <radialGradient id="g-mars" cx="35%" cy="35%" r="70%">
@@ -48,26 +50,30 @@
       }
 
       @for (m of marks(); track m.day) {
-        <g class="mark" [class.past]="m.past">
+        <g class="mark hot" tabindex="0" [class.past]="m.past" [nhTip]="m.tip" [attr.aria-label]="m.tip.title">
           <line [attr.x1]="m.x" [attr.y1]="m.y + 6" [attr.x2]="m.x" [attr.y2]="m.y + 20" />
           <text [attr.x]="m.x" [attr.y]="m.y + 32" text-anchor="middle">{{ m.label }}</text>
         </g>
       }
 
       <!-- Earth -->
+      <g class="hot" tabindex="0" aria-label="Earth" [nhTip]="earthTip()">
       <circle class="halo earth-halo" [attr.cx]="earth.x" [attr.cy]="earth.y" r="18" />
       <circle [attr.cx]="earth.x" [attr.cy]="earth.y" r="10" fill="url(#g-earth)" />
       <text class="body-label" [attr.x]="earth.x" [attr.y]="earth.y + 32" text-anchor="middle">Earth</text>
+      </g>
 
       <!-- Mars -->
+      <g class="hot" tabindex="0" aria-label="Mars" [nhTip]="marsTip()">
       <circle class="halo mars-halo" [attr.cx]="mars.x" [attr.cy]="mars.y" r="30" />
       <circle [attr.cx]="mars.x" [attr.cy]="mars.y" r="17" fill="url(#g-mars)" />
       <text class="body-label" [attr.x]="mars.x" [attr.y]="mars.y + 40" text-anchor="middle">Mars · D{{ cfg.durationDays }}</text>
+      </g>
 
       <!-- Ship -->
       @let s = ship();
       @let l = clock.link();
-      <g class="ship" [attr.transform]="'translate(' + s.x + ',' + s.y + ')'">
+      <g class="ship hot" tabindex="0" aria-label="Spacecraft position" [nhTip]="shipTip()" [attr.transform]="'translate(' + s.x + ',' + s.y + ')'">
         <circle class="ship-ping" r="10" />
         <circle class="ship-dot" r="5" />
         <line class="callout" x1="0" y1="-8" x2="0" y2="-34" />
@@ -81,7 +87,7 @@
 
   <div class="side">
     @if (nextEvent(); as ev) {
-      <div class="next">
+      <div class="next" tabindex="0" [nhTip]="help.nextEvent">
         <p class="eyebrow">Next event</p>
         <p class="next-title">{{ ev.label.split(' ')[0] }}</p>
         <p class="next-desc">{{ ev.label.split(' ').slice(1).join(' ') }}</p>
@@ -91,7 +97,7 @@
         </p>
       </div>
     }
-    <div class="console">
+    <div class="console" tabindex="0" [nhTip]="help.console">
       <span class="avatar" aria-hidden="true">{{ cfg.team.flightSurgeon.charAt(0) }}</span>
       <span class="console-text">
         <span class="console-name">{{ cfg.team.flightSurgeon }}</span>

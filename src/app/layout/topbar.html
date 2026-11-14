@@ -1,5 +1,5 @@
 <header class="bar">
-  <a class="brand" routerLink="/" aria-label="Nova Healix, Mission Control home">
+  <a class="brand" routerLink="/" aria-label="Nova Healix, Mission Control home" [nhTip]="help.brand" nhTipPlacement="bottom">
     <svg class="mark" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
       <ellipse class="orbit" cx="16" cy="16" rx="13" ry="7" transform="rotate(-24 16 16)" />
       <circle class="planet" cx="16" cy="16" r="5" />
@@ -9,12 +9,12 @@
   </a>
 
   <div class="readouts" role="group" aria-label="Mission time">
-    <span class="ro">
+    <span class="ro" tabindex="0" [nhTip]="dayTip()" nhTipPlacement="bottom">
       <span class="ro-k">Day</span>
       <span class="ro-v">{{ clock.day() }}<span class="of">/{{ cfg.durationDays }}</span></span>
     </span>
     <span class="sep" aria-hidden="true"></span>
-    <span class="ro">
+    <span class="ro" tabindex="0" [nhTip]="help.utc" nhTipPlacement="bottom">
       <span class="ro-v"><time>{{ utcTime() }}</time></span>
       <span class="ro-k">UTC</span>
     </span>
@@ -23,7 +23,14 @@
   <div class="spacer"></div>
 
   @let link = clock.link();
-  <div class="link" [class.autonomous]="link.mode === 'autonomous'" role="status">
+  <div
+    class="link"
+    [class.autonomous]="link.mode === 'autonomous'"
+    role="status"
+    tabindex="0"
+    [nhTip]="linkTip()"
+    nhTipPlacement="bottom"
+  >
     @if (link.mode === 'autonomous') {
       <nh-icon [icon]="icons.unplug" [size]="16" />
       <span>Autonomous · no Earth link</span>
@@ -41,6 +48,8 @@
       routerLink="/"
       [class.active]="!crewMode()"
       [attr.aria-current]="!crewMode() ? 'page' : null"
+      [nhTip]="help.modeMc"
+      nhTipPlacement="bottom"
     >
       <nh-icon [icon]="icons.radar" [size]="16" [stroke]="1.75" />
       <span class="mode-text">Mission Control</span>
@@ -50,6 +59,8 @@
       routerLink="/checkin"
       [class.active]="crewMode()"
       [attr.aria-current]="crewMode() ? 'page' : null"
+      [nhTip]="help.modeCrew"
+      nhTipPlacement="bottom"
     >
       <nh-icon [icon]="icons.user" [size]="16" [stroke]="1.75" />
       <span class="mode-text">Crew Mode</span>
@@ -61,7 +72,8 @@
     class="icon-btn"
     (click)="theme.toggle()"
     [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-    [attr.title]="theme.theme() === 'dark' ? 'Light theme' : 'Dark theme'"
+    [nhTip]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+    nhTipPlacement="bottom"
   >
     <nh-icon [icon]="theme.theme() === 'dark' ? icons.sun : icons.moon" [size]="16" />
   </button>

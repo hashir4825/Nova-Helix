@@ -7,6 +7,8 @@
       [class.active]="filter() === f.key"
       [attr.aria-checked]="filter() === f.key"
       (click)="filter.set(f.key)"
+      [nhTip]="f.tip"
+      nhTipPlacement="bottom"
     >
       {{ f.label }}<span class="count">{{ f.count }}</span>
     </button>
@@ -36,7 +38,14 @@
     @for (ins of visible(); track ins.id) {
       @let who = ins.crewId ? crewById().get(ins.crewId) : undefined;
       <li>
-        <a [class]="'item sev-' + ins.severity" [routerLink]="[]" [queryParams]="{ insight: ins.id }" queryParamsHandling="merge">
+        <a
+          [class]="'item sev-' + ins.severity"
+          [routerLink]="[]"
+          [queryParams]="{ insight: ins.id }"
+          queryParamsHandling="merge"
+          [nhTip]="itemTip(ins)"
+          nhTipPlacement="left"
+        >
           <span class="sev">
             <nh-icon [icon]="statusIcon[ins.severity]" [size]="16" [stroke]="2" />
           </span>
@@ -51,7 +60,7 @@
               <time>{{ ins.detectedAt | relTime: now() }}</time>
               <span class="hz">
                 @for (h of ins.hazards; track h) {
-                  <nh-icon [icon]="hazardIcon[h]" [size]="13" [label]="hazards[h].label" [attr.title]="hazards[h].label" />
+                  <nh-icon [icon]="hazardIcon[h]" [size]="13" [label]="hazards[h].label" />
                 }
               </span>
             </span>
