@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
@@ -17,21 +17,8 @@ import { HAZARD_ICON, ICON, STATUS_ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { StatusBadge } from '../../shared/ui/status-badge';
 import { CheckinHistory } from './checkin-history';
-import { ExerciseCalendar } from './exercise-calendar';
 import { HazardOverview } from './hazard-overview';
-import { MedicalTests } from './medical-tests';
-import { MetricPanel } from './metric-panel';
 import { VitalsStrip } from './vitals-strip';
-
-const SECTIONS = [
-  { id: 'sec-sleep', label: 'Sleep' },
-  { id: 'sec-radiation', label: 'Radiation' },
-  { id: 'sec-body', label: 'Bone & muscle' },
-  { id: 'sec-mind', label: 'Mind & workload' },
-  { id: 'sec-tests', label: 'Medical tests' },
-  { id: 'sec-env', label: 'Environment' },
-  { id: 'sec-checkins', label: 'Check-ins' },
-];
 
 @Component({
   selector: 'nh-profile',
@@ -47,10 +34,7 @@ const SECTIONS = [
     RelTimePipe,
     VitalsStrip,
     HazardOverview,
-    MetricPanel,
     CheckinHistory,
-    MedicalTests,
-    ExerciseCalendar,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
@@ -65,14 +49,12 @@ export class Profile {
   private readonly session = inject(SessionStore);
   private readonly crewApi = inject(CrewApi);
   private readonly assess = inject(AssessmentApi);
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly clock = inject(MissionClock);
   protected readonly icons = ICON;
   protected readonly statusIcon = STATUS_ICON;
   protected readonly hazardIcon = HAZARD_ICON;
   protected readonly roleLabel = ROLE_LABEL;
   protected readonly help = HELP;
-  protected readonly sections = SECTIONS;
 
   constructor() {
     effect(() => this.session.role.set(this.viewer()));
@@ -99,7 +81,6 @@ export class Profile {
       .sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] || b.detectedAt - a.detectedAt),
   );
   protected readonly attention = computed(() => this.insights().filter((i) => i.severity !== 'info').slice(0, 3));
-  protected readonly goodNews = computed(() => this.insights().filter((i) => i.severity === 'info'));
 
   /** One-sentence reason for the overall status. */
   protected readonly reason = computed(() => {
@@ -132,16 +113,6 @@ export class Profile {
 
   protected readonly bandOwner = computed(() => (this.isAstronaut() ? 'Your normal' : `${this.astronaut()?.name ?? ''}'s normal`));
 
-  /** Data for this astronaut is ready to render. */
-  protected readonly ready = computed(() => !!this.astronaut());
-
-  protected readonly careerLimit = computed(() => ({ value: this.clock.config.careerDoseLimitMsv, label: 'Career limit 600 mSv' }));
-
-  protected scrollTo(id: string): void {
-    const el = this.host.nativeElement.querySelector<HTMLElement>('#' + id);
-    el?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-    el?.focus({ preventScroll: true });
-  }
 
   protected readonly crewWithStatus = computed(() => this.crew().map((a) => ({ ...a, status: this.statusOf(a.id) })));
 }

@@ -10,7 +10,7 @@ import { Skeleton } from '../../shared/ui/skeleton';
 
 const SCALE = ['', 'Very low', 'Low', 'OK', 'Good', 'Very good'];
 
-/** Last 14 days of daily check-ins, including missed days. */
+/** Last 7 days of daily check-ins, including missed days. */
 @Component({
   selector: 'nh-checkin-history',
   imports: [ClockPipe, Skeleton, TipDirective],
@@ -46,7 +46,7 @@ const SCALE = ['', 'Very low', 'Low', 'OK', 'Good', 'Very good'];
                     </span>
                   </td>
                 }
-                <td class="sym">
+                <td><span class="sym">
                   @for (s of c.symptoms; track s) {
                     <span class="chip">{{ symptomLabel[s] }}</span>
                   }
@@ -56,7 +56,7 @@ const SCALE = ['', 'Very low', 'Low', 'OK', 'Good', 'Very good'];
                   @if (!c.symptoms.length && !c.note) {
                     <span class="none">None</span>
                   }
-                </td>
+                </span></td>
               } @else {
                 <td colspan="4" class="miss">
                   {{ r.day === today() ? 'Not done yet today' : 'No check-in' }}
@@ -154,7 +154,7 @@ export class CheckinHistory {
 
   private readonly list = toSignal(
     combineLatest([toObservable(this.crewId), toObservable(this.clock.queryHour)]).pipe(
-      switchMap(([id, h]) => this.telemetry.checkIns(id, h - 14 * 24, h)),
+      switchMap(([id, h]) => this.telemetry.checkIns(id, h - 7 * 24, h)),
     ),
   );
 
@@ -163,7 +163,7 @@ export class CheckinHistory {
     if (!l) return null;
     const today = this.clock.day();
     const byDay = new Map(l.map((c) => [c.day, c]));
-    return Array.from({ length: 14 }, (_, i) => today - i)
+    return Array.from({ length: 7 }, (_, i) => today - i)
       .filter((d) => d >= 1)
       .map((day) => ({ day, ci: byDay.get(day) }));
   });
