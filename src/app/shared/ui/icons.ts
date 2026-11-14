@@ -1,0 +1,74 @@
+import {
+  Activity,
+  AirVent,
+  ArrowDownToLine,
+  ArrowLeft,
+  ArrowUpRight,
+  CalendarClock,
+  Check,
+  ChevronRight,
+  CircleCheck,
+  ClipboardCheck,
+  Clock,
+  Contrast,
+  Inbox,
+  Info,
+  LayoutDashboard,
+  MessageSquare,
+  Minus,
+  OctagonAlert,
+  Orbit,
+  Radiation,
+  RotateCcw,
+  SatelliteDish,
+  Send,
+  TrendingDown,
+  TrendingUp,
+  TriangleAlert,
+  Unplug,
+  UserRound,
+  Users,
+  X,
+} from 'lucide';
+import { HazardKey, Severity, Status } from '../../core/models';
+
+export type IconNode = [tag: string, attrs: Record<string, string | number | undefined>][];
+
+export const ICON = {
+  activity: Activity,
+  arrowLeft: ArrowLeft,
+  arrowUpRight: ArrowUpRight,
+  calendar: CalendarClock,
+  check: Check,
+  chevronRight: ChevronRight,
+  clipboard: ClipboardCheck,
+  clock: Clock,
+  contrast: Contrast,
+  inbox: Inbox,
+  dashboard: LayoutDashboard,
+  message: MessageSquare,
+  minus: Minus,
+  reset: RotateCcw,
+  dish: SatelliteDish,
+  send: Send,
+  trendDown: TrendingDown,
+  trendUp: TrendingUp,
+  unplug: Unplug,
+  user: UserRound,
+  close: X,
+} satisfies Record<string, IconNode>;
+
+export const STATUS_ICON: Record<Status | Severity, IconNode> = {
+  nominal: CircleCheck,
+  watch: TriangleAlert,
+  alert: OctagonAlert,
+  info: Info,
+};
+
+export const HAZARD_ICON: Record<HazardKey, IconNode> = {
+  radiation: Radiation,
+  isolation: Users,
+  distance: Orbit,
+  gravity: ArrowDownToLine,
+  environment: AirVent,
+};

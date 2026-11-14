@@ -1,0 +1,140 @@
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { HAZARDS, HAZARD_KEYS, HazardAssessment } from '../../core/models';
+
+const SPAN = 72;
+const GAP = 7;
+
+function polar(cx: number, cy: number, r: number, deg: number) {
+  const a = ((deg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+
+function arc(cx: number, cy: number, r: number, a0: number, a1: number): string {
+  const p0 = polar(cx, cy, r, a0);
+  const p1 = polar(cx, cy, r, a1);
+  const large = a1 - a0 > 180 ? 1 : 0;
+  return `M${p0.x.toFixed(2)},${p0.y.toFixed(2)} A${r},${r} 0 ${large} 1 ${p1.x.toFixed(2)},${p1.y.toFixed(2)}`;
+}
+
+/**
+ * Five-segment hazard ring, one segment per NASA hazard in canonical order,
+ * clockwise from top. Fill length = score (0–100), color = level. Labels outside.
+ */
+@Component({
+  selector: 'nh-hazard-ring',
+  template: `
+    <svg
+      [attr.viewBox]="'0 0 ' + box() + ' ' + box()"
+      [attr.width]="box()"
+      [attr.height]="box()"
+      role="img"
+      [attr.aria-label]="ariaLabel()"
+    >
+      @for (s of segments(); track s.key) {
+        <path class="track" [attr.d]="s.track" />
+        @if (s.score > 0) {
+          <path class="fill" [class]="'fill s-' + s.status" [attr.d]="s.fill" />
+        }
+        <text class="lbl" [attr.x]="s.label.x" [attr.y]="s.label.y" text-anchor="middle" dominant-baseline="central">{{ s.short }}</text>
+      }
+      @for (t of ticks(); track $index) {
+        <line class="tick" [attr.x1]="t.x1" [attr.y1]="t.y1" [attr.x2]="t.x2" [attr.y2]="t.y2" />
+      }
+    </svg>
+    <div class="center"><ng-content /></div>
+  `,
+  styles: `
+    :host {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
+    }
+    svg {
+      display: block;
+      overflow: visible;
+    }
+    .track {
+      fill: none;
+      stroke: var(--surface-3);
+      stroke-width: 5;
+    }
+    .fill {
+      fill: none;
+      stroke-width: 5;
+      stroke: var(--c);
+      transition: d var(--dur-slow) var(--ease-out);
+    }
+    .s-nominal { --c: var(--nominal); }
+    .s-watch { --c: var(--watch); }
+    .s-alert { --c: var(--alert); }
+    .tick {
+      stroke: var(--tick);
+      stroke-width: 1;
+    }
+    .lbl {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      fill: var(--text-3);
+    }
+    .center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      line-height: var(--lh-tight);
+      pointer-events: none;
+    }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class HazardRing {
+  readonly assessments = input<HazardAssessment[]>([]);
+  readonly size = input(96);
+
+  protected readonly box = computed(() => this.size());
+
+  protected readonly segments = computed(() => {
+    const size = this.size();
+    const c = size / 2;
+    const r = size / 2 - 18;
+    const byKey = new Map(this.assessments().map((a) => [a.hazard, a]));
+    return HAZARD_KEYS.map((key, i) => {
+      const a0 = i * SPAN + GAP / 2 - SPAN / 2;
+      const a1 = a0 + SPAN - GAP;
+      const a = byKey.get(key);
+      const score = a?.score ?? 0;
+      const mid = (a0 + a1) / 2;
+      return {
+        key,
+        short: HAZARDS[key].short,
+        score,
+        status: a?.status ?? 'nominal',
+        track: arc(c, c, r, a0, a1),
+        fill: arc(c, c, r, a0, a0 + Math.max(2, (a1 - a0) * (score / 100))),
+        label: polar(c, c, r + 12, mid),
+      };
+    });
+  });
+
+  protected readonly ticks = computed(() => {
+    const size = this.size();
+    const c = size / 2;
+    const r = size / 2 - 18;
+    return Array.from({ length: 20 }, (_, i) => {
+      const p0 = polar(c, c, r - 6, i * 18);
+      const p1 = polar(c, c, r - (i % 4 === 0 ? 9 : 7.5), i * 18);
+      return { x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y };
+    });
+  });
+
+  protected readonly ariaLabel = computed(
+    () =>
+      'Hazard scores: ' +
+      HAZARD_KEYS.map((k) => {
+        const a = this.assessments().find((x) => x.hazard === k);
+        return `${HAZARDS[k].label} ${a?.score ?? 0}, ${a?.status ?? 'nominal'}`;
+      }).join('; '),
+  );
+}

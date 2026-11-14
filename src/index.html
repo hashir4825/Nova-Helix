@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <title>Nova Healix · Crew Health</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nova Healix crew health monitoring for long-duration Mars transit.">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <script>
+    try {
+      var q = new URLSearchParams(location.search).get('theme');
+      if (q === 'light' || q === 'dark') localStorage.setItem('nh.theme', q);
+      var t = localStorage.getItem('nh.theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <nh-root></nh-root>
+</body>
+</html>

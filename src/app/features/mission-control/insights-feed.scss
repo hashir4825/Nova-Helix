@@ -1,0 +1,189 @@
+@use 'mixins' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.filters {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.filter {
+  @include reset-button;
+  @include focus-ring;
+  @include label;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-1);
+  color: var(--text-2);
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  &.active {
+    border-color: var(--line-strong);
+    background: var(--surface-2);
+    color: var(--text-1);
+  }
+
+  .count {
+    @include mono;
+    color: var(--text-3);
+  }
+}
+
+.list {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.item {
+  @include focus-ring;
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
+  position: relative;
+  outline-offset: -2px;
+  transition: background-color var(--dur-fast) var(--ease-out);
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--space-4);
+    bottom: var(--space-4);
+    width: 2px;
+    background: var(--sev);
+  }
+
+  &:hover {
+    background: var(--surface-2);
+    .title {
+      color: var(--accent);
+    }
+  }
+}
+
+.sev-alert {
+  --sev: var(--alert);
+}
+.sev-watch {
+  --sev: var(--watch);
+}
+.sev-info {
+  --sev: var(--info);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.tags {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.time {
+  @include mono;
+  margin-left: auto;
+  font-size: var(--type-label);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.title {
+  font-size: var(--type-body-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-snug);
+  color: var(--text-1);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.summary {
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.who {
+  @include label;
+  color: var(--text-1);
+  .role {
+    color: var(--text-3);
+    margin-left: var(--space-1);
+  }
+}
+
+.conf {
+  @include label;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  .mono {
+    @include mono;
+    color: var(--text-2);
+  }
+}
+
+.conf-bar {
+  width: 40px;
+  height: 3px;
+  background: var(--surface-3);
+  span {
+    display: block;
+    height: 100%;
+    background: var(--text-2);
+  }
+}
+
+.skel {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+}
+
+.empty {
+  padding: var(--space-7) var(--space-5);
+  text-align: left;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.empty-title {
+  @include label;
+  color: var(--text-2);
+}
+
+.empty-body {
+  color: var(--text-3);
+}
