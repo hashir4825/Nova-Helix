@@ -1,0 +1,165 @@
+<div class="page">
+  @if (!consented()) {
+    <!-- ── First-use consent ────────────────────────────────────── -->
+    <section class="consent" aria-labelledby="consent-h">
+      <span class="nova-mark big" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="40" height="40"><ellipse cx="16" cy="16" rx="13" ry="7" transform="rotate(-24 16 16)" /><circle class="c" cx="16" cy="16" r="5" /><circle class="s" cx="27.2" cy="10.6" r="2" /></svg>
+      </span>
+      <h1 id="consent-h">Meet Nova</h1>
+      <p class="lead">A private companion for the long days of the transit. Talk about anything: sleep, stress, home, the mission.</p>
+
+      <ul class="rules">
+        <li>
+          <span class="r-icon r-private"><nh-icon [icon]="icons.lock" [size]="18" /></span>
+          <span><strong>Private by default.</strong> Only you can see your conversations with Nova. Mission Control never sees them.</span>
+        </li>
+        <li>
+          <span class="r-icon r-shared"><nh-icon [icon]="icons.send" [size]="18" /></span>
+          <span><strong>You choose what to share.</strong> Nova can turn a chat into your check-in or a note to {{ surgeon }}, but only sends it when you press send.</span>
+        </li>
+        <li>
+          <span class="r-icon r-safety"><nh-icon [icon]="icons.alert" [size]="18" /></span>
+          <span>
+            <strong>One exception, for your safety.</strong> If you describe a risk of serious harm or an urgent medical problem, Nova tells {{ surgeon }}
+            that you need help. It never shares what you wrote, and it always tells you when it has done this.
+          </span>
+        </li>
+        <li>
+          <span class="r-icon r-info"><nh-icon [icon]="icons.info" [size]="18" /></span>
+          <span><strong>Nova is not a doctor.</strong> In an emergency, use the crew intercom or tell the crew medical officer.</span>
+        </li>
+      </ul>
+
+      <button type="button" class="primary" (click)="accept()">I understand, start talking</button>
+    </section>
+  } @else {
+    <!-- ── Chat ─────────────────────────────────────────────────── -->
+    <section class="chat" aria-labelledby="nova-h">
+      <header class="chat-head">
+        <span class="nova-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="26" height="26"><ellipse cx="16" cy="16" rx="13" ry="7" transform="rotate(-24 16 16)" /><circle class="c" cx="16" cy="16" r="5" /><circle class="s" cx="27.2" cy="10.6" r="2" /></svg>
+        </span>
+        <div class="title">
+          <h1 id="nova-h">Nova</h1>
+          <span class="private" tabindex="0" [nhTip]="privacyTip" nhTipPlacement="bottom">
+            <nh-icon [icon]="icons.lock" [size]="12" />Private · only you can see this
+          </span>
+        </div>
+        <span class="onboard" tabindex="0" [nhTip]="onboardTip" nhTipPlacement="bottom">Runs on board</span>
+        @if (confirmClear()) {
+          <span class="clear-confirm" role="alert">
+            Delete this conversation?
+            <button type="button" class="link danger" (click)="clear()">Delete</button>
+            <button type="button" class="link" (click)="confirmClear.set(false)">Keep</button>
+          </span>
+        } @else {
+          <button type="button" class="icon-btn" (click)="confirmClear.set(true)" aria-label="Delete conversation" nhTip="Delete this conversation" nhTipPlacement="bottom">
+            <nh-icon [icon]="icons.trash" [size]="16" />
+          </button>
+        }
+      </header>
+
+      <ol class="list" #list aria-live="polite" aria-relevant="additions" aria-label="Conversation with Nova">
+        @for (m of messages(); track m.id) {
+          <li class="msg" [class]="'msg ' + m.role">
+            @if (m.role === 'nova') {
+              <span class="who" aria-hidden="true">N</span>
+            }
+            <div class="bubble-wrap">
+              <p class="bubble"><span class="visually-hidden">{{ m.role === 'nova' ? 'Nova' : 'You' }}: </span>{{ m.text }}</p>
+
+              @if (m.card; as card) {
+                @switch (card.kind) {
+                  @case ('checkin') {
+                    <div class="card checkin" [class.resolved]="card.status !== 'proposed'">
+                      <p class="card-k"><nh-icon [icon]="icons.clipboard" [size]="14" />Check-in draft · shared with Mission Control if sent</p>
+                      <dl class="ci">
+                        <div><dt>Mood</dt><dd>{{ level[card.draft.mood] }}</dd></div>
+                        <div><dt>Sleep</dt><dd>{{ level[card.draft.sleepQuality] }}</dd></div>
+                        <div><dt>Energy</dt><dd>{{ level[card.draft.energy] }}</dd></div>
+                        <div><dt>Symptoms</dt><dd>{{ symptomText(card.draft.symptoms) }}</dd></div>
+                      </dl>
+                      @if (card.status === 'proposed') {
+                        <div class="card-actions">
+                          <button type="button" class="primary sm" (click)="resolve(m, 'confirm')"><nh-icon [icon]="icons.send" [size]="14" />Send check-in</button>
+                          <a class="link" routerLink="/checkin">Edit in form</a>
+                          <button type="button" class="link" (click)="resolve(m, 'dismiss')">Not now</button>
+                        </div>
+                      } @else {
+                        <p class="card-status">{{ card.status === 'sent' ? 'Sent to Mission Control' : 'Not sent' }}</p>
+                      }
+                    </div>
+                  }
+                  @case ('share') {
+                    <div class="card share" [class.resolved]="card.status !== 'proposed'">
+                      <p class="card-k"><nh-icon [icon]="icons.send" [size]="14" />Note to {{ surgeon }} · only this text is shared</p>
+                      @if (card.status === 'proposed') {
+                        <label class="visually-hidden" [for]="'share-' + m.id">Note to {{ surgeon }}</label>
+                        <textarea [id]="'share-' + m.id" rows="3" [value]="shareEdits()[m.id] ?? card.text" (input)="editShare(m.id, $any($event.target).value)"></textarea>
+                        <div class="card-actions">
+                          <button type="button" class="primary sm" (click)="resolve(m, 'confirm')"><nh-icon [icon]="icons.send" [size]="14" />Send to {{ surgeon }}</button>
+                          <button type="button" class="link" (click)="resolve(m, 'dismiss')">Don’t send</button>
+                        </div>
+                      } @else {
+                        <p class="quote">“{{ card.text }}”</p>
+                        <p class="card-status">{{ card.status === 'sent' ? 'Sent to ' + surgeon : 'Not sent' }}</p>
+                      }
+                    </div>
+                  }
+                  @case ('safety') {
+                    <div class="card safety" role="alert">
+                      <p class="card-k"><nh-icon [icon]="icons.alert" [size]="14" />{{ surgeon }} has been alerted</p>
+                      <p>
+                        Only the fact that you need {{ card.category === 'medical' ? 'urgent medical help' : 'support' }} was shared, not this conversation.
+                        It reaches Earth in about <span class="mono">{{ delay() }}</span>.
+                      </p>
+                    </div>
+                  }
+                  @case ('breathing') {
+                    <div class="card breathing" aria-label="Breathing exercise: in for 4, hold for 4, out for 6">
+                      <span class="orb" aria-hidden="true"><span class="orb-label"></span></span>
+                      <p class="steps">In 4 · Hold 4 · Out 6</p>
+                    </div>
+                  }
+                }
+              }
+              <time class="t">{{ time(m.at) }}</time>
+            </div>
+          </li>
+        }
+        @if (typing()) {
+          <li class="msg nova typing" aria-label="Nova is typing">
+            <span class="who" aria-hidden="true">N</span>
+            <p class="bubble dots"><span></span><span></span><span></span></p>
+          </li>
+        }
+      </ol>
+
+      <footer class="composer-wrap">
+        @if (showPrompts()) {
+          <div class="prompts" aria-label="Suggestions">
+            @for (p of prompts; track p.label) {
+              <button type="button" class="prompt" (click)="send(p.text)">{{ p.label }}</button>
+            }
+          </div>
+        }
+        <form class="composer" (submit)="$event.preventDefault(); send()">
+          <label class="visually-hidden" for="nova-input">Message Nova</label>
+          <textarea
+            id="nova-input"
+            #composer
+            rows="1"
+            placeholder="Tell Nova how you are doing…"
+            [value]="draft()"
+            (input)="draft.set($any($event.target).value)"
+            (keydown)="onKey($event)"
+          ></textarea>
+          <button type="submit" class="send" [disabled]="!draft().trim()" aria-label="Send">
+            <nh-icon [icon]="icons.send" [size]="18" />
+          </button>
+        </form>
+        <p class="foot">Nova is not a doctor. In an emergency use the crew intercom. <span class="lock"><nh-icon [icon]="icons.lock" [size]="11" /> Stored only on this device.</span></p>
+      </footer>
+    </section>
+  }
+</div>

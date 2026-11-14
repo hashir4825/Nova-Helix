@@ -1,6 +1,19 @@
-import { Astronaut, Baseline, CheckIn, METRICS, MetricKey, MissionEvent, Sample } from '../models';
+import {
+  Assignment,
+  Astronaut,
+  Baseline,
+  ChatMessage,
+  CheckIn,
+  METRICS,
+  MetricKey,
+  MissionEvent,
+  SafetyFlag,
+  Sample,
+  SharedNote,
+} from '../models';
 import { CrewBundle, ExerciseSession, generateCrew } from './generator';
-import { BASELINE_FROM_DAY, BASELINE_TO_DAY, CREW_IDS, CrewId, MISSION_EVENTS, at } from './mission-plan';
+import { BASELINE_FROM_DAY, BASELINE_TO_DAY, CREW_IDS, CrewId, MISSION_CONFIG, MISSION_EVENTS, at } from './mission-plan';
+import { seedAssignments } from './questionnaires';
 import { PERSONAS } from './personas';
 import { mean, percentile, sd, sliceSamples } from './stats';
 
@@ -99,6 +112,62 @@ export class MockDatabase {
     this.bump();
   }
 
+  // ── Crew mode: questionnaires, Nova, sharing ─────────────────────
+  private assignmentList: Assignment[] = seedAssignments(MISSION_CONFIG.team.flightSurgeon);
+  private readonly safety: SafetyFlag[] = [];
+  private readonly notes: SharedNote[] = [];
+  private readonly chats = new Map<string, ChatMessage[]>();
+
+  assignments(crewId?: string): Assignment[] {
+    return crewId ? this.assignmentList.filter((a) => a.crewId === crewId) : this.assignmentList;
+  }
+
+  updateAssignment(a: Assignment): void {
+    this.assignmentList = this.assignmentList.map((x) => (x.id === a.id ? a : x));
+    this.bump();
+  }
+
+  /** Insert a new measurement in time order (e.g. a questionnaire score). */
+  addSample(crewId: string, metric: MetricKey, sample: Sample): void {
+    const series = this.bundle(crewId).series;
+    const arr = [...(series.get(metric) ?? []), sample].sort((a, b) => a.t - b.t);
+    series.set(metric, arr);
+    this.bump();
+  }
+
+  safetyFlags(): SafetyFlag[] {
+    return this.safety;
+  }
+
+  addSafetyFlag(f: SafetyFlag): void {
+    this.safety.push(f);
+    this.bump();
+  }
+
+  sharedNotes(): SharedNote[] {
+    return this.notes;
+  }
+
+  addSharedNote(n: SharedNote): void {
+    this.notes.push(n);
+    this.bump();
+  }
+
+  /** Private Nova conversation. Never read by the analysis engine. */
+  chat(crewId: string): ChatMessage[] {
+    return this.chats.get(crewId) ?? [];
+  }
+
+  setChat(crewId: string, messages: ChatMessage[]): void {
+    this.chats.set(crewId, messages);
+    this.onChatChange(crewId);
+  }
+
+  /** Hook for chat updates (kept separate so private chat never triggers re-analysis). */
+  protected onChatChange(_crewId: string): void {
+    /* overridden by the Angular wrapper */
+  }
+
   /** Is the astronaut doing scheduled exercise or EVA at this hour (for baseline exclusion)? */
   isActive(crewId: string, hour: number): boolean {
     const b = this.bundle(crewId);
@@ -156,7 +225,13 @@ export class MockDatabase {
     };
   }
 
-  private bump(): void {
+  /** Any shared data changed: re-run analysis. */
+  protected bump(): void {
     this._version++;
+    this.onChange();
+  }
+
+  protected onChange(): void {
+    /* overridden by the Angular wrapper */
   }
 }

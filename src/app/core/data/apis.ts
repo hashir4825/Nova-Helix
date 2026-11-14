@@ -1,5 +1,11 @@
 import { Observable } from 'rxjs';
 import {
+  AnswerValue,
+  Assignment,
+  ChatMessage,
+  CheckInDraft,
+  Questionnaire,
+  QuestionnaireId,
   Astronaut,
   Baseline,
   CheckIn,
@@ -51,6 +57,32 @@ export abstract class TelemetryApi {
   /** Live current vitals, emitting every few seconds. */
   abstract live(crewId: string): Observable<LiveVitals>;
   abstract checkIns(crewId: string, from: number, to: number): Observable<CheckIn[]>;
+}
+
+/** Astronaut-facing data that IS shared with Mission Control. */
+export abstract class CrewModeApi {
+  abstract submitCheckIn(crewId: string, draft: CheckInDraft): Observable<CheckIn>;
+  abstract questionnaires(): Observable<Record<QuestionnaireId, Questionnaire>>;
+  abstract assignments(crewId: string): Observable<Assignment[]>;
+  abstract assignment(id: string): Observable<Assignment | undefined>;
+  /** Save answers and position so a questionnaire can be resumed. */
+  abstract saveProgress(id: string, answers: Record<string, AnswerValue>, currentIndex: number): Observable<Assignment>;
+  abstract submitQuestionnaire(id: string, answers: Record<string, AnswerValue>): Observable<Assignment>;
+}
+
+/**
+ * Nova, the private companion. Conversations stay with the astronaut.
+ * Only an explicit share, a confirmed check-in, or the safety exception leaves the chat.
+ * The mock is rule-based; a Gemini (prototype) or onboard model can implement this contract.
+ */
+export abstract class CompanionApi {
+  abstract history(crewId: string): Observable<ChatMessage[]>;
+  abstract typing(crewId: string): Observable<boolean>;
+  abstract start(crewId: string): Observable<void>;
+  abstract send(crewId: string, text: string): Observable<void>;
+  /** Confirm or dismiss a check-in / share proposal card. */
+  abstract resolveCard(crewId: string, messageId: string, action: 'confirm' | 'dismiss', edited?: string): Observable<void>;
+  abstract clear(crewId: string): Observable<void>;
 }
 
 export abstract class AssessmentApi {

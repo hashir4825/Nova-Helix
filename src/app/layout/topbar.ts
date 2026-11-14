@@ -4,6 +4,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { MissionClock } from '../core/state/mission-clock';
 import { ThemeStore } from '../core/state/theme';
+import { SessionStore } from '../core/state/session';
+import { CrewApi } from '../core/data/apis';
 import { Icon } from '../shared/ui/icon';
 import { ICON } from '../shared/ui/icons';
 import { DelayPipe } from '../shared/pipes';
@@ -28,6 +30,9 @@ export class Topbar {
   private readonly router = inject(Router);
 
   protected readonly cfg = this.clock.config;
+  protected readonly session = inject(SessionStore);
+  protected readonly crew = toSignal(inject(CrewApi).list(), { initialValue: [] });
+  protected readonly astronautName = computed(() => this.crew().find((c) => c.id === this.session.astronautId())?.name ?? '');
   protected readonly help = HELP;
 
   protected readonly dayTip = computed<TipContent>(() => {
@@ -58,7 +63,7 @@ export class Topbar {
   protected readonly crewMode = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url.startsWith('/checkin') || this.router.url.startsWith('/me')),
+      map(() => /^\/(me|checkin|nova)(\/|\?|$)/.test(this.router.url)),
     ),
     { initialValue: false },
   );

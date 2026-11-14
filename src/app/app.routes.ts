@@ -27,10 +27,21 @@ export const routes: Routes = [
     data: { viewer: 'astronaut' },
   },
   {
+    // Daily check-in + assigned questionnaires (shared with Mission Control).
     path: 'checkin',
-    title: 'Crew Check-in · Nova Healix',
-    loadComponent: () => import('./features/pending/pending').then((m) => m.Pending),
-    data: { screen: 'Crew mode: check-in, questionnaires, inbox', milestone: 'M4' },
+    title: 'Check-in · Nova Healix',
+    loadComponent: () => import('./features/crew-mode/checkin-page').then((m) => m.CheckinPage),
+  },
+  {
+    path: 'checkin/q/:id',
+    title: 'Questionnaire · Nova Healix',
+    loadComponent: () => import('./features/crew-mode/questionnaire-runner').then((m) => m.QuestionnaireRunner),
+  },
+  {
+    // Nova: private companion chat.
+    path: 'nova',
+    title: 'Nova · Nova Healix',
+    loadComponent: () => import('./features/crew-mode/nova-page').then((m) => m.NovaPage),
   },
   { path: '**', redirectTo: '' },
 ];

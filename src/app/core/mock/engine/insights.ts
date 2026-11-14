@@ -1,7 +1,8 @@
 import { Evidence, Insight, SEVERITY_RANK, Severity, SYMPTOM_LABEL } from '../../models';
-import { formatMetric, formatPct } from '../../util/format';
+import { formatClock, formatMetric, formatPct } from '../../util/format';
 import { clamp } from '../prng';
-import { hourToDay } from '../mission-plan';
+import { MISSION_CONFIG, hourToDay } from '../mission-plan';
+import { QUESTIONNAIRES } from '../questionnaires';
 import { lastAt, mean, sliceSamples } from '../stats';
 import {
   EngineContext,
@@ -399,6 +400,91 @@ function cabinCo2(ctx: EngineContext): Insight | null {
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────
+/**
+ * Findings that come from crew mode: Nova safety flags (no transcript, by design),
+ * notes the astronaut chose to share, and completed questionnaires.
+ */
+function crewModeInsights(ctx: EngineContext): Insight[] {
+  const out: Insight[] = [];
+  const surgeon = MISSION_CONFIG.team.flightSurgeon;
+
+  for (const f of ctx.db.safetyFlags().filter((x) => x.at <= ctx.hour)) {
+    const who = name(ctx, f.crewId);
+    const medical = f.category === 'medical';
+    out.push({
+      id: `safety:${f.id}`,
+      crewId: f.crewId,
+      severity: 'alert',
+      hazards: medical ? ['distance'] : ['isolation', 'distance'],
+      title: medical ? `Urgent: ${who} reported a medical red flag` : `Urgent: ${who} needs support now`,
+      summary:
+        `Nova’s safety check raised this at ${formatClock(f.at)}. ` +
+        `${medical ? 'The symptoms described need medical attention.' : 'What was said suggests a risk of serious harm.'} ` +
+        `No conversation content is shared, by design. Contact ${who} directly.`,
+      whyItMatters:
+        `Nova is private. It alerts ${surgeon} only when a message suggests a risk of serious harm or an acute medical problem. ` +
+        `${who} was told this before first using Nova, and was told when this alert was sent.`,
+      detectedAt: f.at,
+      evidence: [
+        { label: 'Source', value: 'Nova safety check' },
+        { label: 'Category', value: medical ? 'Acute medical symptoms' : 'Risk of self-harm' },
+        { label: 'Conversation', value: 'Not shared (private)' },
+      ],
+      confidence: 0.95,
+      recommended: [
+        { kind: 'message', label: `Contact ${who} now`, detail: 'Send a direct message and request a voice call at the next window.' },
+        medical
+          ? { kind: 'escalate', label: 'Medical support', detail: 'Ask the crew medical officer or commander to assess in person.' }
+          : { kind: 'escalate', label: 'Psychologist conference', detail: 'Book an urgent private conference with the Earth psychologist.' },
+      ],
+    });
+  }
+
+  for (const n of ctx.db.sharedNotes().filter((x) => x.at <= ctx.hour)) {
+    const who = name(ctx, n.crewId);
+    out.push({
+      id: `note:${n.id}`,
+      crewId: n.crewId,
+      severity: 'info',
+      hazards: ['isolation'],
+      title: `${who} shared a note with you`,
+      summary: `“${n.text}”`,
+      whyItMatters: `${who} chose to share this from a private Nova conversation. Only this text was shared.`,
+      detectedAt: n.at,
+      evidence: [{ label: 'Source', value: 'Shared from Nova by the astronaut' }],
+      confidence: 1,
+      recommended: [{ kind: 'message', label: 'Reply', detail: `Thank ${who} and follow up at a convenient time.` }],
+    });
+  }
+
+  for (const a of ctx.db.assignments().filter((x) => x.status === 'done' && (x.completedAt ?? 0) <= ctx.hour)) {
+    const q = QUESTIONNAIRES[a.questionnaireId];
+    const who = name(ctx, a.crewId);
+    const score = a.score ?? 0;
+    const band = score >= 60 ? 'high strain' : score >= 35 ? 'some strain' : 'low strain';
+    const comment = q.questions.filter((x) => x.kind === 'text').map((x) => a.answers[x.id]).find((v) => typeof v === 'string' && v.trim());
+    out.push({
+      id: `q:${a.id}`,
+      crewId: a.crewId,
+      severity: score >= 60 ? 'watch' : 'info',
+      hazards: q.hazards,
+      title: `${q.title} questionnaire: ${band}`,
+      summary: `${who} completed the ${q.title.toLowerCase()} questionnaire. Score ${score}/100 (higher means ${q.scoreMeaning}).`,
+      whyItMatters: q.purpose,
+      detectedAt: a.completedAt ?? ctx.hour,
+      primaryMetric: q.feeds,
+      evidence: [
+        { label: 'Score', value: `${score}/100`, metric: q.feeds, crewId: a.crewId },
+        ...(comment ? [{ label: 'Comment', value: `“${comment}”` }] : []),
+      ],
+      confidence: 0.8,
+      recommended: [{ kind: 'acknowledge', label: 'Acknowledge', detail: 'Review the answers and follow up if needed.' }],
+    });
+  }
+  return out;
+}
+
 const RULES: Rule[] = [sleepDebt, isolationStress, radiationOutlier, fluidShift, exerciseCompliance, boneOnTrack, workloadHigh, checkInFlag];
 
 export function detectInsights(ctx: EngineContext): Insight[] {
@@ -411,5 +497,10 @@ export function detectInsights(ctx: EngineContext): Insight[] {
   }
   const co2 = cabinCo2(ctx);
   if (co2) out.push(co2);
-  return out.sort((x, y) => SEVERITY_RANK[y.severity] - SEVERITY_RANK[x.severity] || y.detectedAt - x.detectedAt);
+  out.push(...crewModeInsights(ctx));
+  // Nova safety alerts always come first: someone needs help now.
+  const urgent = (i: Insight) => (i.id.startsWith('safety:') ? 1 : 0);
+  return out.sort(
+    (x, y) => urgent(y) - urgent(x) || SEVERITY_RANK[y.severity] - SEVERITY_RANK[x.severity] || y.detectedAt - x.detectedAt,
+  );
 }

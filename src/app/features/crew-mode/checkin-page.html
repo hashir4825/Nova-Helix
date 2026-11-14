@@ -1,0 +1,144 @@
+<div class="page">
+  <header class="head">
+    <div>
+      <p class="eyebrow">Crew Mode · Day {{ clock.day() }}</p>
+      <h1>Check-in</h1>
+    </div>
+    <span class="shared" tabindex="0" [nhTip]="sharedTip">
+      <nh-icon [icon]="icons.send" [size]="14" />Shared with Mission Control
+    </span>
+  </header>
+
+  <div class="layout">
+    <!-- ── Daily check-in ────────────────────────────────────── -->
+    <section class="card daily" aria-labelledby="daily-h">
+      <header class="card-head">
+        <h2 id="daily-h">Today’s check-in</h2>
+        <span class="time-tag"><nh-icon [icon]="icons.clock" [size]="13" />About 30 seconds</span>
+      </header>
+
+      @if (recent() === undefined) {
+        <nh-skeleton h="320px" />
+      } @else if (showForm()) {
+        <form class="form" (submit)="$event.preventDefault(); submit()">
+          <nh-scale-picker legend="How is your mood?" [options]="moodOpts" [(value)]="mood" />
+          <nh-scale-picker legend="How did you sleep?" [options]="sleepOpts" [(value)]="sleep" />
+          <nh-scale-picker legend="How is your energy?" [options]="energyOpts" [(value)]="energy" />
+
+          <fieldset class="symptoms">
+            <legend>Any symptoms? <span class="opt">Tap all that apply</span></legend>
+            <div class="chips">
+              @for (s of symptomList; track s) {
+                <button type="button" class="chip" [class.on]="symptoms().includes(s)" [attr.aria-pressed]="symptoms().includes(s)" (click)="toggleSymptom(s)">
+                  @if (symptoms().includes(s)) {
+                    <nh-icon [icon]="icons.check" [size]="14" [stroke]="2.25" />
+                  }
+                  {{ symptomLabel[s] }}
+                </button>
+              }
+            </div>
+          </fieldset>
+
+          <label class="note">
+            <span class="note-l">Note <span class="opt">Optional</span></span>
+            <textarea
+              rows="2"
+              maxlength="280"
+              [value]="note()"
+              (input)="note.set($any($event.target).value)"
+              placeholder="Anything else worth mentioning"
+            ></textarea>
+          </label>
+
+          <div class="actions">
+            <button type="submit" class="primary" [disabled]="!complete() || sending()">
+              <nh-icon [icon]="icons.send" [size]="16" />{{ sending() ? 'Sending…' : 'Send check-in' }}
+            </button>
+            @if (!complete()) {
+              <span class="hint">Choose mood, sleep and energy to send</span>
+            }
+            @if (editing()) {
+              <button type="button" class="ghost" (click)="editing.set(false)">Cancel</button>
+            }
+          </div>
+        </form>
+      } @else if (today(); as t) {
+        <div class="done" role="status">
+          <span class="done-icon"><nh-icon [icon]="icons.check" [size]="22" [stroke]="2.25" /></span>
+          <div class="done-text">
+            <p class="done-title">{{ justSent() ? 'Sent. Thank you.' : 'Done for today' }}</p>
+            <p class="done-sub">
+              Sent at <span class="mono">{{ time(t.at) }}</span>
+              @if (justSent()) {
+                · reaches {{ surgeon }} on Earth in about <span class="mono">{{ delay() }}</span>
+              }
+            </p>
+          </div>
+          <button type="button" class="ghost" (click)="edit()">Update</button>
+        </div>
+        <dl class="summary">
+          <div><dt>Mood</dt><dd>{{ moodOpts[t.mood - 1].label }}</dd></div>
+          <div><dt>Sleep</dt><dd>{{ sleepOpts[t.sleepQuality - 1].label }}</dd></div>
+          <div><dt>Energy</dt><dd>{{ energyOpts[t.energy - 1].label }}</dd></div>
+          <div><dt>Symptoms</dt><dd>{{ t.symptoms.length ? t.symptoms.map(symptomLabelOf).join(', ') : 'None' }}</dd></div>
+        </dl>
+      }
+
+      <a class="nova-hint" routerLink="/nova">
+        <nh-icon [icon]="icons.lock" [size]="16" />
+        <span><strong>Rather talk it through?</strong> Tell Nova about your day and it will fill this in for you to review.</span>
+        <nh-icon [icon]="icons.chevronRight" [size]="16" />
+      </a>
+    </section>
+
+    <!-- ── Questionnaires ────────────────────────────────────── -->
+    <section class="card qs" aria-labelledby="qs-h">
+      <header class="card-head">
+        <h2 id="qs-h">Questionnaires</h2>
+        <nh-help
+          [tip]="{ title: 'Questionnaires', body: 'Short sets of questions from ' + surgeon + ', one at a time. You can stop any time and continue later; your answers are saved as you go.' }"
+          label="questionnaires"
+        />
+        @if (openCount()) {
+          <span class="count">{{ openCount() }} to do</span>
+        }
+      </header>
+
+      @if (items(); as items) {
+        <ul class="q-list">
+          @for (i of items; track i.a.id) {
+            <li>
+              <a class="q" [class.done]="i.a.status === 'done'" [routerLink]="['/checkin/q', i.a.id]">
+                <span class="q-main">
+                  <span class="q-title">{{ i.q.title }}</span>
+                  <span class="q-purpose">{{ i.q.purpose }}</span>
+                  @if (i.a.note && i.a.status !== 'done') {
+                    <span class="q-note">“{{ i.a.note }}” · {{ i.a.assignedBy }}</span>
+                  }
+                  <span class="q-meta">
+                    @if (i.a.status === 'done') {
+                      <nh-icon [icon]="icons.check" [size]="13" [stroke]="2.25" /> Done · thank you
+                    } @else {
+                      {{ i.total }} questions · {{ i.q.minutes }} min · due D{{ i.a.dueDay }}
+                    }
+                  </span>
+                  @if (i.a.status === 'in-progress') {
+                    <span class="progress" [attr.aria-label]="i.answered + ' of ' + i.total + ' answered'">
+                      <span [style.width.%]="(i.answered / i.total) * 100"></span>
+                    </span>
+                  }
+                </span>
+                <span class="q-cta">
+                  {{ i.a.status === 'done' ? 'View' : i.a.status === 'in-progress' ? 'Continue' : 'Start' }}
+                  <nh-icon [icon]="icons.chevronRight" [size]="16" />
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      } @else {
+        <nh-skeleton h="220px" />
+      }
+    </section>
+  </div>
+</div>

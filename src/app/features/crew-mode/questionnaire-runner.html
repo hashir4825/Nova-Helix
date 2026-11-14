@@ -1,0 +1,90 @@
+<div class="page">
+  <a class="back" routerLink="/checkin"><nh-icon [icon]="icons.arrowLeft" [size]="16" />Check-in</a>
+
+  @if (q(); as q) {
+    <article class="runner">
+      <header class="head">
+        <div>
+          <p class="eyebrow">Questionnaire · from {{ assignment()?.assignedBy }}</p>
+          <h1>{{ q.title }}</h1>
+        </div>
+        <span class="shared"><nh-icon [icon]="icons.send" [size]="13" />Answers go to {{ surgeon }}</span>
+      </header>
+
+      @if (finished()) {
+        <section class="finished" role="status">
+          <span class="done-icon"><nh-icon [icon]="icons.check" [size]="26" [stroke]="2.25" /></span>
+          <h2>Thank you</h2>
+          <p>
+            Your answers are on their way to {{ surgeon }}
+            @if (completedAt()) {
+              (completed {{ completedAt() }})
+            }. They reach Earth in about <span class="mono">{{ delay() }}</span>.
+          </p>
+          <dl class="answers">
+            @for (question of q.questions; track question.id) {
+              <div>
+                <dt>{{ question.text }}</dt>
+                <dd>{{ labelFor(question.id) }}</dd>
+              </div>
+            }
+          </dl>
+          <button type="button" class="primary" (click)="exit()">Back to check-in</button>
+        </section>
+      } @else if (question(); as question) {
+        <div class="progress-row">
+          <span class="step">Question {{ index() + 1 }} of {{ total() }}</span>
+          @if (resumed() && index() > 0) {
+            <span class="resumed">Picked up where you left off</span>
+          }
+          <span class="progress" role="progressbar" [attr.aria-valuenow]="index() + 1" aria-valuemin="1" [attr.aria-valuemax]="total()">
+            <span [style.width.%]="progress()"></span>
+          </span>
+        </div>
+
+        <section class="question" aria-live="polite">
+          <h2 #qHeading tabindex="-1">{{ question.text }}</h2>
+          @if (question.kind === 'scale') {
+            <nh-scale-picker
+              [legend]="question.text"
+              [hideLegend]="true"
+              layout="stack"
+              [options]="question.options ?? []"
+              [value]="scaleValue()"
+              (valueChange)="setAnswer($event)"
+            />
+            <p class="keys">Tip: press <kbd>1</kbd>–<kbd>5</kbd> to answer, <kbd>Enter</kbd> for next.</p>
+          } @else {
+            <label class="text">
+              <span class="visually-hidden">{{ question.text }}</span>
+              <textarea
+                rows="4"
+                maxlength="500"
+                [value]="current() ?? ''"
+                (input)="setAnswer($any($event.target).value)"
+                placeholder="Type here{{ question.optional ? ' (optional)' : '' }}"
+              ></textarea>
+            </label>
+          }
+        </section>
+
+        <footer class="nav">
+          <button type="button" class="ghost" (click)="back()" [disabled]="index() === 0">Back</button>
+          <span class="saved"><nh-icon [icon]="icons.check" [size]="13" />Saved as you go</span>
+          <button type="button" class="primary" (click)="next()" [disabled]="!canNext() || submitting()">
+            @if (isLast()) {
+              {{ submitting() ? 'Sending…' : 'Send answers' }}
+            } @else {
+              {{ question.optional && !current() ? 'Skip' : 'Next' }}
+            }
+            <nh-icon [icon]="isLast() ? icons.send : icons.chevronRight" [size]="16" />
+          </button>
+        </footer>
+      }
+    </article>
+  } @else if (assignment() === undefined) {
+    <nh-skeleton h="420px" />
+  } @else {
+    <p class="missing">This questionnaire could not be found.</p>
+  }
+</div>

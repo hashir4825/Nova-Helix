@@ -40,9 +40,38 @@
         >Crew</a
       >
     </nav>
+  } @else {
+    <nav class="pages crew-pages" aria-label="Crew Mode pages">
+      <a routerLink="/me" routerLinkActive="active" ariaCurrentWhenActive="page" nhTip="Your own health: vitals, hazards and what needs attention" nhTipPlacement="bottom"
+        >My health</a
+      >
+      <a routerLink="/checkin" routerLinkActive="active" ariaCurrentWhenActive="page" nhTip="Daily 30-second check-in and questionnaires. Shared with Mission Control." nhTipPlacement="bottom"
+        >Check-in</a
+      >
+      <a routerLink="/nova" routerLinkActive="active" ariaCurrentWhenActive="page" nhTip="Nova, your private companion. Only you can see the conversation." nhTipPlacement="bottom">
+        <nh-icon [icon]="icons.lock" [size]="12" />Nova</a
+      >
+    </nav>
   }
 
   <div class="spacer"></div>
+
+  @if (crewMode()) {
+    <label class="who crew-who" nhTip="Demo only: choose which astronaut you are. The landing page will replace this." nhTipPlacement="bottom">
+      <span class="who-initial" aria-hidden="true">{{ astronautName().charAt(0) }}</span>
+      <span class="visually-hidden">Signed in as</span>
+      <select [value]="session.astronautId()" (change)="session.astronautId.set($any($event.target).value)">
+        @for (c of crew(); track c.id) {
+          <option [value]="c.id">{{ c.name }}</option>
+        }
+      </select>
+    </label>
+  } @else {
+    <span class="who" tabindex="0" [nhTip]="{ title: 'Signed in', body: cfg.team.flightSurgeon + ', flight surgeon. Sees every astronaut and receives Nova safety alerts.' }" nhTipPlacement="bottom">
+      <span class="who-initial" aria-hidden="true">{{ cfg.team.flightSurgeon.charAt(0) }}</span>
+      <span class="who-text">{{ cfg.team.flightSurgeon }}<span class="who-role">Flight surgeon</span></span>
+    </span>
+  }
 
   @let link = clock.link();
   <div
