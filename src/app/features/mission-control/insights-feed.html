@@ -8,7 +8,7 @@
       [attr.aria-checked]="filter() === f.key"
       (click)="filter.set(f.key)"
     >
-      {{ f.label }} <span class="count">{{ f.count }}</span>
+      {{ f.label }}<span class="count">{{ f.count }}</span>
     </button>
   }
 </div>
@@ -17,16 +17,18 @@
   <ul class="list" aria-busy="true" aria-label="Loading insights">
     @for (i of [0, 1, 2, 3]; track i) {
       <li class="skel">
-        <nh-skeleton w="40%" h="12px" />
-        <nh-skeleton w="85%" h="16px" />
-        <nh-skeleton h="12px" />
-        <nh-skeleton w="70%" h="12px" />
+        <nh-skeleton w="32px" h="32px" />
+        <div class="skel-lines">
+          <nh-skeleton w="70%" h="14px" />
+          <nh-skeleton h="12px" />
+          <nh-skeleton w="40%" h="12px" />
+        </div>
       </li>
     }
   </ul>
 } @else if (visible().length === 0) {
   <div class="empty">
-    <p class="empty-title">No {{ filter() === 'all' ? '' : filter() + ' ' }}findings</p>
+    <p class="empty-title">Nothing to review</p>
     <p class="empty-body">All monitored signals are inside personal baselines.</p>
   </div>
 } @else {
@@ -34,40 +36,26 @@
     @for (ins of visible(); track ins.id) {
       @let who = ins.crewId ? crewById().get(ins.crewId) : undefined;
       <li>
-        <a
-          class="item"
-          [class]="'item sev-' + ins.severity"
-          [routerLink]="[]"
-          [queryParams]="{ insight: ins.id }"
-          queryParamsHandling="merge"
-        >
-          <div class="top">
-            <nh-status [status]="ins.severity" variant="plain" />
-            <span class="tags">
-              @for (h of ins.hazards; track h) {
-                <nh-hazard-tag [hazard]="h" />
-              }
+        <a [class]="'item sev-' + ins.severity" [routerLink]="[]" [queryParams]="{ insight: ins.id }" queryParamsHandling="merge">
+          <span class="sev">
+            <nh-icon [icon]="statusIcon[ins.severity]" [size]="16" [stroke]="2" />
+          </span>
+          <span class="content">
+            <span class="title">
+              <span class="visually-hidden">{{ severityLabel[ins.severity] }}: </span>{{ ins.title }}
             </span>
-            <time class="time">
-              {{ ins.detectedAt | missionTime }}<span class="rel"> · {{ ins.detectedAt | relTime: now() }}</span>
-            </time>
-          </div>
-          <p class="title">{{ ins.title }}</p>
-          <p class="summary">{{ ins.summary }}</p>
-          <div class="meta">
-            <span class="who">
-              @if (who) {
-                {{ who.familyName }} <span class="role">{{ who.role }}</span>
-              } @else {
-                All crew
-              }
+            <span class="summary">{{ ins.summary }}</span>
+            <span class="meta">
+              <span class="who">{{ who ? who.name : 'All crew' }}</span>
+              <span class="dot" aria-hidden="true"></span>
+              <time>{{ ins.detectedAt | relTime: now() }}</time>
+              <span class="hz">
+                @for (h of ins.hazards; track h) {
+                  <nh-icon [icon]="hazardIcon[h]" [size]="13" [label]="hazards[h].label" [attr.title]="hazards[h].label" />
+                }
+              </span>
             </span>
-            <span class="conf" [attr.aria-label]="'Confidence ' + (ins.confidence * 100).toFixed(0) + ' percent'">
-              Conf
-              <span class="conf-bar" aria-hidden="true"><span [style.width.%]="ins.confidence * 100"></span></span>
-              <span class="mono">{{ (ins.confidence * 100).toFixed(0) }}%</span>
-            </span>
-          </div>
+          </span>
         </a>
       </li>
     }

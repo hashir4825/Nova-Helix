@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Astronaut, Insight, ROLE_LABEL, SEVERITY_LABEL, Severity } from '../../core/models';
-import { HazardTag } from '../../shared/ui/hazard-tag';
+import { Astronaut, HAZARDS, Insight, SEVERITY_LABEL, Severity } from '../../core/models';
+import { Icon } from '../../shared/ui/icon';
+import { HAZARD_ICON, STATUS_ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
-import { StatusBadge } from '../../shared/ui/status-badge';
-import { MissionTimePipe, RelTimePipe } from '../../shared/pipes';
+import { RelTimePipe } from '../../shared/pipes';
 
 type Filter = 'all' | Severity;
 
 @Component({
   selector: 'nh-insights-feed',
-  imports: [RouterLink, StatusBadge, HazardTag, Skeleton, MissionTimePipe, RelTimePipe],
+  imports: [RouterLink, Icon, Skeleton, RelTimePipe],
   templateUrl: './insights-feed.html',
   styleUrl: './insights-feed.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,7 +22,10 @@ export class InsightsFeed {
   readonly now = input(0);
 
   protected readonly filter = signal<Filter>('all');
-  protected readonly roleLabel = ROLE_LABEL;
+  protected readonly statusIcon = STATUS_ICON;
+  protected readonly hazardIcon = HAZARD_ICON;
+  protected readonly hazards = HAZARDS;
+  protected readonly severityLabel = SEVERITY_LABEL;
 
   protected readonly filters = computed(() => {
     const list = this.insights() ?? [];

@@ -1,0 +1,291 @@
+@use 'mixins' as *;
+
+:host {
+  display: block;
+}
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(260px, 330px) minmax(0, 1fr) minmax(200px, 240px);
+  gap: var(--space-6);
+  align-items: center;
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-3);
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(600px 240px at 78% 30%, var(--mars-glow), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 85%, transparent), color-mix(in srgb, var(--surface-0) 70%, transparent));
+  overflow: hidden;
+}
+
+.eyebrow {
+  @include label;
+}
+
+// ── Intro ──────────────────────────────────────────────────────────
+.intro {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.day {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.day-k {
+  @include display;
+  font-size: var(--type-title);
+  color: var(--text-2);
+}
+
+.day-n {
+  @include display;
+  font-size: 4rem;
+  font-weight: var(--weight-semibold);
+  line-height: 0.95;
+  color: var(--text-1);
+  letter-spacing: -0.04em;
+}
+
+.day-of {
+  @include display;
+  font-size: var(--type-title);
+  color: var(--text-3);
+}
+
+.crew-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.cs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cs-n {
+  @include mono;
+  font-size: var(--type-body-lg);
+  color: var(--text-1);
+}
+
+// ── Trajectory ─────────────────────────────────────────────────────
+.trajectory {
+  margin: 0;
+  min-width: 0;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 240px;
+    overflow: visible;
+  }
+}
+
+.arc-rest {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 6;
+}
+
+.arc-done {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.tick {
+  fill: var(--tick);
+  &.major {
+    fill: var(--text-3);
+  }
+}
+
+.mark {
+  line {
+    stroke: var(--text-3);
+    stroke-width: 1;
+    stroke-dasharray: 2 2;
+  }
+  text {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    fill: var(--text-3);
+  }
+  &.past text {
+    fill: var(--text-2);
+  }
+}
+
+.halo {
+  opacity: 0.5;
+}
+.earth-halo {
+  fill: color-mix(in srgb, var(--earth) 18%, transparent);
+}
+.mars-halo {
+  fill: var(--mars-glow);
+}
+
+.body-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--text-2);
+}
+
+.ship-dot {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+.ship-ping {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ping 3s var(--ease-out) infinite;
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+  80%,
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.callout {
+  stroke: var(--accent);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.ship-title {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-1);
+}
+
+.ship-data {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--accent);
+}
+
+// ── Side ───────────────────────────────────────────────────────────
+.side {
+  display: grid;
+  gap: var(--space-5);
+  align-content: center;
+}
+
+.next {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.next-title {
+  @include display;
+  font-size: var(--type-h2);
+  color: var(--text-1);
+  margin-top: var(--space-1);
+}
+
+.next-desc {
+  color: var(--text-2);
+  font-size: var(--type-caption);
+}
+
+.next-when {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-size: var(--type-caption);
+
+  .mono {
+    @include mono;
+    color: var(--text-1);
+  }
+  .in {
+    color: var(--accent);
+    font-weight: var(--weight-medium);
+  }
+}
+
+.console {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.avatar {
+  @include display;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: var(--type-caption);
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.console-text {
+  display: grid;
+  gap: 2px;
+}
+
+.console-name {
+  font-weight: var(--weight-semibold);
+}
+
+.console-role {
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}
+
+@include bp-tablet {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'intro side'
+      'traj traj';
+    row-gap: var(--space-4);
+  }
+  .intro {
+    grid-area: intro;
+  }
+  .side {
+    grid-area: side;
+  }
+  .trajectory {
+    grid-area: traj;
+  }
+}
+
+@include bp-narrow {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'intro' 'traj' 'side';
+    padding: var(--space-4);
+  }
+}

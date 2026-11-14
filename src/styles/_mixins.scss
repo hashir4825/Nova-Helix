@@ -1,7 +1,7 @@
 // Shared style mixins. Import with `@use 'mixins' as *;` in component styles.
 
 @mixin label {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--type-label);
   font-weight: var(--weight-medium);
   letter-spacing: var(--tracking-label);
@@ -10,16 +10,23 @@
   color: var(--text-3);
 }
 
+@mixin display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
+}
+
 @mixin mono {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums slashed-zero;
-  font-feature-settings: 'tnum' 1, 'zero' 1;
+  letter-spacing: -0.02em;
 }
 
 @mixin panel {
   background: var(--surface-1);
   border: 1px solid var(--line);
-  border-radius: var(--radius-2);
+  border-radius: var(--radius-3);
   box-shadow: var(--elev-1);
 }
 

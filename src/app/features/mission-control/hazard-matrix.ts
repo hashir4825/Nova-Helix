@@ -1,13 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  Astronaut,
-  HAZARDS,
-  HAZARD_KEYS,
-  HazardAssessment,
-  STATUS_LABEL,
-  scoreToStatus,
-} from '../../core/models';
+import { Astronaut, HAZARDS, HAZARD_KEYS, HazardAssessment, STATUS_LABEL } from '../../core/models';
 import { Icon } from '../../shared/ui/icon';
 import { HAZARD_ICON, STATUS_ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
@@ -40,6 +33,7 @@ export class HazardMatrix {
         const score = c?.score ?? 0;
         return {
           hazard: k,
+          label: HAZARDS[k].label,
           score,
           status: c?.status ?? 'nominal',
           heat: heat(score),
@@ -47,14 +41,5 @@ export class HazardMatrix {
         };
       }),
     }));
-  });
-
-  /** Crew-max per hazard (column summary). */
-  protected readonly maxes = computed(() => {
-    const all = this.assessments() ?? [];
-    return HAZARD_KEYS.map((k) => {
-      const score = Math.max(0, ...all.filter((x) => x.hazard === k).map((x) => x.score));
-      return { hazard: k, score, status: scoreToStatus(score) };
-    });
   });
 }

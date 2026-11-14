@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { HAZARDS, HAZARD_KEYS, HazardAssessment } from '../../core/models';
 
 const SPAN = 72;
-const GAP = 7;
+const GAP = 9;
 
 function polar(cx: number, cy: number, r: number, deg: number) {
   const a = ((deg - 90) * Math.PI) / 180;
@@ -18,27 +18,21 @@ function arc(cx: number, cy: number, r: number, a0: number, a1: number): string 
 
 /**
  * Five-segment hazard ring, one segment per NASA hazard in canonical order,
- * clockwise from top. Fill length = score (0–100), color = level. Labels outside.
+ * clockwise from top. Fill length = score (0–100), color = level.
+ * Content projected into the center (e.g. the astronaut's initial).
  */
 @Component({
   selector: 'nh-hazard-ring',
   template: `
-    <svg
-      [attr.viewBox]="'0 0 ' + box() + ' ' + box()"
-      [attr.width]="box()"
-      [attr.height]="box()"
-      role="img"
-      [attr.aria-label]="ariaLabel()"
-    >
+    <svg [attr.viewBox]="'0 0 ' + size() + ' ' + size()" [attr.width]="size()" [attr.height]="size()" role="img" [attr.aria-label]="ariaLabel()">
       @for (s of segments(); track s.key) {
-        <path class="track" [attr.d]="s.track" />
+        <path class="track" [attr.d]="s.track" [attr.stroke-width]="thickness()" />
         @if (s.score > 0) {
-          <path class="fill" [class]="'fill s-' + s.status" [attr.d]="s.fill" />
+          <path [class]="'fill s-' + s.status" [attr.d]="s.fill" [attr.stroke-width]="thickness()" />
         }
-        <text class="lbl" [attr.x]="s.label.x" [attr.y]="s.label.y" text-anchor="middle" dominant-baseline="central">{{ s.short }}</text>
-      }
-      @for (t of ticks(); track $index) {
-        <line class="tick" [attr.x1]="t.x1" [attr.y1]="t.y1" [attr.x2]="t.x2" [attr.y2]="t.y2" />
+        @if (labels()) {
+          <text class="lbl" [attr.x]="s.label.x" [attr.y]="s.label.y" text-anchor="middle" dominant-baseline="central">{{ s.short }}</text>
+        }
       }
     </svg>
     <div class="center"><ng-content /></div>
@@ -56,23 +50,18 @@ function arc(cx: number, cy: number, r: number, a0: number, a1: number): string 
     .track {
       fill: none;
       stroke: var(--surface-3);
-      stroke-width: 5;
+      stroke-linecap: round;
     }
     .fill {
       fill: none;
-      stroke-width: 5;
       stroke: var(--c);
-      transition: d var(--dur-slow) var(--ease-out);
+      stroke-linecap: round;
     }
     .s-nominal { --c: var(--nominal); }
     .s-watch { --c: var(--watch); }
     .s-alert { --c: var(--alert); }
-    .tick {
-      stroke: var(--tick);
-      stroke-width: 1;
-    }
     .lbl {
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 8.5px;
       font-weight: 500;
       letter-spacing: 0.06em;
@@ -92,40 +81,29 @@ function arc(cx: number, cy: number, r: number, a0: number, a1: number): string 
 export class HazardRing {
   readonly assessments = input<HazardAssessment[]>([]);
   readonly size = input(96);
-
-  protected readonly box = computed(() => this.size());
+  /** Show RAD/ISO/… labels around the ring. */
+  readonly labels = input(true);
+  readonly thickness = input(5);
 
   protected readonly segments = computed(() => {
     const size = this.size();
     const c = size / 2;
-    const r = size / 2 - 18;
+    const r = size / 2 - (this.labels() ? 18 : this.thickness() / 2 + 1);
     const byKey = new Map(this.assessments().map((a) => [a.hazard, a]));
     return HAZARD_KEYS.map((key, i) => {
       const a0 = i * SPAN + GAP / 2 - SPAN / 2;
       const a1 = a0 + SPAN - GAP;
       const a = byKey.get(key);
       const score = a?.score ?? 0;
-      const mid = (a0 + a1) / 2;
       return {
         key,
         short: HAZARDS[key].short,
         score,
         status: a?.status ?? 'nominal',
         track: arc(c, c, r, a0, a1),
-        fill: arc(c, c, r, a0, a0 + Math.max(2, (a1 - a0) * (score / 100))),
-        label: polar(c, c, r + 12, mid),
+        fill: arc(c, c, r, a0, a0 + Math.max(1, (a1 - a0) * (score / 100))),
+        label: polar(c, c, r + 12, (a0 + a1) / 2),
       };
-    });
-  });
-
-  protected readonly ticks = computed(() => {
-    const size = this.size();
-    const c = size / 2;
-    const r = size / 2 - 18;
-    return Array.from({ length: 20 }, (_, i) => {
-      const p0 = polar(c, c, r - 6, i * 18);
-      const p1 = polar(c, c, r - (i % 4 === 0 ? 9 : 7.5), i * 18);
-      return { x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y };
     });
   });
 

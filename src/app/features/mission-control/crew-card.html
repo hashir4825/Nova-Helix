@@ -1,96 +1,85 @@
 @let a = astronaut();
 @let s = summary();
+@let top = topHazard();
 <article class="card" [attr.aria-labelledby]="'crew-' + a.id">
   <header class="head">
-    <div class="ident">
-      <span class="role">
-        <span class="role-code">{{ a.role }}</span>
-        <span>{{ roleLabel[a.role] }} · {{ a.agency }}</span>
-      </span>
-      <h3 class="name" [id]="'crew-' + a.id">
-        <a [routerLink]="['/crew', a.id]">
-          {{ a.givenName }} {{ a.familyName }}
-          <nh-icon class="chev" [icon]="icons.chevronRight" [size]="16" />
-        </a>
-      </h3>
-    </div>
-    @if (s) {
-      <nh-status [status]="s.status" />
+    @if (top) {
+      <a
+        class="avatar-ring"
+        [routerLink]="[]"
+        [queryParams]="{ hazard: top.hazard, crew: a.id }"
+        queryParamsHandling="merge"
+        [attr.aria-label]="a.name + ' hazard ring. Highest: ' + top.def.label + ' ' + top.score + '. Open hazard detail.'"
+      >
+        <nh-hazard-ring [assessments]="hazards()" [size]="64" [labels]="false" [thickness]="4">
+          <span class="initial" aria-hidden="true">{{ a.name.charAt(0) }}</span>
+        </nh-hazard-ring>
+      </a>
     } @else {
-      <nh-skeleton w="72px" h="22px" />
+      <nh-skeleton class="avatar-skel" w="64px" h="64px" />
+    }
+
+    <div class="who">
+      <h3 class="name" [id]="'crew-' + a.id">
+        <a [routerLink]="['/crew', a.id]">{{ a.name }}</a>
+      </h3>
+      <p class="role">{{ roleLabel[a.role] }}</p>
+    </div>
+
+    @if (s) {
+      <nh-status class="status" [status]="s.status" />
+    } @else {
+      <nh-skeleton w="72px" h="24px" />
     }
   </header>
 
-  <div class="body">
-    <div class="vitals">
-      <div class="vitals-head" aria-hidden="true">
-        <span>Vitals</span>
-        @if (clock.isLive()) {
-          <span class="live"><span class="live-dot"></span>Live</span>
-        }
-        <span class="span">24 h · baseline band</span>
-      </div>
-      @if (vitals(); as rows) {
-        <ul class="rows">
-          @for (v of rows; track v.key) {
-            <li>
-              <a
-                class="row"
-                [routerLink]="[]"
-                [queryParams]="{ metric: a.id + ':' + v.key }"
-                queryParamsHandling="merge"
-                [attr.aria-label]="v.aria"
-              >
-                <span class="k">
-                  <span class="k-short">{{ v.def.short }}</span>
-                  <span class="k-unit">{{ v.def.unit }}</span>
-                </span>
-                <span class="v" [class.out]="v.out">
-                  <nh-metric-value [value]="v.value" [decimals]="v.def.decimals" />
-                </span>
-                <span class="d" [class.out]="v.out">{{ v.delta }}</span>
-                <nh-sparkline class="spark" [samples]="v.samples" [baseline]="v.baseline" [width]="104" [height]="26" />
-              </a>
-            </li>
-          }
-        </ul>
-      } @else {
-        <div class="rows-skel">
-          @for (i of [0, 1, 2]; track i) {
-            <nh-skeleton h="34px" />
-          }
-        </div>
-      }
-    </div>
-
-    <div class="hazards">
-      @if (topHazard(); as top) {
-        <a
-          class="ring-link"
-          [routerLink]="[]"
-          [queryParams]="{ hazard: top.hazard, crew: a.id }"
-          queryParamsHandling="merge"
-          [attr.aria-label]="'Highest hazard: ' + top.def.label + ', score ' + top.score + ', ' + top.status + '. Open hazard detail.'"
-        >
-          <nh-hazard-ring [assessments]="hazards()" [size]="112">
-            <span class="ring-center" aria-hidden="true">
-              <span class="rc-code">{{ top.def.short }}</span>
-              <span class="rc-score" [class]="'rc-score s-' + top.status">{{ top.score }}</span>
+  @if (vitals(); as rows) {
+    <ul class="vitals">
+      @for (v of rows; track v.key; let first = $first) {
+        <li>
+          <a
+            class="vital"
+            [routerLink]="[]"
+            [queryParams]="{ metric: a.id + ':' + v.key }"
+            queryParamsHandling="merge"
+            [attr.aria-label]="v.aria"
+          >
+            <span class="v-k">
+              {{ v.def.short }}
+              @if (first && clock.isLive()) {
+                <span class="live" aria-hidden="true"></span>
+              }
             </span>
-          </nh-hazard-ring>
-        </a>
-      } @else {
-        <nh-skeleton class="ring-skel" w="112px" h="112px" />
+            <span class="v-v" [class.out]="v.out">
+              <nh-metric-value [value]="v.value" [decimals]="v.def.decimals" />
+              <span class="v-u">{{ v.def.unit }}</span>
+            </span>
+            <nh-sparkline class="spark" [samples]="v.samples" [baseline]="v.baseline" [width]="120" [height]="24" />
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="vitals-skel">
+      @for (i of [0, 1, 2]; track i) {
+        <nh-skeleton h="64px" />
       }
     </div>
-  </div>
+  }
 
   <footer class="foot">
+    @if (top) {
+      <span class="fact">
+        <nh-icon [icon]="top.icon" [size]="14" />
+        <span>{{ top.def.label }}</span>
+        <span class="mono" [class]="'mono s-' + top.status">{{ top.score }}</span>
+      </span>
+    }
     @if (s) {
       @if (s.checkInHour !== null) {
         <span class="fact ok">
           <nh-icon [icon]="icons.check" [size]="14" [stroke]="2" />
-          Check-in <span class="mono">{{ s.checkInHour | clock }}</span>
+          Checked in <span class="mono">{{ s.checkInHour | clock }}</span>
         </span>
       } @else {
         <span class="fact due">
@@ -98,14 +87,6 @@
           Check-in due <span class="mono">{{ checkInDueHour() | clock }}</span>
         </span>
       }
-      @if (s.nextEvent) {
-        <span class="fact">
-          <nh-icon [icon]="icons.calendar" [size]="14" />
-          Next {{ s.nextEvent.label }} <span class="mono">D{{ s.nextEvent.day }}</span>
-        </span>
-      }
-    } @else {
-      <nh-skeleton w="60%" h="14px" />
     }
   </footer>
 </article>

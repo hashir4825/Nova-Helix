@@ -14,19 +14,20 @@ import { STATUS_ICON } from './icons';
     </span>
   `,
   styles: `
-    @use 'mixins' as *;
     :host {
       display: inline-flex;
     }
     .badge {
-      @include label;
       display: inline-flex;
       align-items: center;
-      gap: var(--space-1);
-      height: 22px;
-      padding: 0 var(--space-2) 0 6px;
-      border-radius: var(--radius-1);
+      gap: 5px;
+      height: 24px;
+      padding: 0 var(--space-3) 0 var(--space-2);
+      border-radius: var(--radius-round);
+      font-family: var(--font-sans);
+      font-size: var(--type-caption);
       font-weight: var(--weight-semibold);
+      line-height: 1;
       color: var(--c);
       background: var(--bg-s);
       white-space: nowrap;

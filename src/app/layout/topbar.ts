@@ -9,7 +9,6 @@ import { ICON } from '../shared/ui/icons';
 import { DelayPipe } from '../shared/pipes';
 
 const pad = (n: number) => String(n).padStart(2, '0');
-const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
 @Component({
   selector: 'nh-topbar',
@@ -38,19 +37,5 @@ export class Topbar {
     const d = this.clock.utc();
     return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
   });
-  protected readonly utcDate = computed(() => {
-    const d = this.clock.utc();
-    return `${pad(d.getUTCDate())} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-  });
 
-  /** Mission elapsed time DDD:HH:MM */
-  protected readonly met = computed(() => {
-    const h = Math.max(0, this.clock.hour());
-    const days = Math.floor(h / 24);
-    const hh = Math.floor(h % 24);
-    const mm = Math.floor((h * 60) % 60);
-    return `${String(days).padStart(3, '0')}:${pad(hh)}:${pad(mm)}`;
-  });
-
-  protected readonly progress = computed(() => Math.min(1, this.clock.hour() / 24 / this.cfg.durationDays));
 }

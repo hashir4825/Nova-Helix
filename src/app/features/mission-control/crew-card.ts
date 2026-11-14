@@ -13,10 +13,9 @@ import {
   ROLE_LABEL,
 } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
-import { formatSigned } from '../../core/util/format';
 import { HazardRing } from '../../shared/ui/hazard-ring';
 import { Icon } from '../../shared/ui/icon';
-import { ICON } from '../../shared/ui/icons';
+import { HAZARD_ICON, ICON } from '../../shared/ui/icons';
 import { MetricValue } from '../../shared/ui/metric-value';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { Sparkline } from '../../shared/ui/sparkline';
@@ -71,7 +70,6 @@ export class CrewCard {
     return h.map(({ key, samples, baseline }) => {
       const def = METRICS[key];
       const value = live?.values[key] ?? samples.at(-1)?.v ?? null;
-      const delta = value !== null && baseline ? value - baseline.mean : null;
       const out = baseline && value !== null && (value < baseline.low || value > baseline.high);
       return {
         key,
@@ -79,7 +77,6 @@ export class CrewCard {
         value,
         samples,
         baseline,
-        delta: delta === null ? '' : formatSigned(delta, def.decimals),
         out,
         aria: `${def.label} ${value?.toFixed(def.decimals) ?? 'no data'} ${def.unit}${
           baseline ? `, personal baseline ${baseline.low.toFixed(def.decimals)} to ${baseline.high.toFixed(def.decimals)}` : ''
@@ -92,7 +89,7 @@ export class CrewCard {
     const hz = this.hazards();
     if (!hz.length) return null;
     const top = hz.reduce((a, b) => (b.score > a.score ? b : a));
-    return { ...top, def: HAZARDS[top.hazard] };
+    return { ...top, def: HAZARDS[top.hazard], icon: HAZARD_ICON[top.hazard] };
   });
 
   protected readonly checkInDueHour = computed(() => {

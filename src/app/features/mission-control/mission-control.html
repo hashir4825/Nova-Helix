@@ -1,45 +1,12 @@
 <div class="page">
-  <header class="page-head">
-    <div class="title-block">
-      <p class="eyebrow">Flight surgeon console</p>
-      <h1>Mission Control</h1>
-    </div>
-
-    <div class="summary" aria-label="Crew status summary">
-      @if (counts(); as counts) {
-        @for (c of counts; track c.status) {
-          <span class="count" [class.zero]="c.n === 0">
-            <span class="count-n mono">{{ c.n }}</span>
-            <nh-status [status]="c.status" variant="plain" />
-          </span>
-        }
-      } @else {
-        <nh-skeleton w="240px" h="22px" />
-      }
-    </div>
-
-    <div class="facts">
-      @if (nextEvent(); as ev) {
-        <div class="fact">
-          <span class="label">Next event</span>
-          <span class="fact-v">
-            <nh-icon [icon]="icons.calendar" [size]="14" />
-            {{ ev.label }}
-            <span class="mono">{{ ev.start | missionTime }}</span>
-            <span class="mono dim">{{ ev.start | relTime: clock.hour() }}</span>
-          </span>
-        </div>
-      }
-      <div class="fact">
-        <span class="label">Data as of</span>
-        <span class="fact-v mono">{{ clock.queryHour() | missionTime }}</span>
-      </div>
-    </div>
-  </header>
+  <nh-mission-hero [counts]="counts()" [nextEvent]="nextEvent()" />
 
   <div class="layout">
     <section class="crew" aria-labelledby="crew-h">
-      <h2 id="crew-h" class="section-label"><span class="code">01</span> Crew · {{ crewList().length || 4 }}</h2>
+      <header class="section-head">
+        <h2 id="crew-h">Crew</h2>
+        <span class="section-meta">Live vitals · 24 h trend against each astronaut's own baseline</span>
+      </header>
       @switch (crew().state) {
         @case ('ready') {
           <div class="crew-grid">
@@ -50,28 +17,28 @@
         }
         @case ('error') {
           <div class="error" role="alert">
-            <p class="label">Crew roster unavailable</p>
-            <p>The data service did not respond. Telemetry continues to be recorded onboard.</p>
+            <p class="error-title">Crew roster unavailable</p>
+            <p>The data service did not respond. Telemetry is still recorded onboard.</p>
             <button type="button" class="btn" (click)="retry()">Retry</button>
           </div>
         }
         @default {
           <div class="crew-grid" aria-busy="true">
             @for (i of [0, 1, 2, 3]; track i) {
-              <nh-skeleton h="248px" />
+              <nh-skeleton h="236px" />
             }
           </div>
         }
       }
     </section>
 
-    <nh-panel class="insights" heading="Insights" code="02" [flush]="true">
-      <span panelMeta>Ranked by severity</span>
+    <nh-panel class="insights" heading="Insights" [flush]="true">
+      <span panelMeta>Most severe first</span>
       <nh-insights-feed [insights]="insights()" [crew]="crewList()" [now]="clock.hour()" />
     </nh-panel>
 
-    <nh-panel class="matrix" heading="Crew hazard matrix" code="03">
-      <span panelMeta>NASA 5 hazards of human spaceflight · score 0–100</span>
+    <nh-panel class="matrix" heading="Hazard exposure">
+      <span panelMeta>NASA's 5 hazards of human spaceflight · watch 40+ · alert 70+</span>
       <nh-hazard-matrix [crew]="crewList()" [assessments]="hazards()" />
     </nh-panel>
   </div>

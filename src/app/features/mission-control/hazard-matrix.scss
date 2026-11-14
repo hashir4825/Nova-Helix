@@ -10,8 +10,9 @@
 
 .matrix {
   width: 100%;
+  min-width: 560px;
   border-collapse: separate;
-  border-spacing: var(--space-1);
+  border-spacing: 6px;
   table-layout: fixed;
 }
 
@@ -22,90 +23,92 @@ td {
   text-align: left;
 }
 
-thead th {
-  vertical-align: bottom;
+.corner {
+  width: 128px;
 }
 
-.corner {
-  width: 120px;
+thead th {
   vertical-align: bottom;
-  padding-bottom: var(--space-2);
 }
 
 .hz-head {
   @include focus-ring;
   display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  column-gap: var(--space-2);
-  row-gap: 2px;
+  gap: var(--space-2);
   padding: var(--space-2);
-  border-radius: var(--radius-1);
-  color: var(--text-2);
-
-  nh-icon {
-    grid-row: span 2;
-    color: var(--text-3);
-  }
+  border-radius: var(--radius-2);
+  transition: background-color var(--dur-fast) var(--ease-out);
 
   &:hover {
     background: var(--surface-2);
-    color: var(--text-1);
-    .hz-short {
+    .hz-icon {
       color: var(--accent);
+      background: var(--accent-soft);
     }
   }
 }
 
-.hz-short {
-  @include label;
-  color: var(--text-1);
-  font-weight: var(--weight-semibold);
+.hz-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-2);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
 .hz-label {
   font-size: var(--type-caption);
-  color: var(--text-3);
-  line-height: var(--lh-tight);
-  @include truncate;
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-snug);
+  color: var(--text-2);
 }
 
 .crew {
   @include focus-ring;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2);
-  border-radius: var(--radius-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-2);
 
   &:hover .crew-name {
     color: var(--accent);
   }
 }
 
+.crew-initial {
+  @include display;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: var(--type-label);
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
 .crew-name {
   font-weight: var(--weight-medium);
 }
 
-.crew-role {
-  @include label;
-}
-
 .cell {
   @include focus-ring;
-  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  height: 48px;
+  justify-content: space-between;
+  height: 46px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   background: var(--h);
-  transition: border-color var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 
   &:hover {
-    border-color: var(--text-3);
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px var(--line-strong);
   }
 }
 
@@ -117,9 +120,12 @@ thead th {
 
 .score {
   @include mono;
-  font-size: var(--type-title);
-  font-weight: var(--weight-medium);
+  font-size: var(--type-body-lg);
   color: var(--text-1);
+}
+
+.s-nominal .score {
+  color: var(--text-2);
 }
 
 .glyph {
@@ -128,82 +134,3 @@ thead th {
 
 .s-watch { --c: var(--watch); }
 .s-alert { --c: var(--alert); }
-.s-nominal { --c: var(--text-2); }
-
-.bar {
-  position: absolute;
-  left: var(--space-3);
-  right: var(--space-3);
-  bottom: 6px;
-  height: 2px;
-  background: var(--surface-3);
-
-  span {
-    display: block;
-    height: 100%;
-    background: var(--c, var(--text-3));
-  }
-}
-
-.s-nominal .bar span {
-  background: var(--text-3);
-}
-
-tfoot th,
-tfoot td {
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--line);
-}
-
-tfoot th {
-  padding-left: var(--space-2);
-}
-
-.max {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding-left: var(--space-3);
-  color: var(--c);
-
-  .mono {
-    @include mono;
-    color: var(--text-2);
-  }
-}
-
-.legend {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-}
-
-.scale {
-  position: relative;
-  display: grid;
-  grid-template-columns: 20fr 20fr 15fr 15fr 30fr;
-  width: 280px;
-  height: 6px;
-  margin-bottom: 14px;
-  border: 1px solid var(--line);
-}
-
-.seg {
-  background: var(--h);
-}
-
-.tick {
-  @include label;
-  position: absolute;
-  top: 10px;
-  font-size: 10px;
-  white-space: nowrap;
-  transform: translateX(-50%);
-}
-
-.t0 { left: 0; transform: none; }
-.t40 { left: 40%; }
-.t70 { left: 70%; }
-.t100 { left: 100%; transform: translateX(-100%); }

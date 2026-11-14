@@ -18,7 +18,7 @@ type Rule = (ctx: EngineContext, crewId: string) => Insight | null;
 
 const confidence = (signals: number, base = 0.56): number => Math.round(clamp(base + signals * 0.08, 0, 0.95) * 100) / 100;
 
-const name = (ctx: EngineContext, crewId: string): string => ctx.db.astronaut(crewId)?.familyName ?? crewId;
+const name = (ctx: EngineContext, crewId: string): string => ctx.db.astronaut(crewId)?.name ?? crewId;
 
 const dir = (now: number, ref: number): Evidence['direction'] => (Math.abs(now - ref) < 1e-6 ? 'flat' : now > ref ? 'up' : 'down');
 

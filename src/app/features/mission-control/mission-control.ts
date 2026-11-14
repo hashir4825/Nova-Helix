@@ -7,17 +7,14 @@ import { MissionClock } from '../../core/state/mission-clock';
 import { withLoad } from '../../core/util/load';
 import { Panel } from '../../shared/ui/panel';
 import { Skeleton } from '../../shared/ui/skeleton';
-import { StatusBadge } from '../../shared/ui/status-badge';
-import { Icon } from '../../shared/ui/icon';
-import { ICON } from '../../shared/ui/icons';
-import { MissionTimePipe, RelTimePipe } from '../../shared/pipes';
 import { CrewCard } from './crew-card';
 import { HazardMatrix } from './hazard-matrix';
 import { InsightsFeed } from './insights-feed';
+import { MissionHero } from './mission-hero';
 
 @Component({
   selector: 'nh-mission-control',
-  imports: [Panel, CrewCard, InsightsFeed, HazardMatrix, StatusBadge, Skeleton, Icon, MissionTimePipe, RelTimePipe],
+  imports: [Panel, CrewCard, InsightsFeed, HazardMatrix, MissionHero, Skeleton],
   templateUrl: './mission-control.html',
   styleUrl: './mission-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,7 +24,6 @@ export class MissionControl {
   private readonly crewApi = inject(CrewApi);
   private readonly assess = inject(AssessmentApi);
   private readonly missionApi = inject(MissionApi);
-  protected readonly icons = ICON;
 
   /** Bumped by "Retry" in error states. */
   private readonly reload = signal(0);

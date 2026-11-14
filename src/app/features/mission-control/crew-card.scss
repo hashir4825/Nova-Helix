@@ -4,41 +4,14 @@
   display: block;
   min-width: 0;
   container: card / inline-size;
-  --stripe: var(--line-strong);
+  --tone: transparent;
 }
 
-// The card adapts to its own width, not the viewport.
-@container card (max-width: 470px) {
-  .vitals-head .span {
-    display: none;
-  }
-  .row {
-    grid-template-columns: 44px minmax(48px, auto) 36px 1fr;
-  }
-  .body {
-    gap: var(--space-2);
-  }
-}
-
-@container card (max-width: 400px) {
-  .body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .hazards {
-    justify-items: start;
-    border-top: 1px solid var(--line);
-    padding-top: var(--space-2);
-  }
-}
-
-:host(.status-nominal) {
-  --stripe: var(--nominal);
-}
 :host(.status-watch) {
-  --stripe: var(--watch);
+  --tone: var(--watch-soft);
 }
 :host(.status-alert) {
-  --stripe: var(--alert);
+  --tone: var(--alert-soft);
 }
 
 .card {
@@ -46,118 +19,130 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  gap: var(--space-4);
   height: 100%;
+  padding: var(--space-5);
   overflow: hidden;
+  // Status tint bleeds softly from the top edge; icon + text carry the meaning.
+  background:
+    radial-gradient(120% 70% at 0% 0%, var(--tone), transparent 60%),
+    var(--surface-1);
+  transition: border-color var(--dur-base) var(--ease-out);
+}
 
-  // Status stripe on the leading edge
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--stripe);
-  }
+:host(.status-alert) .card {
+  border-color: color-mix(in srgb, var(--alert) 45%, var(--line));
+  animation: attn 1.2s var(--ease-in-out) 2;
 }
 
 // Alerts draw attention once, then settle.
-:host(.status-alert) .card {
-  animation: attn 1.1s var(--ease-in-out) 2;
-}
-
 @keyframes attn {
-  0%,
-  100% {
-    border-color: var(--line);
-  }
-  45% {
-    border-color: var(--alert);
+  50% {
+    box-shadow: 0 0 0 3px var(--alert-soft), var(--elev-1);
   }
 }
 
+// ── Head ───────────────────────────────────────────────────────────
 .head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-4) var(--space-3) var(--space-5);
-}
-
-.ident {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.role {
-  @include label;
-  display: flex;
   align-items: center;
-  gap: var(--space-2);
-  @include truncate;
+  gap: var(--space-4);
 }
 
-.role-code {
-  color: var(--text-1);
+.avatar-ring {
+  @include focus-ring;
+  flex: none;
+  border-radius: 50%;
+  transition: transform var(--dur-base) var(--ease-out);
+  &:hover {
+    transform: scale(1.04);
+  }
+}
+
+.avatar-skel {
+  border-radius: 50%;
+  flex: none;
+}
+
+.initial {
+  @include display;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: var(--type-title);
   font-weight: var(--weight-semibold);
-  padding: 1px 4px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-1);
+  color: var(--text-1);
+}
+
+.who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .name {
+  @include display;
   font-size: var(--type-title);
   font-weight: var(--weight-semibold);
-  line-height: var(--lh-snug);
 
   a {
     @include focus-ring;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
     border-radius: var(--radius-1);
     &:hover {
       color: var(--accent);
     }
   }
-  .chev {
-    color: var(--text-3);
-  }
 }
 
-.body {
+.role {
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}
+
+.status {
+  align-self: flex-start;
+}
+
+// ── Vitals ─────────────────────────────────────────────────────────
+.vitals {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-4);
-  padding: 0 var(--space-4) var(--space-3) var(--space-5);
-  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
-.vitals-head {
-  @include label;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--line);
+.vital {
+  @include focus-ring;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-2);
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+  transition: background-color var(--dur-fast) var(--ease-out);
 
-  .span {
-    margin-left: auto;
-    color: var(--text-3);
+  &:hover {
+    background: var(--surface-2);
+    .v-v {
+      color: var(--accent);
+    }
   }
+}
+
+.v-k {
+  @include label;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .live {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--nominal);
-}
-
-.live-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: currentColor;
+  background: var(--nominal);
   animation: pulse 2.4s var(--ease-in-out) infinite;
 }
 
@@ -167,148 +152,87 @@
   }
 }
 
-.rows li + li .row {
-  border-top: 1px solid var(--line);
-}
-
-.row {
-  @include focus-ring;
-  display: grid;
-  grid-template-columns: 48px minmax(56px, auto) 40px 1fr;
-  align-items: center;
-  gap: var(--space-2);
-  height: 44px;
-  padding: 0 var(--space-1);
-  margin: 0 calc(-1 * var(--space-1));
-  border-radius: var(--radius-1);
-  transition: background-color var(--dur-fast) var(--ease-out);
-
-  &:hover {
-    background: var(--surface-2);
-    .v {
-      color: var(--accent);
-    }
-  }
-}
-
-.k {
-  display: grid;
-  gap: 1px;
-}
-
-.k-short {
-  @include label;
-  color: var(--text-2);
-}
-
-.k-unit {
-  @include label;
-  font-size: 10px;
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.v {
+.v-v {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
   font-size: var(--type-h2);
-  font-weight: var(--weight-medium);
-  line-height: 1;
-  text-align: right;
+  line-height: 1.1;
   color: var(--text-1);
   transition: color var(--dur-fast) var(--ease-out);
-}
 
-.d {
-  @include mono;
-  font-size: var(--type-caption);
-  color: var(--text-3);
-  &.out {
+  nh-metric-value {
+    font-weight: var(--weight-medium);
+  }
+
+  &.out nh-metric-value {
     color: var(--watch);
   }
+}
+
+.v-u {
+  font-size: var(--type-caption);
+  color: var(--text-3);
 }
 
 .spark {
-  justify-self: end;
+  margin-top: var(--space-1);
+  width: 100%;
+
+  ::ng-deep svg {
+    width: 100%;
+  }
 }
 
-.rows-skel {
+.vitals-skel {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-2);
-  padding-top: var(--space-2);
 }
 
-.hazards {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  padding-left: var(--space-2);
-}
-
-.ring-link {
-  @include focus-ring;
-  display: block;
-  border-radius: 50%;
-  padding: var(--space-1);
-  transition: background-color var(--dur-fast) var(--ease-out);
-  &:hover {
-    background: var(--surface-2);
-  }
-}
-
-.ring-center {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-}
-
-.rc-code {
-  @include label;
-}
-
-.rc-score {
-  @include mono;
-  font-size: var(--type-title);
-  font-weight: var(--weight-semibold);
-  &.s-watch {
-    color: var(--watch);
-  }
-  &.s-alert {
-    color: var(--alert);
-  }
-  &.s-nominal {
-    color: var(--text-1);
-  }
-}
-
-.ring-skel {
-  border-radius: 50%;
-}
-
+// ── Footer ─────────────────────────────────────────────────────────
 .foot {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
-  align-items: center;
-  min-height: 40px;
-  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-5);
-  border-top: 1px solid var(--line);
-  background: var(--surface-0);
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--type-caption);
+  color: var(--text-2);
 }
 
 .fact {
-  @include label;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-2);
 
+  nh-icon {
+    color: var(--text-3);
+  }
   .mono {
     @include mono;
     color: var(--text-1);
   }
+  .s-watch {
+    color: var(--watch);
+  }
+  .s-alert {
+    color: var(--alert);
+  }
   &.ok nh-icon {
     color: var(--nominal);
   }
-  &.due {
+  &.due,
+  &.due nh-icon {
     color: var(--watch);
+  }
+}
+
+@container card (max-width: 400px) {
+  .vitals {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vital {
+    grid-template-columns: 56px auto 1fr;
+    align-items: center;
   }
 }

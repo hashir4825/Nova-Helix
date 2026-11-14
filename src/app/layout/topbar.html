@@ -1,65 +1,58 @@
-<header class="bar" role="banner">
+<header class="bar">
   <a class="brand" routerLink="/" aria-label="Nova Healix, Mission Control home">
-    <svg class="mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      @for (a of [0, 72, 144, 216, 288]; track a) {
-        <line x1="12" y1="1.5" x2="12" y2="4.5" [attr.transform]="'rotate(' + a + ' 12 12)'" />
-      }
-      <circle class="core" cx="12" cy="12" r="2.25" />
+    <svg class="mark" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+      <ellipse class="orbit" cx="16" cy="16" rx="13" ry="7" transform="rotate(-24 16 16)" />
+      <circle class="planet" cx="16" cy="16" r="5" />
+      <circle class="ship" cx="27.2" cy="10.6" r="2" />
     </svg>
-    <span class="brand-text">
-      <span class="name">NOVA HEALIX</span>
-      <span class="mission">{{ cfg.code }} · {{ cfg.name }}</span>
-    </span>
+    <span class="wordmark">Nova Healix</span>
   </a>
 
   <div class="readouts" role="group" aria-label="Mission time">
-    <div class="ro day">
-      <span class="ro-label">Mission day</span>
-      <span class="ro-value">
-        <span class="big">{{ clock.day() }}</span><span class="of"> / {{ cfg.durationDays }}</span>
-      </span>
-      <span class="progress" aria-hidden="true">
-        <span class="progress-fill" [style.width.%]="progress() * 100"></span>
-      </span>
-      <span class="visually-hidden">Day {{ clock.day() }} of {{ cfg.durationDays }}</span>
-    </div>
-
-    <div class="ro met">
-      <span class="ro-label">MET</span>
-      <span class="ro-value">{{ met() }}</span>
-    </div>
-
-    <div class="ro">
-      <span class="ro-label">UTC<span class="utc-date"> · {{ utcDate() }}</span></span>
-      <span class="ro-value" aria-live="off"><time>{{ utcTime() }}</time></span>
-    </div>
+    <span class="ro">
+      <span class="ro-k">Day</span>
+      <span class="ro-v">{{ clock.day() }}<span class="of">/{{ cfg.durationDays }}</span></span>
+    </span>
+    <span class="sep" aria-hidden="true"></span>
+    <span class="ro">
+      <span class="ro-v"><time>{{ utcTime() }}</time></span>
+      <span class="ro-k">UTC</span>
+    </span>
   </div>
 
   <div class="spacer"></div>
 
   @let link = clock.link();
-  <div class="link" [class.autonomous]="link.mode === 'autonomous'" role="status" aria-live="polite">
-    <nh-icon [icon]="link.mode === 'autonomous' ? icons.unplug : icons.dish" [size]="18" />
-    <span class="link-text">
-      <span class="ro-label">Earth link</span>
-      @if (link.mode === 'autonomous') {
-        <span class="link-value">AUTONOMOUS</span>
-      } @else {
-        <span class="link-value">
-          <span class="live-dot" aria-hidden="true"></span>
-          Signal delay <span class="mono">{{ link.delaySeconds | delay }}</span>
-        </span>
-      }
-    </span>
+  <div class="link" [class.autonomous]="link.mode === 'autonomous'" role="status">
+    @if (link.mode === 'autonomous') {
+      <nh-icon [icon]="icons.unplug" [size]="16" />
+      <span>Autonomous · no Earth link</span>
+    } @else {
+      <span class="beacon" aria-hidden="true"></span>
+      <span>Earth link</span>
+      <span class="link-delay">{{ link.delaySeconds | delay }}</span>
+      <span class="visually-hidden">one-way signal delay</span>
+    }
   </div>
 
-  <nav class="mode" aria-label="Mode">
-    <a routerLink="/" aria-label="Mission Control" [class.active]="!crewMode()" [attr.aria-current]="!crewMode() ? 'page' : null">
-      <nh-icon [icon]="icons.dashboard" [size]="14" /><span class="mode-text">Mission Control</span>
+  <nav class="modes" aria-label="Mode">
+    <a
+      class="mode mc"
+      routerLink="/"
+      [class.active]="!crewMode()"
+      [attr.aria-current]="!crewMode() ? 'page' : null"
+    >
+      <nh-icon [icon]="icons.radar" [size]="16" [stroke]="1.75" />
+      <span class="mode-text">Mission Control</span>
     </a>
-    <a routerLink="/checkin" [class.active]="crewMode()" [attr.aria-current]="crewMode() ? 'page' : null">
-      <nh-icon [icon]="icons.user" [size]="14" />Crew
+    <a
+      class="mode crew"
+      routerLink="/checkin"
+      [class.active]="crewMode()"
+      [attr.aria-current]="crewMode() ? 'page' : null"
+    >
+      <nh-icon [icon]="icons.user" [size]="16" [stroke]="1.75" />
+      <span class="mode-text">Crew Mode</span>
     </a>
   </nav>
 
@@ -70,6 +63,6 @@
     [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
     [attr.title]="theme.theme() === 'dark' ? 'Light theme' : 'Dark theme'"
   >
-    <nh-icon [icon]="icons.contrast" [size]="16" />
+    <nh-icon [icon]="theme.theme() === 'dark' ? icons.sun : icons.moon" [size]="16" />
   </button>
 </header>

@@ -1,16 +1,15 @@
 <div class="scroll">
   <table class="matrix">
     <caption class="visually-hidden">
-      Hazard score from 0 to 100 for each crew member across NASA's five hazards of human spaceflight. Watch at 40, alert at 70.
+      Hazard score from 0 to 100 for each crew member across NASA's five hazards of human spaceflight. Watch from 40, alert from 70.
     </caption>
     <thead>
       <tr>
-        <th scope="col" class="corner"><span class="label">Crew \ Hazard</span></th>
+        <td class="corner"></td>
         @for (h of hazards; track h.key) {
           <th scope="col">
-            <a class="hz-head" [routerLink]="[]" [queryParams]="{ hazard: h.key }" queryParamsHandling="merge" [attr.title]="h.label">
-              <nh-icon [icon]="h.icon" [size]="16" />
-              <span class="hz-short">{{ h.short }}</span>
+            <a class="hz-head" [routerLink]="[]" [queryParams]="{ hazard: h.key }" queryParamsHandling="merge">
+              <span class="hz-icon"><nh-icon [icon]="h.icon" [size]="16" /></span>
               <span class="hz-label">{{ h.label }}</span>
             </a>
           </th>
@@ -23,26 +22,24 @@
           <tr>
             <th scope="row">
               <a class="crew" [routerLink]="['/crew', r.astronaut.id]">
-                <span class="crew-name">{{ r.astronaut.familyName }}</span>
-                <span class="crew-role">{{ r.astronaut.role }}</span>
+                <span class="crew-initial" aria-hidden="true">{{ r.astronaut.name.charAt(0) }}</span>
+                <span class="crew-name">{{ r.astronaut.name }}</span>
               </a>
             </th>
             @for (c of r.cells; track c.hazard) {
               <td>
                 <a
-                  class="cell"
                   [class]="'cell heat-' + c.heat + ' s-' + c.status"
                   [routerLink]="[]"
                   [queryParams]="{ hazard: c.hazard, crew: r.astronaut.id }"
                   queryParamsHandling="merge"
-                  [attr.aria-label]="r.astronaut.familyName + ', ' + c.hazard + ': score ' + c.score + ', ' + statusLabel[c.status] + (c.driver ? '. Main driver: ' + c.driver : '') + '. Open hazard detail.'"
+                  [attr.aria-label]="r.astronaut.name + ', ' + c.label + ': ' + c.score + ', ' + statusLabel[c.status] + (c.driver ? '. Main driver: ' + c.driver : '') + '. Open hazard detail.'"
                   [attr.title]="c.driver ? 'Main driver: ' + c.driver : null"
                 >
                   <span class="score">{{ c.score }}</span>
                   @if (c.status !== 'nominal') {
-                    <nh-icon class="glyph" [icon]="statusIcon[c.status]" [size]="13" [stroke]="2" />
+                    <nh-icon class="glyph" [icon]="statusIcon[c.status]" [size]="14" [stroke]="2" />
                   }
-                  <span class="bar" aria-hidden="true"><span [style.width.%]="c.score"></span></span>
                 </a>
               </td>
             }
@@ -51,7 +48,7 @@
       } @else {
         @for (i of [0, 1, 2, 3]; track i) {
           <tr>
-            <th scope="row"><nh-skeleton w="80px" h="14px" /></th>
+            <th scope="row"><nh-skeleton w="96px" h="16px" /></th>
             @for (j of [0, 1, 2, 3, 4]; track j) {
               <td><nh-skeleton h="44px" /></td>
             }
@@ -59,30 +56,5 @@
         }
       }
     </tbody>
-    @if (rows()) {
-      <tfoot>
-        <tr>
-          <th scope="row"><span class="label">Crew max</span></th>
-          @for (m of maxes(); track m.hazard) {
-            <td>
-              <span class="max" [class]="'max s-' + m.status">
-                <span class="mono">{{ m.score }}</span>
-                @if (m.status !== 'nominal') {
-                  <nh-icon [icon]="statusIcon[m.status]" [size]="12" [stroke]="2" />
-                }
-              </span>
-            </td>
-          }
-        </tr>
-      </tfoot>
-    }
   </table>
-</div>
-
-<div class="legend" aria-hidden="true">
-  <span class="label">Score</span>
-  <span class="scale">
-    <span class="seg heat-0"></span><span class="seg heat-1"></span><span class="seg heat-2"></span><span class="seg heat-3"></span><span class="seg heat-4"></span>
-    <span class="tick t0">0</span><span class="tick t40">40 Watch</span><span class="tick t70">70 Alert</span><span class="tick t100">100</span>
-  </span>
 </div>

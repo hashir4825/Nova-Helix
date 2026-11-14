@@ -39,8 +39,8 @@ function evaDaysFor(crewId: string): Set<number> {
 }
 
 function sleepStartFor(p: Persona, nightOfDay: number): number {
-  // Lindqvist's planned sleep shift for EVA-3 prep: nights D136–D144 start 2 h earlier.
-  if (p.astronaut.id === 'lindqvist' && nightOfDay >= 136 && nightOfDay <= 144) return p.astronaut.sleepStartHour - 2;
+  // Ahmad's planned sleep shift for EVA-3 prep: nights D136–D144 start 2 h earlier.
+  if (p.astronaut.id === 'ahmad' && nightOfDay >= 136 && nightOfDay <= 144) return p.astronaut.sleepStartHour - 2;
   return p.astronaut.sleepStartHour;
 }
 
@@ -89,7 +89,7 @@ export function generateCrew(crewId: CrewId): CrewBundle {
     let dur = P.sleepH + storyValue(p, 'sleepH', d) + sleepNoise.step();
     let eff = P.sleepEff + storyValue(p, 'sleepEff', d) + effNoise.step();
     if (d === 97) {
-      dur -= crewId === 'ferreira' ? 3.1 : 2.4; // SPE alarm at 03:00
+      dur -= crewId === 'sabaina' ? 3.1 : 2.4; // SPE alarm at 03:00
       eff -= 14;
     } else if (d === 98) {
       dur -= 1.6; // night in storm shelter

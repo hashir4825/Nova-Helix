@@ -29,6 +29,8 @@ export interface MissionConfig {
   currentDay: number;
   /** Earth–ship distance per mission day (index 0 = Day 1), AU. */
   trajectoryAu: number[];
+  /** Mission Control team. */
+  team: { flightSurgeon: string; flightDirector: string };
 }
 
 export type LinkMode = 'nominal' | 'degraded' | 'autonomous';

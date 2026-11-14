@@ -24,8 +24,7 @@ export interface Baseline {
 
 export interface Astronaut {
   id: string;
-  givenName: string;
-  familyName: string;
+  name: string;
   role: CrewRole;
   callsign: string;
   age: number;

@@ -1,90 +1,11 @@
 @use 'mixins' as *;
 
 .page {
-  padding: var(--space-5) var(--page-pad) var(--space-7);
-  max-width: 1680px;
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--page-pad) var(--space-8);
+  max-width: 1600px;
   margin: 0 auto;
-}
-
-.page-head {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-6);
-  padding-bottom: var(--space-4);
-  margin-bottom: var(--space-5);
-  border-bottom: 1px solid var(--line);
-}
-
-.title-block {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.eyebrow {
-  @include label;
-}
-
-h1 {
-  font-size: var(--type-h1);
-  font-weight: var(--weight-medium);
-  line-height: var(--lh-tight);
-  letter-spacing: -0.01em;
-}
-
-.summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  padding-bottom: 2px;
-}
-
-.count {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-2);
-
-  &.zero {
-    opacity: 0.55;
-  }
-}
-
-.count-n {
-  @include mono;
-  font-size: var(--type-h2);
-  font-weight: var(--weight-medium);
-  line-height: 1;
-}
-
-.facts {
-  display: flex;
-  gap: var(--space-6);
-  margin-left: auto;
-}
-
-.fact {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.fact-v {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--type-caption);
-  color: var(--text-1);
-  white-space: nowrap;
-
-  nh-icon {
-    color: var(--text-3);
-  }
-}
-
-.mono {
-  @include mono;
-}
-
-.dim {
-  color: var(--text-3);
 }
 
 .layout {
@@ -94,13 +15,30 @@ h1 {
     'crew insights'
     'matrix insights';
   grid-template-rows: auto 1fr;
-  gap: var(--space-5);
+  gap: var(--space-6) var(--space-5);
   align-items: start;
 }
 
 .crew {
   grid-area: crew;
   min-width: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+
+  h2 {
+    @include display;
+    font-size: var(--type-body-lg);
+  }
+}
+
+.section-meta {
+  font-size: var(--type-caption);
+  color: var(--text-3);
 }
 
 .insights {
@@ -112,19 +50,6 @@ h1 {
 
 .matrix {
   grid-area: matrix;
-}
-
-.section-label {
-  @include label;
-  color: var(--text-2);
-  font-weight: var(--weight-semibold);
-  margin-bottom: var(--space-3);
-
-  .code {
-    color: var(--text-3);
-    font-weight: var(--weight-regular);
-    margin-right: var(--space-1);
-  }
 }
 
 .crew-grid {
@@ -143,28 +68,29 @@ h1 {
   color: var(--text-2);
 }
 
+.error-title {
+  font-weight: var(--weight-semibold);
+  color: var(--text-1);
+}
+
 .btn {
   @include reset-button;
   @include focus-ring;
-  @include label;
-  height: 32px;
-  padding: 0 var(--space-3);
+  height: 34px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-round);
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-2);
-  color: var(--text-1);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
   &:hover {
     background: var(--surface-2);
   }
 }
 
 @include bp-tablet {
-  .page-head {
-    flex-wrap: wrap;
-    gap: var(--space-4) var(--space-6);
-  }
-  .facts {
-    margin-left: 0;
-    width: 100%;
+  .page {
+    padding: var(--space-5) var(--space-4) var(--space-7);
+    gap: var(--space-5);
   }
   .layout {
     grid-template-columns: minmax(0, 1fr);
@@ -175,7 +101,7 @@ h1 {
   }
   .insights {
     position: static;
-    max-height: 560px;
+    max-height: 520px;
   }
 }
 

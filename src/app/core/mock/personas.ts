@@ -58,10 +58,10 @@ export interface Persona {
 
 export const PERSONAS: Record<CrewId, Persona> = {
   // Steady, highly adapted. Reference case: everything nominal.
-  okafor: {
+  hashir: {
     astronaut: {
-      id: 'okafor', givenName: 'Adaeze', familyName: 'Okafor', role: 'CDR', callsign: 'KESTREL',
-      age: 46, agency: 'NASA', sleepStartHour: 22, exerciseHour: 6,
+      id: 'hashir', name: 'Hashir', role: 'CDR', callsign: 'KESTREL',
+      age: 44, agency: 'NHX', sleepStartHour: 22, exerciseHour: 6,
       persona: 'Third long-duration flight. Former test pilot. Very consistent sleep and exercise compliance.',
     },
     params: {
@@ -76,10 +76,10 @@ export const PERSONAS: Record<CrewId, Persona> = {
   },
 
   // Storyline: sleep degrading ahead of EVA-3 (sleep shift + workload).
-  lindqvist: {
+  ahmad: {
     astronaut: {
-      id: 'lindqvist', givenName: 'Jonas', familyName: 'Lindqvist', role: 'FE', callsign: 'TORQUE',
-      age: 39, agency: 'ESA', sleepStartHour: 23, exerciseHour: 16,
+      id: 'ahmad', name: 'Ahmad', role: 'FE', callsign: 'TORQUE',
+      age: 39, agency: 'NHX', sleepStartHour: 23, exerciseHour: 16,
       persona: 'Systems and EVA lead. Second flight. Tends to under-sleep during high-workload periods.',
     },
     params: {
@@ -104,10 +104,10 @@ export const PERSONAS: Record<CrewId, Persona> = {
   },
 
   // Storyline: isolation stress rising, exercise compliance dropping.
-  tanaka: {
+  hannan: {
     astronaut: {
-      id: 'tanaka', givenName: 'Rei', familyName: 'Tanaka', role: 'MS', callsign: 'LANTERN',
-      age: 34, agency: 'JAXA', sleepStartHour: 23, exerciseHour: 13,
+      id: 'hannan', name: 'Hannan', role: 'MS', callsign: 'LANTERN',
+      age: 34, agency: 'NHX', sleepStartHour: 23, exerciseHour: 13,
       persona: 'First long-duration flight. Planetary geologist. Close family ties; private conferences now limited by delay.',
     },
     params: {
@@ -138,10 +138,10 @@ export const PERSONAS: Record<CrewId, Persona> = {
   },
 
   // Storyline: highest radiation dose (late to shelter on D97) + fluid-shift symptoms.
-  ferreira: {
+  sabaina: {
     astronaut: {
-      id: 'ferreira', givenName: 'Sofia', familyName: 'Ferreira', role: 'CMO', callsign: 'MERIDIAN',
-      age: 42, agency: 'NASA', sleepStartHour: 22, exerciseHour: 18,
+      id: 'sabaina', name: 'Sabaina', role: 'CMO', callsign: 'MERIDIAN',
+      age: 41, agency: 'NHX', sleepStartHour: 22, exerciseHour: 18,
       persona: 'Emergency physician. Crew medical officer. Entered storm shelter late on D97 securing the medical bay.',
     },
     params: {
