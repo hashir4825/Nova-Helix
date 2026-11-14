@@ -1,4 +1,5 @@
 import {
+  Resolution,
   ActionLogEntry,
   CrewMessage,
   Assignment,
@@ -165,6 +166,22 @@ export class MockDatabase {
 
   addLog(e: ActionLogEntry): void {
     this.log.push(e);
+    this.bump();
+  }
+
+  private readonly resolutions = new Map<string, Resolution>();
+
+  resolution(insightId: string): Resolution | undefined {
+    return this.resolutions.get(insightId);
+  }
+
+  resolve(insightId: string, r: Resolution): void {
+    this.resolutions.set(insightId, r);
+    this.bump();
+  }
+
+  reopen(insightId: string): void {
+    this.resolutions.delete(insightId);
     this.bump();
   }
 

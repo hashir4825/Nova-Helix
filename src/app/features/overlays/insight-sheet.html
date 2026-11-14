@@ -10,7 +10,23 @@
   </ng-container>
 
   @if (i) {
-    @if (urgent()) {
+    @if (i.resolution; as r) {
+      <section class="resolved" role="status">
+        <nh-icon [icon]="icons.check" [size]="20" [stroke]="2.25" />
+        <div>
+          <p class="r-title">Resolved {{ when(r.at) }} by {{ r.by }}</p>
+          <p class="r-note">{{ r.note }}</p>
+        </div>
+        <button type="button" class="ghost" (click)="reopen()">Reopen</button>
+      </section>
+    } @else if (i.reopened) {
+      <section class="reopened" role="alert">
+        <nh-icon [icon]="icons.alert" [size]="18" />
+        <p>Reopened automatically: this got more severe after it was resolved.</p>
+      </section>
+    }
+
+    @if (urgent() && !i.resolution) {
       <section class="urgent" role="alert">
         <nh-icon [icon]="icons.alert" [size]="20" />
         <div>
@@ -35,7 +51,9 @@
         <span class="avatar" aria-hidden="true">4</span>
         <span class="who-text"><span class="who-name">Whole crew</span></span>
       }
-      @if (acknowledged(); as ack) {
+      @if (i.resolution) {
+        <span class="ack"><nh-icon [icon]="icons.check" [size]="14" [stroke]="2" />Resolved</span>
+      } @else if (acknowledged(); as ack) {
         <span class="ack"><nh-icon [icon]="icons.check" [size]="14" [stroke]="2" />Acknowledged {{ clockOf(ack.at) }}</span>
       } @else {
         <button type="button" class="ghost" (click)="acknowledge()">Acknowledge</button>
@@ -116,6 +134,35 @@
         }
       </ol>
     </section>
+
+    <!-- Resolve -->
+    @if (!i.resolution) {
+      <section class="block resolve-block">
+        <h3>Close this finding</h3>
+        @if (resolving()) {
+          <div class="resolve-form">
+            <p class="r-help">What was done? This note stays in the log and the finding moves to Resolved.</p>
+            <div class="quick">
+              @for (q of quickNotes(); track q) {
+                <button type="button" class="chip" [class.on]="note() === q" (click)="note.set(q)">{{ q }}</button>
+              }
+            </div>
+            <label class="visually-hidden" for="resolve-note">Resolution note</label>
+            <textarea id="resolve-note" rows="3" [value]="note()" (input)="note.set($any($event.target).value)" placeholder="Or write your own note"></textarea>
+            <div class="c-actions">
+              <button type="button" class="do resolve" (click)="resolve()" [disabled]="!note().trim()">
+                <nh-icon [icon]="icons.check" [size]="15" [stroke]="2.25" />Resolve
+              </button>
+              <button type="button" class="ghost" (click)="resolving.set(false)">Cancel</button>
+            </div>
+          </div>
+        } @else {
+          <button type="button" class="do resolve-start" (click)="startResolve()" nhTip="Mark as handled. It leaves the active views; if it gets worse it reopens itself.">
+            <nh-icon [icon]="icons.check" [size]="15" [stroke]="2.25" />Resolve
+          </button>
+        }
+      </section>
+    }
 
     <!-- Log -->
     <section class="block">

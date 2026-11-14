@@ -118,7 +118,7 @@ export interface SafetyFlag {
 }
 
 // ── Mission Control actions ─────────────────────────────────────────
-export type LogKind = 'acknowledge' | 'message' | 'in-person' | 'psych' | 'medical' | 'escalate' | 'countermeasure' | 'questionnaire';
+export type LogKind = 'acknowledge' | 'message' | 'in-person' | 'psych' | 'medical' | 'escalate' | 'countermeasure' | 'questionnaire' | 'resolve' | 'reopen';
 
 export interface ActionLogEntry {
   id: string;

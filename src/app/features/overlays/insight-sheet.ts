@@ -72,7 +72,6 @@ export class InsightSheet {
     const i = this.insight();
     if (!i) return [];
     const mine = this.logAll().filter((e) => e.insightId === i.id);
-    const delayH = this.clock.link().delaySeconds / 3600;
     const system: ActionLogEntry[] = [
       {
         id: 'detected',
@@ -84,9 +83,6 @@ export class InsightSheet {
         label: this.urgent() ? 'Alert raised on board' : 'Finding detected',
       },
     ];
-    if (this.urgent()) {
-      system.push({ id: 'arrived', insightId: i.id, crewId: i.crewId, at: i.detectedAt + delayH, by: 'Earth link', kind: 'acknowledge', label: 'Alert reached Mission Control' });
-    }
     return [...mine, ...system].sort((a, b) => b.at - a.at);
   });
 
@@ -132,6 +128,37 @@ export class InsightSheet {
     const i = this.insight();
     if (!i) return;
     this.actions.record({ insightId: i.id, crewId: i.crewId, kind: 'acknowledge', label: 'Acknowledged' }).subscribe();
+  }
+
+  // ── Resolve ──────────────────────────────────────────────────────
+  protected readonly resolving = signal(false);
+  protected readonly note = signal('');
+  protected readonly quickNotes = computed(() => {
+    const name = this.who()?.name ?? 'the crew';
+    return this.urgent()
+      ? [
+          `Spoke with ${name}; safe and supported, crewmate with them`,
+          `Psychologist conference held; follow-up plan agreed`,
+          `Medical assessment done on board; stable`,
+        ]
+      : [`Discussed with ${name}; plan in place`, 'Countermeasure scheduled', 'Reviewed; no further action needed'];
+  });
+
+  protected startResolve(): void {
+    this.note.set('');
+    this.resolving.set(true);
+  }
+
+  protected resolve(): void {
+    const i = this.insight();
+    const note = this.note().trim();
+    if (!i || !note) return;
+    this.actions.resolve(i.id, i.crewId, note, i.severity).subscribe(() => this.resolving.set(false));
+  }
+
+  protected reopen(): void {
+    const i = this.insight();
+    if (i) this.actions.reopen(i.id, i.crewId).subscribe();
   }
 
   protected readonly delay = computed(() => formatDelay(this.clock.link().delaySeconds));

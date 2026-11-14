@@ -62,7 +62,9 @@ export class MissionControl {
   });
 
   protected readonly hazards = toSignal(this.query$.pipe(switchMap(([q]) => this.assess.hazards(q))));
-  protected readonly insights = toSignal(this.query$.pipe(switchMap(([q]) => this.assess.insights(q))));
+  private readonly allInsights = toSignal(this.query$.pipe(switchMap(([q]) => this.assess.insights(q))));
+  /** Active findings only: resolved ones live on the Insights page. */
+  protected readonly insights = computed(() => this.allInsights()?.filter((i) => !i.resolution));
   protected readonly summaries = toSignal(this.query$.pipe(switchMap(([q]) => this.assess.crewSummaries(q))));
   private readonly events = toSignal(this.missionApi.events(), { initialValue: [] });
 

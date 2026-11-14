@@ -77,14 +77,14 @@ export class Profile {
 
   protected readonly insights = computed(() =>
     (this.allInsights() ?? [])
-      .filter((i) => i.crewId === this.crewId() || i.crewId === null)
+      .filter((i) => (i.crewId === this.crewId() || i.crewId === null) && !i.resolution)
       // The astronaut never sees the clinical safety alert about themself; they get the support note instead.
       .filter((i) => !(this.isAstronaut() && i.id.startsWith('safety:')))
       .sort((a, b) => urgentRank(b) - urgentRank(a) || SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] || b.detectedAt - a.detectedAt),
   );
   /** Active Nova safety alert for this astronaut. */
   protected readonly urgent = computed(() =>
-    (this.allInsights() ?? []).find((i) => i.id.startsWith('safety:') && i.crewId === this.crewId()),
+    (this.allInsights() ?? []).find((i) => i.id.startsWith('safety:') && i.crewId === this.crewId() && !i.resolution),
   );
   protected readonly surgeon = this.clock.config.team.flightSurgeon;
   protected readonly helperName = computed(() => {

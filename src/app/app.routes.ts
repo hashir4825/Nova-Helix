@@ -7,6 +7,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/mission-control/mission-control').then((m) => m.MissionControl),
   },
   {
+    // All findings, filterable by crew member, with Active / Resolved history.
+    path: 'insights',
+    title: 'Insights · Nova Healix',
+    loadComponent: () => import('./features/insights/insights-page').then((m) => m.InsightsPage),
+  },
+  {
     // Flight surgeon's crew directory: pick a member to open their profile.
     path: 'crew',
     title: 'Crew · Nova Healix',

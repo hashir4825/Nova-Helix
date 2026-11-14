@@ -58,10 +58,10 @@ export class CrewDirectory {
       const mine = hz.filter((h) => h.crewId === a.id);
       const top = mine.length ? mine.reduce((m, h) => (h.score > m.score ? h : m)) : undefined;
       const finding = ins
-        .filter((i) => i.crewId === a.id && i.severity !== 'info')
+        .filter((i) => i.crewId === a.id && i.severity !== 'info' && !i.resolution)
         .sort((x, y) => Number(y.id.startsWith('safety:')) - Number(x.id.startsWith('safety:')) || SEVERITY_RANK[y.severity] - SEVERITY_RANK[x.severity] || y.detectedAt - x.detectedAt)[0];
       const status = s?.status ?? 'nominal';
-      const openFindings = ins.filter((i) => i.crewId === a.id && i.severity !== 'info').length;
+      const openFindings = ins.filter((i) => i.crewId === a.id && i.severity !== 'info' && !i.resolution).length;
       return {
         a,
         role: ROLE_LABEL[a.role],

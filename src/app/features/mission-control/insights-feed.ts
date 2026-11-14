@@ -40,7 +40,8 @@ export class InsightsFeed {
   protected readonly acked = computed(() => {
     const m = new Map<string, string>();
     for (const e of [...this.log()].sort((a, b) => a.at - b.at)) {
-      m.set(e.insightId, (e.kind === 'acknowledge' ? 'Acknowledged ' : 'Responded ') + formatClock(e.at));
+      if (e.kind === 'reopen') m.delete(e.insightId);
+      else m.set(e.insightId, (e.kind === 'acknowledge' ? 'Acknowledged ' : e.kind === 'resolve' ? 'Resolved ' : 'Responded ') + formatClock(e.at));
     }
     return m;
   });

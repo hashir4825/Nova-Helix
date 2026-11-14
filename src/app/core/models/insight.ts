@@ -48,6 +48,18 @@ export interface Insight {
   /** 0–1 */
   confidence: number;
   recommended: RecommendedAction[];
+  /** Set when the flight surgeon resolved it and it has not got worse since. */
+  resolution?: Resolution;
+  /** It was resolved earlier but is more severe now, so it is active again. */
+  reopened?: boolean;
+}
+
+export interface Resolution {
+  at: number;
+  by: string;
+  note: string;
+  /** Severity when resolved; a higher severity later reopens the finding. */
+  severity: Severity;
 }
 
 export interface HazardDriver {

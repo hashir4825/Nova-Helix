@@ -1,0 +1,95 @@
+<div class="page">
+  <header class="head">
+    <div>
+      <p class="eyebrow">Mission Control</p>
+      <div class="title-row">
+        <h1>Insights</h1>
+        <nh-help [tip]="helpTip" label="the insights page" />
+      </div>
+    </div>
+
+    <label class="member">
+      <span class="m-label">Crew member</span>
+      <select [value]="selected()" (change)="setMember($any($event.target).value)">
+        @for (o of memberOptions(); track o.value) {
+          <option [value]="o.value" [selected]="o.value === selected()">{{ o.label }}</option>
+        }
+      </select>
+    </label>
+  </header>
+
+  <div class="controls">
+    <div class="tabs" role="tablist" aria-label="Finding state">
+      @for (t of tabs(); track t.key) {
+        <button type="button" role="tab" class="tab" [class.on]="view() === t.key" [attr.aria-selected]="view() === t.key" (click)="view.set(t.key)">
+          {{ t.label }} <span class="n">{{ t.n }}</span>
+        </button>
+      }
+    </div>
+    <div class="sev" role="radiogroup" aria-label="Severity">
+      @for (s of sevOptions; track s.key) {
+        <button type="button" role="radio" class="sev-btn" [class.on]="sev() === s.key" [attr.aria-checked]="sev() === s.key" (click)="sev.set(s.key)">
+          @if (s.icon) {
+            <nh-icon [class]="'s-' + s.key" [icon]="s.icon" [size]="14" [stroke]="2" />
+          }
+          {{ s.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (rows(); as rows) {
+    @if (rows.length) {
+      <ul class="list">
+        @for (r of rows; track r.i.id) {
+          <li class="row" [class.urgent]="r.urgent && !r.i.resolution" [class.resolved]="!!r.i.resolution">
+            <a class="item" [routerLink]="[]" [queryParams]="{ insight: r.i.id }" queryParamsHandling="merge" [nhTip]="{ title: r.i.title, body: r.i.summary, hint: r.i.resolution ? 'Click to see what was done' : 'Click to respond or resolve' }" nhTipPlacement="left">
+              <span [class]="'sev-icon s-' + r.i.severity">
+                <nh-icon [icon]="r.i.resolution ? icons.check : statusIcon[r.i.severity]" [size]="18" [stroke]="2" />
+              </span>
+              <span class="body">
+                <span class="top">
+                  <span class="who">{{ r.who ? r.who.name : 'Whole crew' }}</span>
+                  <span class="sev-text" [class]="'sev-text s-' + r.i.severity">{{ sevLabel[r.i.severity] }}</span>
+                  @if (r.i.reopened) {
+                    <span class="flag watch">Reopened: got worse</span>
+                  }
+                  <span class="hz">
+                    @for (h of r.i.hazards; track h) {
+                      <nh-icon [icon]="hazardIcon[h]" [size]="14" [label]="hazards[h].label" />
+                    }
+                  </span>
+                </span>
+                <span class="title">{{ r.i.title }}</span>
+                <span class="summary">{{ r.i.summary }}</span>
+                <span class="meta">
+                  <span class="mono">{{ when(r.i.detectedAt) }}</span>
+                  <span>· {{ r.i.detectedAt | relTime: clock.hour() }}</span>
+                  @if (r.i.resolution; as res) {
+                    <span class="res"><nh-icon [icon]="icons.check" [size]="12" [stroke]="2.25" />Resolved {{ when(res.at) }} by {{ res.by }}: “{{ res.note }}”</span>
+                  } @else if (r.last) {
+                    <span class="last">{{ r.last }}</span>
+                  } @else if (r.urgent) {
+                    <span class="unhandled">Not yet handled</span>
+                  }
+                </span>
+              </span>
+            </a>
+            @if (r.who) {
+              <a class="profile" [routerLink]="['/crew', r.who.id]" [attr.aria-label]="'Open ' + r.who.name + '’s profile'">
+                <nh-icon [icon]="icons.user" [size]="14" />Profile
+              </a>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="empty">
+        <nh-icon [icon]="icons.check" [size]="20" />
+        <p>{{ view() === 'resolved' ? 'Nothing resolved yet for this selection.' : 'No active findings for this selection.' }}</p>
+      </div>
+    }
+  } @else {
+    <nh-skeleton h="400px" />
+  }
+</div>

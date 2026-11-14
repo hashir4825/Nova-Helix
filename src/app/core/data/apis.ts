@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
 import {
+  Severity,
   ActionLogEntry,
   CrewMessage,
   AnswerValue,
@@ -95,6 +96,9 @@ export abstract class ActionsApi {
   /** Message an astronaut; it arrives after the one-way signal delay. Also logged against the insight. */
   abstract sendMessage(crewId: string, text: string, insightId?: string): Observable<CrewMessage>;
   abstract messages(crewId: string): Observable<CrewMessage[]>;
+  /** Close a finding once handled; it leaves the active views. Reopens itself if it gets more severe. */
+  abstract resolve(insightId: string, crewId: string | null, note: string, severity: Severity): Observable<void>;
+  abstract reopen(insightId: string, crewId: string | null): Observable<void>;
 }
 
 export abstract class AssessmentApi {

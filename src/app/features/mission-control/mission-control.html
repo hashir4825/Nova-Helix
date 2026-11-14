@@ -49,7 +49,7 @@
     </section>
 
     <nh-panel class="insights" heading="Insights" [flush]="true">
-      <span panelMeta>Most severe first</span>
+      <span panelMeta>Most severe first · <a class="inline-link" routerLink="/insights">View all</a></span>
       <nh-help panelActions [tip]="help.insightsSection" label="insights" />
       <nh-insights-feed [insights]="insights()" [crew]="crewList()" [now]="clock.hour()" />
     </nh-panel>

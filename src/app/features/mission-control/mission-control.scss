@@ -163,3 +163,13 @@
     background: var(--accent-soft);
   }
 }
+
+.inline-link {
+  @include focus-ring;
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
+  border-radius: var(--radius-1);
+  &:hover {
+    text-decoration: underline;
+  }
+}

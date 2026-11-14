@@ -24,6 +24,8 @@ import {
   MissionEvent,
   Sample,
   VITAL_KEYS,
+  SEVERITY_RANK,
+  Severity,
   severityToStatus,
   worstStatus,
 } from '../models';
@@ -176,11 +178,20 @@ export class MockAssessmentApi extends AssessmentApi {
     let a = this.cache.get(key);
     if (!a) {
       const ctx = this.ctx(q);
-      a = { hazards: assessHazards(ctx), insights: detectInsights(ctx) };
+      a = { hazards: assessHazards(ctx), insights: this.withResolutions(detectInsights(ctx)) };
       if (this.cache.size > 400) this.cache.clear();
       this.cache.set(key, a);
     }
     return a;
+  }
+
+  /** Mark resolved findings; one that got more severe since it was resolved is active again. */
+  private withResolutions(list: Insight[]): Insight[] {
+    return list.map((i) => {
+      const r = this.db.resolution(i.id);
+      if (!r) return i;
+      return SEVERITY_RANK[i.severity] > SEVERITY_RANK[r.severity] ? { ...i, reopened: true } : { ...i, resolution: r };
+    });
   }
 
   private stream<T>(q: AnalysisQuery, pick: (a: Analysis) => T): Observable<T> {
@@ -211,7 +222,7 @@ export class MockAssessmentApi extends AssessmentApi {
       const today = hourToDay(q.atHour);
       return this.db.crew().map((astro) => {
         const hz = a.hazards.filter((h) => h.crewId === astro.id).map((h) => h.status);
-        const ins = a.insights.filter((i) => i.crewId === astro.id).map((i) => severityToStatus(i.severity));
+        const ins = a.insights.filter((i) => i.crewId === astro.id && !i.resolution).map((i) => severityToStatus(i.severity));
         const ci = this.db.checkIns(astro.id).find((c) => c.day === today && c.at <= q.atHour);
         const next = this.db
           .events()
@@ -448,6 +459,19 @@ export class MockActionsApi extends ActionsApi {
 
   messages(crewId: string): Observable<CrewMessage[]> {
     return this.db.changes$.pipe(map(() => [...this.db.crewMessages(crewId)]));
+  }
+
+  resolve(insightId: string, crewId: string | null, note: string, severity: Severity): Observable<void> {
+    const at = this.now();
+    this.db.addLog({ id: `log-${++this.seq}`, insightId, crewId, at, by: this.surgeon, kind: 'resolve', label: 'Resolved', detail: note });
+    this.db.resolve(insightId, { at, by: this.surgeon, note, severity });
+    return of(undefined);
+  }
+
+  reopen(insightId: string, crewId: string | null): Observable<void> {
+    this.db.addLog({ id: `log-${++this.seq}`, insightId, crewId, at: this.now(), by: this.surgeon, kind: 'reopen', label: 'Reopened' });
+    this.db.reopen(insightId);
+    return of(undefined);
   }
 }
 
