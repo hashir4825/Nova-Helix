@@ -53,6 +53,8 @@ export interface HazardDriver {
   value: string;
   /** 0–100 contribution to the hazard score. */
   contribution: number;
+  /** Plain-language phrase used when this driver is a concern, e.g. "sleep is more broken". */
+  concern?: string;
 }
 
 export interface HazardAssessment {
@@ -61,4 +63,23 @@ export interface HazardAssessment {
   score: number;
   status: Status;
   drivers: HazardDriver[];
+  /** Key figure for the hazard tile, e.g. "321 mSv · 53% of career limit". */
+  headline: string;
+  /** Plain-language explanation without scores or pronouns, suitable for the astronaut. */
+  explanation: string;
+}
+
+export interface MetricInterpretation {
+  crewId: string;
+  metric: MetricKey;
+  /** What changed. */
+  summary: string;
+  whyItMatters: string;
+  /** Signals that move together with this one. */
+  contributing: Evidence[];
+  /** 0–1 */
+  confidence: number;
+  recommended: RecommendedAction[];
+  trend: 'up' | 'down' | 'flat';
+  status: Status;
 }

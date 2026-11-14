@@ -122,6 +122,9 @@ export function generateCrew(crewId: CrewId): CrewBundle {
     if (d > 2 && done) {
       paint(exerciseLoad, exStart, exStart + 1, 1);
       paint(exerciseLoad, exStart + 1, exStart + 1.5, 0.5);
+      // Leg press load cells: estimated 1RM, tracks lean mass loss (+ extra for skipped training).
+      const strength = P.strength * (1 - (leanLossPct * 1.4) / 100 + storyValue(p, 'strengthPct', d)) + rng.gauss() * 1.6;
+      push('legStrength', exStart + 1.5, round(strength, 1));
     }
 
     // Radiation: cumulative effective dose at start of day d
@@ -144,6 +147,33 @@ export function generateCrew(crewId: CrewId): CrewBundle {
     if (d % 7 === 1) {
       push('boneDensity', at(d, 9), round(P.bmd * (1 - boneLossPct / 100) + rng.gauss() * 0.003, 4));
       push('muscleMass', at(d, 9), round(P.lean * (1 - leanLossPct / 100) + rng.gauss() * 0.18, 2));
+    }
+
+    // Weekly tablet tests: reaction time (PVT) and near vision
+    if (d % 7 === 0) {
+      const rtBump = d === 98 ? 22 : 0; // post solar-event fatigue
+      push('reactionTime', at(d, 20.5), round(P.rt + storyValue(p, 'rt', d) + rng.gauss() * 7 + rtBump, 0));
+      const acuity = P.acuity + storyValue(p, 'acuity', d) + rng.gauss() * 0.025;
+      push('visionAcuity', at(d, 20.6), round(Math.round(acuity * 20) / 20, 2));
+    }
+    // Extra vision check the evening Sabaina reported blurred near vision
+    if (crewId === 'sabaina' && d === 140) {
+      push('visionAcuity', at(d, 21), round(P.acuity + storyValue(p, 'acuity', d), 2));
+    }
+
+    // Monthly lab panel (+ extra panel after the solar particle event)
+    if (d % 30 === 15 || d === 99) {
+      const post = d === 99 ? (crewId === 'sabaina' ? -0.75 : -0.4) : 0;
+      push('wbc', at(d, 8), round(P.wbc + storyValue(p, 'wbc', d) + rng.gauss() * 0.3 + post * 0.6, 2));
+      push('lymphocytes', at(d, 8), round(P.lymph + rng.gauss() * 0.12 + post, 2));
+      const ntxRise = 1 + Math.min(0.35, (d / 120) * 0.35) + storyValue(p, 'ntxPct', d);
+      push('boneMarker', at(d, 8.1), round(P.ntx * ntxRise + rng.gauss() * 2, 0));
+    }
+
+    // Medical supply readiness (ship-wide inventory, deterministic)
+    if (d % 7 === 2) {
+      const kit = 100 - d * 0.1 - (d > 97 ? 3 : 0) - (d >= 135 ? 4 : 0) + Math.sin(d / 9) * 0.8;
+      push('medKit', at(d, 10), round(Math.min(100, kit), 0));
     }
 
     // Weekly questionnaires
@@ -176,7 +206,13 @@ export function generateCrew(crewId: CrewId): CrewBundle {
     sys: new ArNoise(rng, 3),
     dia: new ArNoise(rng, 2.2),
     resp: new ArNoise(rng, 0.7, 0.5),
+    dose: new ArNoise(rng, 0.05, 0.6),
+    noise: new ArNoise(rng, 1.3, 0.6),
+    cabT: new ArNoise(rng, 0.18, 0.8),
+    rh: new ArNoise(rng, 1.6, 0.8),
   };
+  const speStart = at(97, 3);
+  const speHours = 32;
   for (let h = 0; h < GENERATED_HOURS; h++) {
     const d = hourToDay(h);
     const hod = h % 24;
@@ -205,6 +241,24 @@ export function generateCrew(crewId: CrewId): CrewBundle {
     push('bpSys', h, round(clamp(sys, 85, 175), 1));
     push('bpDia', h, round(clamp(dia, 48, 110), 1));
     push('resp', h, round(clamp(resp, 8, 34), 1));
+
+    // Dosimeter: galactic cosmic ray background ~74 µSv/h, EVA adds, SPE spikes.
+    let rate = 74 * P.shield * (1 + n.dose.step()) + 40 * ev;
+    if (h >= speStart && h < speStart + speHours) {
+      const k = h - speStart;
+      // Rise over 4 h, slow decay; integrates to roughly the persona's SPE dose.
+      const shape = k < 4 ? (k + 1) / 4 : Math.exp(-(k - 4) / 12);
+      rate += ((P.speDose * 1000) / 15.5) * shape;
+      if (crewId === 'sabaina' && k < 3) rate *= 1.6; // late into the shelter
+    }
+    push('doseRate', h, round(rate, 0));
+
+    // Crew-quarters environment
+    const anomaly = d >= 140 ? 1 : 0;
+    const noise = 47 * s + 56 * awake + 10 * ex + P.noiseOffset + 3 * anomaly + s * storyValue(p, 'nightNoise', d) + n.noise.step();
+    push('cabinNoise', h, round(clamp(noise, 38, 78), 1));
+    push('cabinTemp', h, round(22.6 + 0.4 * circ + 0.3 * ex + 0.6 * anomaly + n.cabT.step(), 2));
+    push('cabinHumidity', h, round(clamp(44 + 6 * anomaly + 2 * s + n.rh.step(), 25, 75), 1));
   }
 
   // ── Daily check-ins ──

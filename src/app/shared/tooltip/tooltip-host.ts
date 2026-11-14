@@ -15,6 +15,7 @@ const EDGE = 8;
       <div
         #tip
         class="tip"
+        popover="manual"
         [id]="tipId"
         role="tooltip"
         [class.ready]="pos().ready"
@@ -55,6 +56,9 @@ const EDGE = 8;
     @use 'mixins' as *;
     .tip {
       position: fixed;
+      inset: auto;
+      margin: 0;
+      overflow: visible;
       z-index: var(--z-toast);
       max-width: 300px;
       padding: var(--space-3) var(--space-4);
@@ -142,7 +146,16 @@ export class TooltipHost {
       const tipRef = this.tip();
       this.pos.set({ x: -9999, y: -9999, side: 'top', ready: false });
       if (!s || !tipRef) return;
-      requestAnimationFrame(() => this.place(s.anchor, tipRef.nativeElement, s.placement));
+      const el = tipRef.nativeElement;
+      // Top layer, so tips also appear above modal sheets and dialogs.
+      if (typeof el.showPopover === 'function' && !el.matches(':popover-open')) {
+        try {
+          el.showPopover();
+        } catch {
+          /* already open or unsupported */
+        }
+      }
+      requestAnimationFrame(() => this.place(s.anchor, el, s.placement));
     });
   }
 

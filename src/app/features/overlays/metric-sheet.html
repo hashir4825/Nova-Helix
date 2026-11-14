@@ -1,0 +1,172 @@
+@let d = def();
+<nh-sheet [heading]="d.label" (closed)="closed.emit()">
+  <ng-container sheetEyebrow>
+    <span>{{ isAstronaut() ? 'My health' : name() }}</span>
+    @for (h of d.hazards; track h) {
+      <nh-hazard-tag [hazard]="h" />
+    }
+  </ng-container>
+
+  <!-- Current value -->
+  <section class="now">
+    <div class="now-main">
+      @if (latest(); as l) {
+        <span class="now-v">{{ fmt(l.v, false) }}</span>
+        <span class="now-u">{{ d.unit }}</span>
+      } @else {
+        <nh-skeleton w="120px" h="40px" />
+      }
+      @if (interp(); as i) {
+        <nh-status class="now-status" [status]="i.status" />
+      }
+    </div>
+    <p class="about">{{ help() }}</p>
+    <dl class="facts">
+      @if (normalText(); as n) {
+        <div tabindex="0" [nhTip]="legendTips.band">
+          <dt>{{ isAstronaut() ? 'Your normal' : 'Personal normal' }}</dt>
+          <dd>{{ n }}</dd>
+        </div>
+      }
+      @if (d.reference) {
+        <div tabindex="0" nhTip="Standard clinical reference range for adults on Earth, shown for comparison.">
+          <dt>Clinical reference</dt>
+          <dd>{{ fmt(d.reference[0], false) }}–{{ fmt(d.reference[1]) }}</dd>
+        </div>
+      }
+      <div>
+        <dt>Measured by</dt>
+        <dd class="src">{{ d.source }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- Trend -->
+  <section class="trend" aria-label="Trend">
+    <div class="ranges" role="radiogroup" aria-label="Time range">
+      @for (r of ranges(); track r.key) {
+        <button
+          type="button"
+          role="radio"
+          class="range"
+          [class.active]="range() === r.key"
+          [attr.aria-checked]="range() === r.key"
+          [disabled]="!r.enabled"
+          [nhTip]="r.enabled ? 'Show the last ' + r.label.toLowerCase() : 'Not measured often enough for this range'"
+          nhTipPlacement="bottom"
+          (click)="range.set(r.key)"
+        >
+          {{ r.label }}
+        </button>
+      }
+    </div>
+
+    @if (samples(); as s) {
+      <nh-trend-chart
+        [metric]="metric()"
+        [samples]="s"
+        [secondary]="isBp() ? (diastolic() ?? null) : null"
+        secondaryLabel="Diastolic"
+        [baseline]="baseline() ?? null"
+        [from]="win().from"
+        [to]="win().to"
+        [events]="events()"
+        [height]="240"
+        [bandLabel]="bandLabel()"
+        [limit]="limit()"
+      />
+    } @else {
+      <nh-skeleton h="240px" />
+    }
+
+    <ul class="legend">
+      <li tabindex="0" [nhTip]="legendTips.band"><span class="sw band"></span>{{ bandLabel() }} range</li>
+      @if (d.thresholds.length) {
+        <li tabindex="0" [nhTip]="legendTips.threshold"><span class="sw dash"></span>Thresholds</li>
+      }
+      <li tabindex="0" [nhTip]="legendTips.events"><span class="sw col"></span>Mission events</li>
+      @if (isBp()) {
+        <li><span class="sw line2"></span>Diastolic</li>
+      }
+    </ul>
+  </section>
+
+  <!-- Analysis -->
+  <section class="analysis" aria-labelledby="ana-h">
+    <header class="sec-head">
+      <h3 id="ana-h">Analysis</h3>
+      @if (interp(); as i) {
+        <span class="conf" tabindex="0" [nhTip]="confidenceTip()">
+          <span class="conf-bar" aria-hidden="true"><span [style.width.%]="i.confidence * 100"></span></span>
+          <span class="mono">{{ (i.confidence * 100).toFixed(0) }}%</span>
+          <span class="visually-hidden">confidence</span>
+        </span>
+      }
+    </header>
+    @if (interp(); as i) {
+      <div class="block">
+        <p class="k">What changed</p>
+        <p>{{ i.summary }}</p>
+      </div>
+      <div class="block">
+        <p class="k">Why it matters</p>
+        <p>{{ i.whyItMatters }}</p>
+      </div>
+      @if (i.contributing.length) {
+        <div class="block">
+          <p class="k">Signals moving with it</p>
+          <ul class="signals">
+            @for (c of i.contributing; track c.label) {
+              <li>
+                @if (c.metric) {
+                  <a
+                    class="signal link"
+                    [routerLink]="[]"
+                    [queryParams]="{ metric: (c.crewId ?? crewId()) + ':' + c.metric }"
+                    queryParamsHandling="merge"
+                    nhTip="Open this measurement"
+                  >
+                    <span>{{ c.label }}</span>
+                    <span class="mono">{{ c.value }}</span>
+                    <nh-icon [icon]="icons.chevronRight" [size]="14" />
+                  </a>
+                } @else {
+                  <span class="signal">
+                    <span>{{ c.label }}</span>
+                    <span class="mono">{{ c.value }}</span>
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    } @else {
+      <div class="block">
+        <nh-skeleton h="14px" />
+        <nh-skeleton w="80%" h="14px" />
+        <nh-skeleton w="60%" h="14px" />
+      </div>
+    }
+  </section>
+
+  <!-- Recommended actions -->
+  @if (interp(); as i) {
+    <section class="actions" aria-labelledby="act-h">
+      <header class="sec-head">
+        <h3 id="act-h">{{ isAstronaut() ? 'What you can do' : 'Recommended actions' }}</h3>
+      </header>
+      <ul class="action-list">
+        @for (a of i.recommended; track a.label) {
+          <li class="action">
+            <span class="a-icon"><nh-icon [icon]="actionIcon[a.kind]" [size]="16" /></span>
+            <span class="a-text">
+              <span class="a-label">{{ a.label }}</span>
+              <span class="a-detail">{{ a.detail }}</span>
+            </span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</nh-sheet>

@@ -10,6 +10,7 @@ import {
   HazardKey,
   Insight,
   LiveVitals,
+  MetricInterpretation,
   MetricKey,
   MissionConfig,
   MissionEvent,
@@ -23,7 +24,8 @@ import { assessHazards, hazardHistory } from './engine/hazards';
 import { detectInsights } from './engine/insights';
 import { HOUR_MS, MISSION_CONFIG, hourToDay } from './mission-plan';
 import { MockDatabase } from './mock-database';
-import { lowerBound, sliceSamples } from './stats';
+import { downsample, lowerBound, sliceSamples } from './stats';
+import { interpretMetric } from './engine/interpret';
 import { linkStateAt } from '../util/link';
 
 /** Simulated network latency on the first emission only (lets loading states show). */
@@ -56,6 +58,29 @@ export class MockMissionApi extends MissionApi {
   events(): Observable<MissionEvent[]> {
     return this.db.changes$.pipe(map(() => this.db.events()));
   }
+  timeline(crewId: string, from: number, to: number): Observable<MissionEvent[]> {
+    return this.db.changes$.pipe(
+      map(() => {
+        const events = this.db
+          .events()
+          .filter((e) => e.end >= from && e.start <= to && (e.crewIds.length === 0 || e.crewIds.includes(crewId)));
+        const exercise: MissionEvent[] = this.db
+          .exercise(crewId)
+          .filter((s) => s.end >= from && s.start <= to)
+          .map((s) => ({
+            id: `ex-${crewId}-${s.day}`,
+            kind: 'exercise',
+            label: s.done ? 'Exercise' : 'Exercise missed',
+            missed: !s.done,
+            start: s.start,
+            end: s.end,
+            crewIds: [crewId],
+            hazards: ['gravity'],
+          }));
+        return [...events, ...exercise].sort((a, b) => a.start - b.start);
+      }),
+    );
+  }
 }
 
 @Injectable({ providedIn: 'root' })
@@ -77,9 +102,9 @@ const LIVE_JITTER: Partial<Record<MetricKey, number>> = {
 export class MockTelemetryApi extends TelemetryApi {
   private readonly db = inject(MockDb);
 
-  series(crewId: string, metric: MetricKey, from: number, to: number): Observable<Sample[]> {
+  series(crewId: string, metric: MetricKey, from: number, to: number, bucketHours = 1): Observable<Sample[]> {
     return this.db.changes$.pipe(
-      map(() => sliceSamples(this.db.series(crewId, metric), from, to)),
+      map(() => downsample(sliceSamples(this.db.series(crewId, metric), from, to), bucketHours)),
       latency(),
     );
   }
@@ -189,6 +214,13 @@ export class MockAssessmentApi extends AssessmentApi {
         };
       });
     });
+  }
+
+  interpretMetric(q: AnalysisQuery, crewId: string, metric: MetricKey): Observable<MetricInterpretation> {
+    return this.db.changes$.pipe(
+      map(() => interpretMetric(this.ctx(q), crewId, metric)),
+      latency(420),
+    );
   }
 }
 

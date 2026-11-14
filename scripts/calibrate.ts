@@ -14,3 +14,4 @@ for (const i of detectInsights(ctx)) console.log(i.severity.padEnd(6), (i.crewId
 for (const a of db.crew()) { const b=['hr','hrv','sleepDuration','mood','stress','co2'].map(m=>{const x=db.baseline(a.id,m as any);return x?`${m}:${x.mean.toFixed(1)}[${x.low.toFixed(1)}-${x.high.toFixed(1)}]`:''}); console.log(a.id, b.join(' ')); }
 console.log('ms', Date.now()-t0);
 for (const id of ['hannan','ahmad','sabaina']) { const d = hz.filter(h=>h.crewId===id && h.score>=35); for (const h of d) console.log(id,h.hazard,h.drivers.map(x=>`${x.label}=${x.value}(${x.contribution})`).join('; ')); }
+if (process.argv[3] === 'explain') for (const h of hz.filter((x) => x.status !== 'nominal')) console.log(`${h.crewId}/${h.hazard} [${h.headline}] ${h.explanation}`);

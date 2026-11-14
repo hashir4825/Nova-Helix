@@ -55,6 +55,12 @@ const sleepDebt: Rule = (ctx, crewId) => {
     evidence.push({ label: 'HRV, 7-day resting mean', value: formatMetric('hrv', hrv), reference: formatMetric('hrv', hrvB.mean), metric: 'hrv', crewId, direction: 'down' });
   }
   if (Number.isFinite(sq)) evidence.push({ label: 'Self-rated sleep quality', value: formatMetric('sleepQuality', sq), metric: 'sleepQuality', crewId, direction: dir(sq, 3.5) });
+  const rtB = ctx.db.baseline(crewId, 'reactionTime');
+  const rt = lastAt(ctx.db.series(crewId, 'reactionTime'), ctx.hour);
+  if (rtB && rt && rt.v > rtB.high) {
+    signals++;
+    evidence.push({ label: 'Reaction time, latest test', value: formatMetric('reactionTime', rt.v), reference: formatMetric('reactionTime', rtB.mean), metric: 'reactionTime', crewId, direction: 'up' });
+  }
   if (shift) evidence.push({ label: 'Active schedule change', value: shift.label });
   if (evaSoon && eva) evidence.push({ label: 'Next EVA', value: `${eva.label.split(' ')[0]} in ${evaDays} d` });
 
@@ -207,6 +213,12 @@ const fluidShift: Rule = (ctx, crewId) => {
   if (vision.length) {
     signals += 2;
     evidence.push({ label: 'Vision change reported', value: vision.map((v) => `D${v.day}`).join(', ') });
+  }
+  const accB = ctx.db.baseline(crewId, 'visionAcuity');
+  const acc = lastAt(ctx.db.series(crewId, 'visionAcuity'), ctx.hour);
+  if (accB && acc && acc.v < accB.low) {
+    signals++;
+    evidence.push({ label: 'Near visual acuity, latest check', value: formatMetric('visionAcuity', acc.v), reference: formatMetric('visionAcuity', accB.mean), metric: 'visionAcuity', crewId, direction: 'down' });
   }
   const congestion = symptomCount(ci, 'congestion');
   if (congestion) {

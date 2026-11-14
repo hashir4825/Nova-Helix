@@ -29,6 +29,21 @@ export interface PersonaParams {
   leanRate: number;
   /** Probability of skipping a scheduled exercise session. */
   exerciseSkip: number;
+  // ── M2 signals ──
+  /** Psychomotor vigilance mean reaction time, ms. */
+  rt: number;
+  /** Near visual acuity (decimal, 1.0 = normal). */
+  acuity: number;
+  /** White blood cells ×10⁹/L. */
+  wbc: number;
+  /** Lymphocytes ×10⁹/L. */
+  lymph: number;
+  /** Urinary NTx at launch. */
+  ntx: number;
+  /** Leg press estimated 1RM at launch, kg. */
+  strength: number;
+  /** Crew quarters noise offset, dBA. */
+  noiseOffset: number;
 }
 
 /** A linear ramp from `from` to `to` day, reaching `delta`, held afterwards. */
@@ -42,7 +57,8 @@ export type StoryChannel =
   | 'hr' | 'hrvPct' | 'sys' | 'dia' | 'resp'
   | 'sleepH' | 'sleepEff'
   | 'mood' | 'energy' | 'sleepQuality' | 'stress' | 'workload'
-  | 'boneRateExtra' | 'leanRateExtra' | 'exerciseSkip';
+  | 'boneRateExtra' | 'leanRateExtra' | 'exerciseSkip'
+  | 'rt' | 'acuity' | 'wbc' | 'ntxPct' | 'strengthPct' | 'nightNoise';
 
 export interface Persona {
   astronaut: Astronaut;
@@ -68,6 +84,7 @@ export const PERSONAS: Record<CrewId, Persona> = {
       hr: 54, hrv: 68, spo2: 98, temp: 36.8, sys: 114, dia: 72, resp: 13,
       sleepH: 7.2, sleepEff: 91, mood: 4.1, energy: 4.0, sleepQuality: 4.0, stress: 28, workload: 48,
       bmd: 1.042, lean: 58.6, shield: 0.97, speDose: 27, co2Offset: 0, boneRate: 0.33, leanRate: 0.25, exerciseSkip: 0.03,
+      rt: 238, acuity: 1.0, wbc: 6.4, lymph: 2.0, ntx: 34, strength: 142, noiseOffset: 0,
     },
     story: {},
     symptoms: { 2: ['nausea', 'congestion'], 3: ['congestion'], 21: ['congestion'] },
@@ -86,8 +103,12 @@ export const PERSONAS: Record<CrewId, Persona> = {
       hr: 61, hrv: 52, spo2: 98, temp: 36.7, sys: 122, dia: 79, resp: 14,
       sleepH: 6.9, sleepEff: 88, mood: 3.9, energy: 3.8, sleepQuality: 3.8, stress: 34, workload: 55,
       bmd: 1.083, lean: 61.3, shield: 1.0, speDose: 29, co2Offset: 0.05, boneRate: 0.6, leanRate: 0.4, exerciseSkip: 0.05,
+      rt: 246, acuity: 1.2, wbc: 6.9, lymph: 2.1, ntx: 38, strength: 158, noiseOffset: 1,
     },
     story: {
+      rt: [{ from: 133, to: 142, delta: 48 }],
+      // Quarters next to the CO₂ scrubber fan, run at high speed since D140.
+      nightNoise: [{ from: 139, to: 141, delta: 7 }],
       sleepH: [{ from: 132, to: 142, delta: -1.7 }],
       sleepEff: [{ from: 132, to: 142, delta: -11 }],
       hr: [{ from: 133, to: 142, delta: 5 }],
@@ -114,8 +135,13 @@ export const PERSONAS: Record<CrewId, Persona> = {
       hr: 65, hrv: 46, spo2: 97, temp: 36.9, sys: 110, dia: 70, resp: 15,
       sleepH: 7.0, sleepEff: 89, mood: 4.0, energy: 3.9, sleepQuality: 3.9, stress: 30, workload: 50,
       bmd: 0.981, lean: 47.8, shield: 0.98, speDose: 26, co2Offset: 0.05, boneRate: 0.7, leanRate: 0.5, exerciseSkip: 0.04,
+      rt: 252, acuity: 1.0, wbc: 6.1, lymph: 1.9, ntx: 36, strength: 104, noiseOffset: -1,
     },
     story: {
+      rt: [{ from: 112, to: 142, delta: 34 }],
+      wbc: [{ from: 115, to: 140, delta: -1.4 }],
+      ntxPct: [{ from: 118, to: 140, delta: 0.45 }],
+      strengthPct: [{ from: 118, to: 142, delta: -0.07 }],
       mood: [{ from: 112, to: 142, delta: -1.6 }],
       energy: [{ from: 112, to: 142, delta: -1.2 }],
       sleepQuality: [{ from: 115, to: 142, delta: -1.0 }],
@@ -148,8 +174,11 @@ export const PERSONAS: Record<CrewId, Persona> = {
       hr: 58, hrv: 60, spo2: 98, temp: 36.7, sys: 116, dia: 74, resp: 13,
       sleepH: 6.7, sleepEff: 90, mood: 4.2, energy: 4.0, sleepQuality: 4.0, stress: 26, workload: 52,
       bmd: 1.012, lean: 49.6, shield: 1.04, speDose: 58, co2Offset: 0.15, boneRate: 0.55, leanRate: 0.45, exerciseSkip: 0.04,
+      rt: 241, acuity: 1.0, wbc: 6.6, lymph: 2.0, ntx: 33, strength: 112, noiseOffset: 0,
     },
     story: {
+      // Fluid shift: near vision degrading (SANS-like) from ~D132.
+      acuity: [{ from: 132, to: 140, delta: -0.25 }],
       sys: [{ from: 125, to: 142, delta: 7 }],
       dia: [{ from: 125, to: 142, delta: 4 }],
     },

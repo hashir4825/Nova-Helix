@@ -1,0 +1,282 @@
+@let a = astronaut();
+@let s = summary();
+@let me = isAstronaut();
+<div class="page">
+  @if (!me) {
+    <nav class="crew-nav" aria-label="Astronauts">
+      <a class="back" routerLink="/" nhTip="Back to the crew overview">
+        <nh-icon [icon]="icons.arrowLeft" [size]="16" />Mission Control
+      </a>
+      <ul class="switch">
+        @for (c of crewWithStatus(); track c.id) {
+          <li>
+            <a
+              [routerLink]="['/crew', c.id]"
+              [class.active]="c.id === crewId()"
+              [attr.aria-current]="c.id === crewId() ? 'page' : null"
+              [nhTip]="'Open ' + c.name + '’s profile'"
+              nhTipPlacement="bottom"
+            >
+              <span class="sw-initial">{{ c.name.charAt(0) }}</span>
+              {{ c.name }}
+              @if (c.status && c.status !== 'nominal') {
+                <nh-icon [class]="'sw-status s-' + c.status" [icon]="statusIcon[c.status]" [size]="13" [stroke]="2" [label]="c.status" />
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+  }
+
+  @if (a) {
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <header class="head" [class]="'head s-' + (s?.status ?? 'nominal')">
+      <div class="ident">
+        <span class="ring" tabindex="0" [nhTip]="ringTip()">
+          <nh-hazard-ring [assessments]="hazards() ?? []" [size]="96" [labels]="false" [thickness]="5">
+            <span class="initial" aria-hidden="true">{{ a.name.charAt(0) }}</span>
+          </nh-hazard-ring>
+        </span>
+        <div class="who">
+          <p class="eyebrow">{{ me ? 'My health · Day ' + clock.day() : 'Astronaut profile' }}</p>
+          <h1>{{ a.name }}</h1>
+          <p class="role">{{ roleLabel[a.role] }} · callsign {{ a.callsign }} · age {{ a.age }}</p>
+          @if (!me) {
+            <p class="persona">{{ a.persona }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="state">
+        <div class="status-box" tabindex="0" [nhTip]="statusTip()">
+          <p class="k">{{ me ? 'How you are doing' : 'Overall status' }}</p>
+          @if (s) {
+            <nh-status [status]="s.status" size="lg" />
+            <p class="reason">{{ reason() }}</p>
+          } @else {
+            <nh-skeleton w="120px" h="28px" />
+          }
+        </div>
+
+        <div class="checkin-box" tabindex="0" [nhTip]="checkInTip()">
+          <p class="k">Today’s check-in</p>
+          @if (s) {
+            @if (s.checkInHour !== null) {
+              <p class="ci done"><nh-icon [icon]="icons.check" [size]="16" [stroke]="2" /> Done at <span class="mono">{{ s.checkInHour | clock }}</span></p>
+            } @else if (me) {
+              <a class="cta" routerLink="/checkin">
+                <nh-icon [icon]="icons.clipboard" [size]="16" />Check in now · 30 s
+              </a>
+            } @else {
+              <p class="ci due"><nh-icon [icon]="icons.clock" [size]="16" /> Not done yet</p>
+            }
+          }
+          @if (s?.nextEvent; as ev) {
+            <p class="next"><nh-icon [icon]="icons.calendar" [size]="14" /> Next: {{ ev.label }} on D{{ ev.day }}</p>
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Live vitals ────────────────────────────────────────── -->
+    <section class="block" aria-labelledby="h-vitals">
+      <header class="block-head">
+        <h2 id="h-vitals">Live vitals</h2>
+        <nh-help [tip]="{ title: 'Live vitals', body: 'Readings from wearables, refreshed every few seconds. Each tile shows the value now, ' + (me ? 'your' : 'this astronaut’s') + ' own normal range and the last 24 hours. Orange numbers are outside the normal range.', hint: 'Click a tile for the full trend and analysis' }" label="live vitals" />
+        @if (clock.isLive()) {
+          <span class="live-tag"><span class="live-dot"></span>Live</span>
+        }
+      </header>
+      <nh-vitals-strip [crewId]="crewId()" [ownerLabel]="bandOwner()" />
+    </section>
+
+    <!-- ── Hazards ────────────────────────────────────────────── -->
+    <section class="block" aria-labelledby="h-hazards">
+      <header class="block-head">
+        <h2 id="h-hazards">NASA’s 5 hazards of human spaceflight</h2>
+        <nh-help
+          [tip]="{
+            title: 'The 5 hazards',
+            body: 'NASA groups the risks of deep-space travel into five hazards. Each tile shows how ' + (me ? 'you are' : a.name + ' is') + ' doing on that hazard, with the measurements behind it.',
+            hint: 'Click a tile to see what feeds it'
+          }"
+          label="the five hazards"
+        />
+      </header>
+      <nh-hazard-overview [crewId]="crewId()" [assessments]="hazards()" [astronautView]="me" />
+    </section>
+
+    <!-- ── Attention ──────────────────────────────────────────── -->
+    <section class="block" aria-labelledby="h-attn">
+      <header class="block-head">
+        <h2 id="h-attn">{{ me ? 'What needs attention' : 'Findings for ' + a.name }}</h2>
+        <nh-help [tip]="help.insightsSection" label="findings" />
+      </header>
+      @if (attention().length) {
+        <ul class="attn">
+          @for (i of attention(); track i.id) {
+            <li [class]="'attn-item sev-' + i.severity">
+              <span class="attn-icon"><nh-icon [icon]="statusIcon[i.severity]" [size]="16" [stroke]="2" [label]="i.severity" /></span>
+              <div class="attn-body">
+                <p class="attn-title">{{ i.title }}</p>
+                @if (!me) {
+                  <p class="attn-summary">{{ i.summary }}</p>
+                }
+                @if (i.recommended.length) {
+                  <p class="attn-k">{{ me ? 'What you can do' : 'Suggested' }}</p>
+                  <ul class="attn-recs">
+                    @for (r of i.recommended.slice(0, me ? 2 : 3); track r.label) {
+                      <li><strong>{{ r.label }}.</strong> {{ r.detail }}</li>
+                    }
+                  </ul>
+                }
+                <p class="attn-meta">
+                  @for (h of i.hazards; track h) {
+                    <nh-icon [icon]="hazardIcon[h]" [size]="13" [label]="h" />
+                  }
+                  <span>{{ i.detectedAt | relTime: clock.hour() }}</span>
+                  @if (i.crewId === null) {
+                    <span>· whole crew</span>
+                  }
+                </p>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="empty">
+          <nh-icon [icon]="statusIcon.nominal" [size]="18" />
+          <p>{{ me ? 'Nothing needs your attention right now.' : 'No open findings for ' + a.name + '.' }}</p>
+        </div>
+      }
+      @if (goodNews().length) {
+        <ul class="good">
+          @for (g of goodNews(); track g.id) {
+            <li><nh-icon [icon]="statusIcon.info" [size]="14" /> {{ g.title }}</li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- ── History & details ──────────────────────────────────── -->
+    <nav class="subnav" aria-label="History sections">
+      <span class="subnav-k">History</span>
+      @for (sec of sections; track sec.id) {
+        <button type="button" (click)="scrollTo(sec.id)">{{ sec.label }}</button>
+      }
+    </nav>
+
+    @let band = bandOwner();
+    <section class="block" id="sec-vitals" tabindex="-1" aria-labelledby="h-v">
+      <h2 class="sec-title" id="h-v">Vitals history</h2>
+      @defer (on viewport) {
+        <div class="grid g3">
+          <nh-metric-panel [crewId]="crewId()" metric="hr" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="hrv" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="spo2" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="coreTemp" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="bpSys" title="Blood pressure (systolic)" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="resp" range="7d" [bandLabel]="band" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="420px" />
+      }
+    </section>
+
+    <section class="block" id="sec-sleep" tabindex="-1" aria-labelledby="h-s">
+      <h2 class="sec-title" id="h-s">Sleep</h2>
+      @defer (on viewport) {
+        <div class="grid g2">
+          <nh-metric-panel [crewId]="crewId()" metric="sleepDuration" title="Sleep per night" kind="bar" range="30d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="sleepEfficiency" range="30d" [bandLabel]="band" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="220px" />
+      }
+    </section>
+
+    <section class="block" id="sec-radiation" tabindex="-1" aria-labelledby="h-r">
+      <h2 class="sec-title" id="h-r">Radiation</h2>
+      @defer (on viewport) {
+        <div class="grid g2">
+          <nh-metric-panel [crewId]="crewId()" metric="radDose" title="Total dose vs career limit" range="mission" [limit]="careerLimit()" [height]="180" />
+          <nh-metric-panel [crewId]="crewId()" metric="doseRate" range="7d" [height]="180" [bandLabel]="band" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="250px" />
+      }
+    </section>
+
+    <section class="block" id="sec-body" tabindex="-1" aria-labelledby="h-b">
+      <h2 class="sec-title" id="h-b">Bone &amp; muscle</h2>
+      @defer (on viewport) {
+        <div class="grid g2">
+          <nh-metric-panel [crewId]="crewId()" metric="boneDensity" title="Bone density (hip)" range="mission" bandLabel="Preflight" />
+          <nh-metric-panel [crewId]="crewId()" metric="muscleMass" range="mission" bandLabel="Preflight" />
+          <nh-metric-panel [crewId]="crewId()" metric="legStrength" range="mission" bandLabel="First session" />
+          <nh-exercise-calendar [crewId]="crewId()" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="460px" />
+      }
+    </section>
+
+    <section class="block" id="sec-mind" tabindex="-1" aria-labelledby="h-m">
+      <h2 class="sec-title" id="h-m">Mind &amp; workload</h2>
+      @defer (on viewport) {
+        <div class="grid g2">
+          <nh-metric-panel [crewId]="crewId()" metric="mood" range="30d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="stress" range="mission" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="workload" range="mission" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="reactionTime" range="mission" [bandLabel]="band" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="460px" />
+      }
+    </section>
+
+    <section class="block" id="sec-tests" tabindex="-1" aria-labelledby="h-t">
+      <h2 class="sec-title" id="h-t">Medical tests</h2>
+      @defer (on viewport) {
+        <div class="tests-wrap">
+          <nh-medical-tests [crewId]="crewId()" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="260px" />
+      }
+    </section>
+
+    <section class="block" id="sec-env" tabindex="-1" aria-labelledby="h-e">
+      <h2 class="sec-title" id="h-e">Environment</h2>
+      @defer (on viewport) {
+        <div class="grid g2">
+          <nh-metric-panel [crewId]="crewId()" metric="co2" range="30d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="cabinNoise" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="cabinTemp" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="cabinHumidity" range="7d" [bandLabel]="band" />
+          <nh-metric-panel [crewId]="crewId()" metric="medKit" title="Medical supply readiness (ship)" range="mission" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="460px" />
+      }
+    </section>
+
+    <section class="block" id="sec-checkins" tabindex="-1" aria-labelledby="h-c">
+      <h2 class="sec-title" id="h-c">Check-ins, last 14 days</h2>
+      @defer (on viewport) {
+        <div class="tests-wrap">
+          <nh-checkin-history [crewId]="crewId()" />
+        </div>
+      } @placeholder {
+        <nh-skeleton h="320px" />
+      }
+    </section>
+  } @else {
+    <div class="loading">
+      <nh-skeleton w="320px" h="96px" />
+      <nh-skeleton h="140px" />
+      <nh-skeleton h="240px" />
+    </div>
+  }
+</div>

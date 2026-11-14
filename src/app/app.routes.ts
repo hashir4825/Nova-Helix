@@ -7,10 +7,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/mission-control/mission-control').then((m) => m.MissionControl),
   },
   {
+    // Flight surgeon (admin) view of any astronaut.
     path: 'crew/:id',
     title: 'Astronaut Profile · Nova Healix',
-    loadComponent: () => import('./features/pending/pending').then((m) => m.Pending),
-    data: { screen: 'Astronaut Profile', milestone: 'M2' },
+    loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),
+    data: { viewer: 'surgeon' },
+  },
+  {
+    // Astronaut's own profile (Crew Mode home).
+    path: 'me',
+    title: 'My Health · Nova Healix',
+    loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),
+    data: { viewer: 'astronaut' },
   },
   {
     path: 'checkin',

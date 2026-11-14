@@ -16,6 +16,12 @@ const MIN_HALF_BAND: Partial<Record<MetricKey, number>> = {
   stress: 8,
   workload: 8,
   co2: 0.3,
+  reactionTime: 18,
+  visionAcuity: 0.08,
+  wbc: 0.9,
+  lymphocytes: 0.3,
+  boneMarker: 7,
+  doseRate: 12,
 };
 
 /**
@@ -112,11 +118,18 @@ export class MockDatabase {
   private computeBaseline(crewId: string, metric: MetricKey): Baseline | null {
     const def = METRICS[metric];
     const all = this.series(crewId, metric);
-    if (metric === 'radDose') return null;
-    if (metric === 'boneDensity' || metric === 'muscleMass') {
+    if (metric === 'radDose' || metric === 'medKit') return null;
+    if (def.cadence === 'monthly') {
+      const vals = sliceSamples(all, at(1, 0), at(60, 23.99)).map((s) => s.v);
+      const m = mean(vals);
+      const half = Math.max(1.4 * sd(vals), MIN_HALF_BAND[metric] ?? 0);
+      return { mean: m, low: m - half, high: m + half, source: 'Early-mission labs D15–D45' };
+    }
+    if (metric === 'boneDensity' || metric === 'muscleMass' || metric === 'legStrength') {
       const pre = all[0]?.v;
       if (pre === undefined) return null;
-      return { mean: pre, low: pre * 0.985, high: pre * 1.015, source: 'Preflight / D1 measurement' };
+      const tol = metric === 'legStrength' ? 0.03 : 0.015;
+      return { mean: pre, low: pre * (1 - tol), high: pre * (1 + tol), source: 'Preflight / first measurement' };
     }
     const from = at(BASELINE_FROM_DAY, 0);
     const to = at(BASELINE_TO_DAY, 23.99);

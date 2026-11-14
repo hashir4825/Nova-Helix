@@ -8,6 +8,7 @@ import {
   HazardKey,
   Insight,
   LiveVitals,
+  MetricInterpretation,
   MetricKey,
   MissionConfig,
   MissionEvent,
@@ -31,6 +32,8 @@ export abstract class MissionApi {
   abstract config(): Observable<MissionConfig>;
   /** All mission timeline events, past and planned. Re-emits on change. */
   abstract events(): Observable<MissionEvent[]>;
+  /** Events affecting one astronaut in a window, including their exercise sessions. */
+  abstract timeline(crewId: string, from: number, to: number): Observable<MissionEvent[]>;
 }
 
 export abstract class CrewApi {
@@ -39,8 +42,11 @@ export abstract class CrewApi {
 }
 
 export abstract class TelemetryApi {
-  /** Samples with from <= t <= to (mission hours). Re-emits when data changes. */
-  abstract series(crewId: string, metric: MetricKey, from: number, to: number): Observable<Sample[]>;
+  /**
+   * Samples with from <= t <= to (mission hours). Re-emits when data changes.
+   * `bucketHours` > 1 returns bucket means (server-side aggregation for long ranges).
+   */
+  abstract series(crewId: string, metric: MetricKey, from: number, to: number, bucketHours?: number): Observable<Sample[]>;
   abstract baseline(crewId: string, metric: MetricKey): Observable<Baseline | null>;
   /** Live current vitals, emitting every few seconds. */
   abstract live(crewId: string): Observable<LiveVitals>;
@@ -52,4 +58,6 @@ export abstract class AssessmentApi {
   abstract hazardHistory(q: AnalysisQuery, hazard: HazardKey, crewId: string, fromDay: number): Observable<Sample[]>;
   abstract insights(q: AnalysisQuery): Observable<Insight[]>;
   abstract crewSummaries(q: AnalysisQuery): Observable<CrewSummary[]>;
+  /** AI interpretation of one metric for one astronaut. */
+  abstract interpretMetric(q: AnalysisQuery, crewId: string, metric: MetricKey): Observable<MetricInterpretation>;
 }

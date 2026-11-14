@@ -49,7 +49,7 @@ export function formatNumber(v: number, decimals: number): string {
 export function formatMetric(metric: MetricKey, v: number, withUnit = true): string {
   const def = METRICS[metric];
   const n = formatNumber(v, def.decimals);
-  if (!withUnit) return n;
+  if (!withUnit || !def.unit) return n;
   return def.unit.startsWith('/') || def.unit === '%' || def.unit === '°C' ? `${n}${def.unit}` : `${n} ${def.unit}`;
 }
 

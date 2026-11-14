@@ -1,0 +1,100 @@
+@if (tiles(); as tiles) {
+  <ul class="tiles">
+    @for (t of tiles; track t.hazard) {
+      <li>
+        <button
+          type="button"
+          class="tile"
+          [class]="'tile s-' + t.status"
+          [class.open]="open() === t.hazard"
+          [attr.aria-expanded]="open() === t.hazard"
+          [attr.aria-controls]="'hz-detail'"
+          [nhTip]="t.tip"
+          (click)="toggle(t.hazard)"
+        >
+          <span class="t-head">
+            <span class="t-icon"><nh-icon [icon]="t.icon" [size]="18" /></span>
+            <span class="t-name">{{ t.def.label }}</span>
+          </span>
+          <span class="t-status">
+            <nh-status [status]="t.status" />
+            @if (!astronautView()) {
+              <span class="t-score" aria-label="score">{{ t.score }}<span>/100</span></span>
+            }
+          </span>
+          <span class="t-headline">{{ t.headline }}</span>
+          <span class="t-explain">{{ t.explanation }}</span>
+          <span class="t-trend">
+            <nh-sparkline [samples]="t.trend" [width]="200" [height]="24" />
+            <span class="t-trend-l">30 days</span>
+          </span>
+          <span class="t-more">
+            {{ open() === t.hazard ? 'Hide details' : 'What feeds this' }}
+            <nh-icon [icon]="icons.chevronRight" [size]="14" />
+          </span>
+        </button>
+      </li>
+    }
+  </ul>
+
+  @if (detail(); as d) {
+    <section id="hz-detail" class="detail" [attr.aria-label]="d.def.label + ' details'">
+      <div class="d-intro">
+        <h4><nh-icon [icon]="d.icon" [size]="18" /> {{ d.def.label }}</h4>
+        <p>{{ d.def.description }}</p>
+      </div>
+
+      <div class="d-cols">
+        <div>
+          <p class="k">What feeds this {{ astronautView() ? '' : '(contribution to score)' }}</p>
+          <ul class="drivers">
+            @for (dr of d.drivers; track dr.label) {
+              <li>
+                @if (dr.metric) {
+                  <a
+                    class="driver link"
+                    [class.concern]="dr.contribution >= 35"
+                    [routerLink]="[]"
+                    [queryParams]="{ metric: crewId() + ':' + dr.metric }"
+                    queryParamsHandling="merge"
+                    nhTip="Open this measurement"
+                  >
+                    <ng-container *ngTemplateOutlet="row; context: { $implicit: dr }" />
+                  </a>
+                } @else {
+                  <span class="driver" [class.concern]="dr.contribution >= 35">
+                    <ng-container *ngTemplateOutlet="row; context: { $implicit: dr }" />
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+        <div>
+          <p class="k">Countermeasures</p>
+          <ul class="cms">
+            @for (c of d.def.countermeasures; track c) {
+              <li><nh-icon [icon]="icons.check" [size]="14" /> {{ c }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </section>
+  }
+
+  <ng-template #row let-dr>
+    <span class="dr-label">{{ dr.label }}</span>
+    <span class="dr-value">{{ dr.value }}</span>
+    @if (!astronautView()) {
+      <span class="dr-bar" [attr.aria-label]="'contribution ' + dr.contribution"><span [style.width.%]="dr.contribution"></span></span>
+    } @else if (dr.contribution >= 35) {
+      <span class="dr-flag">Worth a look</span>
+    }
+  </ng-template>
+} @else {
+  <div class="tiles">
+    @for (i of [0, 1, 2, 3, 4]; track i) {
+      <nh-skeleton h="220px" />
+    }
+  </div>
+}

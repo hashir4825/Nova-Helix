@@ -24,10 +24,22 @@ export type MetricKey =
   | 'stress'
   | 'workload'
   // Environment (daily exposure)
-  | 'co2';
+  | 'co2'
+  // M2 additions
+  | 'doseRate'
+  | 'reactionTime'
+  | 'visionAcuity'
+  | 'wbc'
+  | 'lymphocytes'
+  | 'boneMarker'
+  | 'cabinNoise'
+  | 'cabinTemp'
+  | 'cabinHumidity'
+  | 'legStrength'
+  | 'medKit';
 
-export type MetricGroup = 'vitals' | 'sleep' | 'radiation' | 'musculoskeletal' | 'behavioral' | 'environment';
-export type Cadence = 'hourly' | 'daily' | 'weekly';
+export type MetricGroup = 'vitals' | 'sleep' | 'radiation' | 'musculoskeletal' | 'behavioral' | 'environment' | 'medical' | 'operations';
+export type Cadence = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'session';
 
 /** Which direction away from baseline is a concern. */
 export type ConcernDirection = 'high' | 'low' | 'both';
@@ -51,6 +63,8 @@ export interface MetricDef {
   thresholds: Threshold[];
   /** Hard display range for charts (y axis). */
   range: [number, number];
+  /** Clinical reference range (labs/tests only; shown alongside the personal baseline). */
+  reference?: [number, number];
   source: string;
 }
 
@@ -188,8 +202,72 @@ export const METRICS: Record<MetricKey, MetricDef> = {
       { value: 4, level: 'alert', direction: 'above' },
     ],
   },
+  doseRate: {
+    key: 'doseRate', label: 'Radiation dose rate', short: 'RATE', unit: 'µSv/h', decimals: 0, group: 'radiation', cadence: 'hourly',
+    hazards: ['radiation'], concern: 'high', range: [0, 2500], source: 'Personal active dosimeter',
+    thresholds: [
+      { value: 150, level: 'watch', direction: 'above' },
+      { value: 500, level: 'alert', direction: 'above' },
+    ],
+  },
+  reactionTime: {
+    key: 'reactionTime', label: 'Reaction time', short: 'RT', unit: 'ms', decimals: 0, group: 'behavioral', cadence: 'weekly',
+    hazards: ['radiation', 'isolation'], concern: 'high', range: [180, 420], source: 'Psychomotor vigilance test on tablet (3 min)',
+    thresholds: [{ value: 320, level: 'watch', direction: 'above' }],
+  },
+  visionAcuity: {
+    key: 'visionAcuity', label: 'Near visual acuity', short: 'VIS', unit: '', decimals: 2, group: 'medical', cadence: 'weekly',
+    hazards: ['gravity'], concern: 'low', range: [0.4, 1.4], source: 'Tablet near-vision chart + Amsler grid',
+    thresholds: [{ value: 0.8, level: 'watch', direction: 'below' }],
+    reference: [0.8, 1.5],
+  },
+  wbc: {
+    key: 'wbc', label: 'White blood cells', short: 'WBC', unit: '×10⁹/L', decimals: 1, group: 'medical', cadence: 'monthly',
+    hazards: ['environment'], concern: 'both', range: [2, 12], source: 'Onboard blood analyzer',
+    thresholds: [{ value: 4, level: 'watch', direction: 'below' }],
+    reference: [4.0, 11.0],
+  },
+  lymphocytes: {
+    key: 'lymphocytes', label: 'Lymphocytes', short: 'LYM', unit: '×10⁹/L', decimals: 2, group: 'medical', cadence: 'monthly',
+    hazards: ['radiation', 'environment'], concern: 'low', range: [0.5, 3.5], source: 'Onboard blood analyzer',
+    thresholds: [{ value: 1.0, level: 'watch', direction: 'below' }],
+    reference: [1.0, 3.0],
+  },
+  boneMarker: {
+    key: 'boneMarker', label: 'Bone breakdown marker (urine NTx)', short: 'NTX', unit: 'nM BCE/mM Cr', decimals: 0, group: 'medical', cadence: 'monthly',
+    hazards: ['gravity'], concern: 'high', range: [10, 120], source: 'Onboard urine analyzer',
+    thresholds: [{ value: 65, level: 'watch', direction: 'above' }],
+    reference: [5, 65],
+  },
+  cabinNoise: {
+    key: 'cabinNoise', label: 'Noise exposure', short: 'NOISE', unit: 'dBA', decimals: 0, group: 'environment', cadence: 'hourly',
+    hazards: ['environment'], concern: 'high', range: [35, 80], source: 'Crew quarters acoustic sensor',
+    thresholds: [{ value: 60, level: 'watch', direction: 'above' }],
+  },
+  cabinTemp: {
+    key: 'cabinTemp', label: 'Cabin temperature', short: 'CABIN', unit: '°C', decimals: 1, group: 'environment', cadence: 'hourly',
+    hazards: ['environment'], concern: 'both', range: [18, 28], source: 'Module thermal sensor',
+    thresholds: [{ value: 26, level: 'watch', direction: 'above' }],
+  },
+  cabinHumidity: {
+    key: 'cabinHumidity', label: 'Cabin humidity', short: 'RH', unit: '%', decimals: 0, group: 'environment', cadence: 'hourly',
+    hazards: ['environment'], concern: 'both', range: [20, 75], source: 'Module humidity sensor',
+    thresholds: [{ value: 60, level: 'watch', direction: 'above' }],
+  },
+  legStrength: {
+    key: 'legStrength', label: 'Leg press strength (estimated max)', short: 'STR', unit: 'kg', decimals: 0, group: 'musculoskeletal', cadence: 'session',
+    hazards: ['gravity'], concern: 'low', range: [60, 200], source: 'Resistive exercise device load cells',
+    thresholds: [],
+  },
+  medKit: {
+    key: 'medKit', label: 'Medical supply readiness', short: 'MED', unit: '%', decimals: 0, group: 'operations', cadence: 'weekly',
+    hazards: ['distance'], concern: 'low', range: [50, 100], source: 'Pharmacy and medical kit inventory',
+    thresholds: [{ value: 75, level: 'watch', direction: 'below' }],
+  },
 };
 
 export const VITAL_KEYS: readonly MetricKey[] = ['hr', 'hrv', 'spo2', 'coreTemp', 'bpSys', 'bpDia', 'resp'];
 /** Vitals shown on the Mission Control crew card. */
 export const CARD_VITALS: readonly MetricKey[] = ['hr', 'hrv', 'spo2'];
+/** Vitals on the profile's live strip (bpDia is shown together with bpSys). */
+export const PROFILE_VITALS: readonly MetricKey[] = ['hr', 'hrv', 'spo2', 'coreTemp', 'bpSys', 'resp'];

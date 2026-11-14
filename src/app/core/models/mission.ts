@@ -15,6 +15,8 @@ export interface MissionEvent {
   hazards: HazardKey[];
   /** Scheduled in the future relative to "now". */
   planned?: boolean;
+  /** Scheduled exercise session that was not done. */
+  missed?: boolean;
 }
 
 export interface MissionConfig {

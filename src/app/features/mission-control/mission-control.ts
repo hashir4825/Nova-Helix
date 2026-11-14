@@ -5,6 +5,7 @@ import { AssessmentApi, CrewApi, MissionApi } from '../../core/data/apis';
 import { HazardAssessment, Status } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { withLoad } from '../../core/util/load';
+import { SessionStore } from '../../core/state/session';
 import { Panel } from '../../shared/ui/panel';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { CrewCard } from './crew-card';
@@ -31,6 +32,10 @@ export class MissionControl {
   private readonly assess = inject(AssessmentApi);
   private readonly missionApi = inject(MissionApi);
   protected readonly help = HELP;
+
+  constructor() {
+    inject(SessionStore).role.set('surgeon');
+  }
   protected readonly icons = ICON;
 
   protected readonly showIntro = signal(readIntro());
