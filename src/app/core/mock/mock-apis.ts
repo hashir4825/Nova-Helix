@@ -1,7 +1,9 @@
 import { Injectable, Provider, inject } from '@angular/core';
 import { BehaviorSubject, Observable, delayWhen, distinctUntilChanged, filter, map, of, timer } from 'rxjs';
-import { AnalysisQuery, AssessmentApi, CompanionApi, CrewApi, CrewModeApi, MissionApi, TelemetryApi } from '../data/apis';
+import { ActionsApi, AnalysisQuery, AssessmentApi, CompanionApi, CrewApi, CrewModeApi, MissionApi, TelemetryApi } from '../data/apis';
 import {
+  ActionLogEntry,
+  CrewMessage,
   AnswerValue,
   Assignment,
   ChatMessage,
@@ -340,7 +342,9 @@ export class MockCompanionApi extends CompanionApi {
       );
       if (turn.safety) {
         // Safety exception: an alert with NO transcript.
-        this.db.addSafetyFlag({ id: `sf-${crewId}-${++this.seq}`, crewId, at: nowHour(), category: turn.safety });
+        // Exact time (not rounded): the clinician needs to know precisely when.
+        const exact = (Date.now() - MISSION_CONFIG.launchEpochMs) / HOUR_MS;
+        this.db.addSafetyFlag({ id: `sf-${crewId}-${++this.seq}`, crewId, at: exact, category: turn.safety.category, signal: turn.safety.signal });
       }
     }, pause);
   }
@@ -386,7 +390,7 @@ export class MockCompanionApi extends CompanionApi {
       this.crewMode.submitCheckIn(crewId, card.draft).subscribe();
       this.push(crewId, [{ role: 'nova', text: `Done. Your check-in is on its way to Mission Control (about ${delay} to Earth). Thanks for keeping it up.` }]);
     } else if (action === 'confirm' && card.kind === 'share') {
-      this.db.addSharedNote({ id: `note-${crewId}-${++this.seq}`, crewId, at: nowHour(), text: edited ?? card.text });
+      this.db.addSharedNote({ id: `note-${crewId}-${++this.seq}`, crewId, at: (Date.now() - MISSION_CONFIG.launchEpochMs) / HOUR_MS, text: edited ?? card.text });
       this.push(crewId, [{ role: 'nova', text: `Sent to ${surgeon}. Only that note was shared, nothing else from our conversation.` }]);
     } else {
       this.push(crewId, [{ role: 'nova', text: 'No problem, nothing was sent.' }]);
@@ -401,6 +405,52 @@ export class MockCompanionApi extends CompanionApi {
   }
 }
 
+@Injectable({ providedIn: 'root' })
+export class MockActionsApi extends ActionsApi {
+  private readonly db = inject(MockDb);
+  private seq = 0;
+  private readonly surgeon = MISSION_CONFIG.team.flightSurgeon;
+
+  /** Real (unrounded) mission hour so the log shows exact times. */
+  private now(): number {
+    return (Date.now() - MISSION_CONFIG.launchEpochMs) / HOUR_MS;
+  }
+
+  log(): Observable<ActionLogEntry[]> {
+    return this.db.changes$.pipe(map(() => [...this.db.actionLog()]));
+  }
+
+  record(entry: Omit<ActionLogEntry, 'id' | 'at' | 'by'>): Observable<ActionLogEntry> {
+    const e: ActionLogEntry = { ...entry, id: `log-${++this.seq}`, at: this.now(), by: this.surgeon };
+    this.db.addLog(e);
+    return of(e);
+  }
+
+  sendMessage(crewId: string, text: string, insightId?: string): Observable<CrewMessage> {
+    const at = this.now();
+    const delayH = linkStateAt(MISSION_CONFIG, at, false).delaySeconds / 3600;
+    const m: CrewMessage = { id: `msg-${++this.seq}`, crewId, from: this.surgeon, text, sentAt: at, deliverAt: at + delayH, insightId };
+    this.db.addMessage(m);
+    if (insightId) {
+      this.db.addLog({
+        id: `log-${++this.seq}`,
+        insightId,
+        crewId,
+        at,
+        by: this.surgeon,
+        kind: 'message',
+        label: `Messaged ${this.db.astronaut(crewId)?.name ?? crewId}`,
+        detail: `“${text}” · arrives ${formatDelay(delayH * 3600)} later`,
+      });
+    }
+    return of(m);
+  }
+
+  messages(crewId: string): Observable<CrewMessage[]> {
+    return this.db.changes$.pipe(map(() => [...this.db.crewMessages(crewId)]));
+  }
+}
+
 /** Swap this for provideHttpData() when the real backend exists. */
 export function provideMockData(): Provider[] {
   return [
@@ -410,5 +460,6 @@ export function provideMockData(): Provider[] {
     { provide: AssessmentApi, useExisting: MockAssessmentApi },
     { provide: CrewModeApi, useExisting: MockCrewModeApi },
     { provide: CompanionApi, useExisting: MockCompanionApi },
+    { provide: ActionsApi, useExisting: MockActionsApi },
   ];
 }

@@ -1,4 +1,6 @@
 import {
+  ActionLogEntry,
+  CrewMessage,
   Assignment,
   Astronaut,
   Baseline,
@@ -150,6 +152,28 @@ export class MockDatabase {
 
   addSharedNote(n: SharedNote): void {
     this.notes.push(n);
+    this.bump();
+  }
+
+  // ── Mission Control actions ──────────────────────────────────────
+  private readonly log: ActionLogEntry[] = [];
+  private readonly outbox: CrewMessage[] = [];
+
+  actionLog(insightId?: string): ActionLogEntry[] {
+    return insightId ? this.log.filter((e) => e.insightId === insightId) : this.log;
+  }
+
+  addLog(e: ActionLogEntry): void {
+    this.log.push(e);
+    this.bump();
+  }
+
+  crewMessages(crewId: string): CrewMessage[] {
+    return this.outbox.filter((m) => m.crewId === crewId);
+  }
+
+  addMessage(m: CrewMessage): void {
+    this.outbox.push(m);
     this.bump();
   }
 

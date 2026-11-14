@@ -30,6 +30,43 @@
   }
 
   @if (a) {
+    @if (urgent(); as u) {
+      @if (!me) {
+        <a class="urgent" [routerLink]="[]" [queryParams]="{ insight: u.id }" queryParamsHandling="merge" role="alert">
+          <nh-icon [icon]="icons.alert" [size]="20" />
+          <span class="u-text">
+            <strong>{{ u.title }}</strong>
+            <span>{{ u.summary }}</span>
+          </span>
+          <span class="u-cta">Respond now <nh-icon [icon]="icons.chevronRight" [size]="16" /></span>
+        </a>
+      } @else {
+        <div class="support" role="status">
+          <nh-icon [icon]="icons.lock" [size]="18" />
+          <span>Nova let {{ surgeon }} know you need support. {{ surgeon }} will contact you soon. You don’t have to wait alone: {{ helperName() }} is on board with you.</span>
+        </div>
+      }
+    }
+
+    @if (me && messages().length) {
+      <section class="inbox" aria-labelledby="h-inbox">
+        <h2 id="h-inbox"><nh-icon [icon]="icons.message" [size]="16" />Messages from {{ surgeon }}</h2>
+        <ul>
+          @for (m of messages(); track m.id) {
+            <li [class.pending]="!m.delivered">
+              @if (m.delivered) {
+                <p class="m-text">{{ m.text }}</p>
+                <p class="m-meta">{{ m.from }} · arrived {{ m.deliverAt | clock }}</p>
+              } @else {
+                <p class="m-text pending-text">A message from {{ m.from }} is on its way across the signal delay.</p>
+                <p class="m-meta">Arrives about {{ m.deliverAt | clock }}</p>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     <!-- ── Header ─────────────────────────────────────────────── -->
     <header class="head" [class]="'head s-' + (s?.status ?? 'nominal')">
       <div class="ident">
@@ -116,7 +153,11 @@
             <li [class]="'attn-item sev-' + i.severity">
               <span class="attn-icon"><nh-icon [icon]="statusIcon[i.severity]" [size]="16" [stroke]="2" [label]="i.severity" /></span>
               <div class="attn-body">
-                <p class="attn-title">{{ i.title }}</p>
+                @if (me) {
+                  <p class="attn-title">{{ i.title }}</p>
+                } @else {
+                  <a class="attn-title link" [routerLink]="[]" [queryParams]="{ insight: i.id }" queryParamsHandling="merge" nhTip="Open the evidence and respond">{{ i.title }}</a>
+                }
                 @if (!me) {
                   <p class="attn-summary">{{ i.summary }}</p>
                 }

@@ -173,3 +173,83 @@
   color: var(--text-3);
   font-size: var(--type-caption);
 }
+
+// ── Quick actions (hover / focus; always on urgent) ───────────────
+.row {
+  position: relative;
+
+  &.urgent .item {
+    background: var(--alert-soft);
+    box-shadow: inset 3px 0 0 var(--alert);
+    padding-bottom: var(--space-8);
+  }
+  &.urgent .title {
+    color: var(--alert);
+  }
+}
+
+.quick {
+  position: absolute;
+  right: var(--space-3);
+  bottom: 10px;
+  background: inherit;
+  display: flex;
+  gap: var(--space-1);
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.row:hover .quick,
+.row:focus-within .quick,
+.row.urgent .quick {
+  opacity: 1;
+  transform: none;
+}
+
+.qbtn {
+  @include focus-ring;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-round);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-1);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--text-1);
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  &.respond {
+    background: var(--alert);
+    border-color: var(--alert);
+    color: var(--text-inverse);
+    &:hover {
+      color: var(--text-inverse);
+      filter: brightness(1.08);
+    }
+  }
+}
+
+.ack {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--nominal);
+  font-weight: var(--weight-semibold);
+}
+
+.unhandled {
+  color: var(--alert);
+  font-weight: var(--weight-semibold);
+}
+
+// On normal rows the hover buttons sit over the hazard icons in the meta row.
+.row:not(.urgent):hover .hz,
+.row:not(.urgent):focus-within .hz {
+  visibility: hidden;
+}

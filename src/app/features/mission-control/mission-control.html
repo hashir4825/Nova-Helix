@@ -27,7 +27,7 @@
         @case ('ready') {
           <div class="crew-grid">
             @for (a of crewList(); track a.id) {
-              <nh-crew-card [astronaut]="a" [summary]="summaryFor(a.id)" [hazards]="hazardsFor(a.id)" />
+              <nh-crew-card [astronaut]="a" [summary]="summaryFor(a.id)" [hazards]="hazardsFor(a.id)" [urgent]="urgentFor(a.id)" />
             }
           </div>
         }

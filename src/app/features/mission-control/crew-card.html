@@ -2,6 +2,13 @@
 @let s = summary();
 @let top = topHazard();
 <article class="card" [attr.aria-labelledby]="'crew-' + a.id">
+  @if (urgent(); as u) {
+    <a class="urgent" [routerLink]="[]" [queryParams]="{ insight: u.id }" queryParamsHandling="merge" role="alert">
+      <nh-icon [icon]="icons.alert" [size]="16" />
+      <span class="u-text"><strong>Urgent</strong> · {{ u.title.replace('Urgent: ', '') }}</span>
+      <span class="u-cta">Respond <nh-icon [icon]="icons.chevronRight" [size]="14" /></span>
+    </a>
+  }
   <header class="head">
     @if (top) {
       <a

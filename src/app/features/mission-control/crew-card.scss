@@ -242,3 +242,46 @@
   cursor: help;
   border-radius: var(--radius-1);
 }
+
+// Nova safety alert: impossible to miss, one click to respond.
+.urgent {
+  @include focus-ring;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-5)) 0;
+  padding: var(--space-3) var(--space-5);
+  background: var(--alert);
+  color: var(--text-inverse);
+  font-size: var(--type-caption);
+  animation: attn-bar 1.2s var(--ease-in-out) 3;
+
+  strong {
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+  }
+  &:hover {
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes attn-bar {
+  50% {
+    filter: brightness(1.25);
+  }
+}
+
+.u-text {
+  flex: 1;
+  min-width: 0;
+  @include truncate;
+}
+
+.u-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}

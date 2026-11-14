@@ -3,18 +3,21 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { METRICS, MetricKey } from '../../core/models';
 import { MetricSheet } from './metric-sheet';
+import { InsightSheet } from './insight-sheet';
 
 /**
  * URL-addressable overlays that work over any screen:
  * `?metric=<crewId>:<metricKey>` opens the Metric Detail sheet.
- * (`?insight=` and `?hazard=` arrive in M3.)
+ * `?insight=<id>` opens the Insight sheet (detail, response, action log).
  */
 @Component({
   selector: 'nh-overlays',
-  imports: [MetricSheet],
+  imports: [MetricSheet, InsightSheet],
   template: `
     @if (metric(); as m) {
       <nh-metric-sheet [crewId]="m.crewId" [metric]="m.metric" (closed)="close('metric')" />
+    } @else if (insight(); as id) {
+      <nh-insight-sheet [insightId]="id" (closed)="close('insight')" />
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,7 +34,9 @@ export class OverlayHost {
     return { crewId, metric: key as MetricKey };
   });
 
-  protected close(param: 'metric'): void {
+  protected readonly insight = computed(() => this.params()?.get('insight') ?? null);
+
+  protected close(param: 'metric' | 'insight'): void {
     this.router.navigate([], { queryParams: { [param]: null }, queryParamsHandling: 'merge' });
   }
 }

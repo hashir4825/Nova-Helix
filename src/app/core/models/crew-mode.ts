@@ -80,12 +80,66 @@ export interface ChatMessage {
   card?: ChatCard;
 }
 
+/** What specifically triggered the safety exception (a category, never the astronaut's words). */
+export type SafetySignal =
+  | 'wish-to-die'
+  | 'suicidal-thoughts'
+  | 'self-harm-intent'
+  | 'confirmed-when-asked'
+  | 'chest-pain'
+  | 'breathing'
+  | 'stroke-signs'
+  | 'unconscious'
+  | 'vision-loss'
+  | 'severe-headache'
+  | 'seizure';
+
+export const SAFETY_SIGNAL_LABEL: Record<SafetySignal, string> = {
+  'wish-to-die': 'expressed a wish to die',
+  'suicidal-thoughts': 'expressed suicidal thoughts',
+  'self-harm-intent': 'expressed intent to harm themself',
+  'confirmed-when-asked': 'said yes when Nova asked about thoughts of self-harm',
+  'chest-pain': 'reported chest pain',
+  breathing: 'reported difficulty breathing',
+  'stroke-signs': 'reported stroke-like symptoms (numbness or slurred speech)',
+  unconscious: 'reported fainting or blacking out',
+  'vision-loss': 'reported sudden loss of vision',
+  'severe-headache': 'reported a sudden severe headache',
+  seizure: 'reported a seizure',
+};
+
 /** Raised only under the safety exception. Carries no transcript. */
 export interface SafetyFlag {
   id: string;
   crewId: string;
   at: number;
   category: SafetyCategory;
+  signal: SafetySignal;
+}
+
+// ── Mission Control actions ─────────────────────────────────────────
+export type LogKind = 'acknowledge' | 'message' | 'in-person' | 'psych' | 'medical' | 'escalate' | 'countermeasure' | 'questionnaire';
+
+export interface ActionLogEntry {
+  id: string;
+  insightId: string;
+  crewId: string | null;
+  at: number;
+  by: string;
+  kind: LogKind;
+  label: string;
+  detail?: string;
+}
+
+/** Message from Mission Control to an astronaut; arrives after the signal delay. */
+export interface CrewMessage {
+  id: string;
+  crewId: string;
+  from: string;
+  text: string;
+  sentAt: number;
+  deliverAt: number;
+  insightId?: string;
 }
 
 /** Text the astronaut explicitly chose to share with the flight surgeon. */

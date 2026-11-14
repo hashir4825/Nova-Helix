@@ -1,4 +1,5 @@
 import { HazardKey } from './hazard';
+import type { LogKind } from './crew-mode';
 import { MetricKey } from './metric';
 import { Severity, Status } from './status';
 
@@ -28,6 +29,8 @@ export interface RecommendedAction {
   detail: string;
   countermeasure?: CountermeasureKind;
   questionnaireId?: string;
+  /** Specific action-log kind when it differs from `kind` (e.g. in-person check). */
+  log?: LogKind;
 }
 
 export interface Insight {

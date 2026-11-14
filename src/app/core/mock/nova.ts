@@ -1,4 +1,4 @@
-import { CheckInDraft, ChatCard, SafetyCategory, Symptom } from '../models';
+import { CheckInDraft, ChatCard, SafetyCategory, SafetySignal, Symptom } from '../models';
 import { formatDelay } from '../util/format';
 import { MockDatabase } from './mock-database';
 import { MISSION_EVENTS, hourToDay } from './mission-plan';
@@ -35,7 +35,7 @@ export interface NovaReply {
 
 export interface NovaTurn {
   replies: NovaReply[];
-  safety?: SafetyCategory;
+  safety?: { category: SafetyCategory; signal: SafetySignal };
   state: NovaState;
 }
 
@@ -155,6 +155,24 @@ export function extractCheckIn(ctx: NovaContext, text: string): { draft: CheckIn
   };
 }
 
+// ── Specific safety signal (a category for the clinician, never the words) ──
+function selfHarmSignal(text: string, wasAsked: boolean): SafetySignal {
+  if (/(want to die|better off dead|don'?t want to (live|be alive|wake up))/i.test(text)) return 'wish-to-die';
+  if (/(kill myself|suicid|end my life|end it all)/i.test(text)) return 'suicidal-thoughts';
+  if (/(hurt myself|harm myself)/i.test(text)) return 'self-harm-intent';
+  return wasAsked ? 'confirmed-when-asked' : 'suicidal-thoughts';
+}
+
+function medicalSignal(text: string): SafetySignal {
+  if (/chest pain/i.test(text)) return 'chest-pain';
+  if (/(breathe)/i.test(text)) return 'breathing';
+  if (/(numb|slurred)/i.test(text)) return 'stroke-signs';
+  if (/(passed out|fainted|blacked out)/i.test(text)) return 'unconscious';
+  if (/(vision|blind|can'?t see)/i.test(text)) return 'vision-loss';
+  if (/headache/i.test(text)) return 'severe-headache';
+  return 'seizure';
+}
+
 // ── Pre-written safety messages ─────────────────────────────────────
 function safetyMessage(ctx: NovaContext, category: SafetyCategory): string {
   const delay = formatDelay(ctx.delaySeconds);
@@ -188,10 +206,19 @@ export function novaRespond(ctx: NovaContext, text: string): NovaTurn {
 
   // 1. Safety always comes first.
   if (SELF_HARM.test(text) || (s.pendingSafetyCheck && YES.test(text))) {
-    return { replies: [{ text: safetyMessage(ctx, 'self-harm'), card: { kind: 'safety', category: 'self-harm' } }], safety: 'self-harm', state: IDLE };
+    const signal = selfHarmSignal(text, s.pendingSafetyCheck);
+    return {
+      replies: [{ text: safetyMessage(ctx, 'self-harm'), card: { kind: 'safety', category: 'self-harm' } }],
+      safety: { category: 'self-harm', signal },
+      state: IDLE,
+    };
   }
   if (MEDICAL.test(text)) {
-    return { replies: [{ text: safetyMessage(ctx, 'medical'), card: { kind: 'safety', category: 'medical' } }], safety: 'medical', state: IDLE };
+    return {
+      replies: [{ text: safetyMessage(ctx, 'medical'), card: { kind: 'safety', category: 'medical' } }],
+      safety: { category: 'medical', signal: medicalSignal(text) },
+      state: IDLE,
+    };
   }
   if (s.pendingSafetyCheck && NO.test(text)) {
     return {

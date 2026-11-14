@@ -62,7 +62,7 @@
       <span class="visually-hidden">Signed in as</span>
       <select [value]="session.astronautId()" (change)="session.astronautId.set($any($event.target).value)">
         @for (c of crew(); track c.id) {
-          <option [value]="c.id">{{ c.name }}</option>
+          <option [value]="c.id" [selected]="c.id === session.astronautId()">{{ c.name }}</option>
         }
       </select>
     </label>

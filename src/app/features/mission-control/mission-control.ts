@@ -88,6 +88,10 @@ export class MissionControl {
     return this.summaries()?.find((s) => s.crewId === id);
   }
 
+  protected urgentFor(id: string) {
+    return this.insights()?.find((i) => i.crewId === id && i.id.startsWith('safety:'));
+  }
+
   protected hazardsFor(id: string): HazardAssessment[] {
     return this.hazards()?.filter((h) => h.crewId === id) ?? [];
   }

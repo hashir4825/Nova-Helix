@@ -1,5 +1,5 @@
-import { Evidence, Insight, SEVERITY_RANK, Severity, SYMPTOM_LABEL } from '../../models';
-import { formatClock, formatMetric, formatPct } from '../../util/format';
+import { Evidence, Insight, RecommendedAction, SAFETY_SIGNAL_LABEL, SEVERITY_RANK, SafetyFlag, Severity, SYMPTOM_LABEL } from '../../models';
+import { formatClock, formatDelay, formatMetric, formatMissionTime, formatPct } from '../../util/format';
 import { clamp } from '../prng';
 import { MISSION_CONFIG, hourToDay } from '../mission-plan';
 import { QUESTIONNAIRES } from '../questionnaires';
@@ -402,6 +402,94 @@ function cabinCo2(ctx: EngineContext): Insight | null {
 
 // ─────────────────────────────────────────────────────────────────────
 /**
+ * Nova safety alert. Gives the clinician what is needed to act: the specific signal
+ * (a category, never the astronaut's words), timing, what Nova already did, context
+ * from data the astronaut already shares, who can help on board, and a response protocol.
+ */
+function safetyInsight(ctx: EngineContext, f: SafetyFlag): Insight {
+  const who = name(ctx, f.crewId);
+  const medical = f.category === 'medical';
+  const crew = ctx.db.crew();
+  const cdr = crew.find((a) => a.role === 'CDR' && a.id !== f.crewId) ?? crew.find((a) => a.role === 'CMO' && a.id !== f.crewId);
+  const cmo = crew.find((a) => a.role === 'CMO' && a.id !== f.crewId) ?? cdr;
+  const helper = medical ? cmo : cdr;
+  const director = MISSION_CONFIG.team.flightDirector;
+  const delay = ctx.link.delaySeconds / 3600;
+  const signal = SAFETY_SIGNAL_LABEL[f.signal];
+
+  // Context from shared data (check-ins, wearables, schedule).
+  const evidence: Evidence[] = [
+    { label: 'Detected', value: `${who} ${signal}` },
+    { label: 'When', value: `${formatMissionTime(f.at)} · reached Earth ${formatClock(f.at + delay)}` },
+    {
+      label: 'Nova already',
+      value: medical
+        ? `told ${who} to get ${cmo?.name ?? 'the crew medical officer'} now, stop exercise, and that you were alerted`
+        : `gave crisis support, urged ${who} not to be alone, and told ${who} you were alerted`,
+    },
+  ];
+  const moodB = ctx.db.baseline(f.crewId, 'mood');
+  const mood = recentMean(ctx, f.crewId, 'mood', 7);
+  if (Number.isFinite(mood)) {
+    evidence.push({ label: 'Mood, 7-day mean', value: formatMetric('mood', mood), reference: moodB ? formatMetric('mood', moodB.mean) : undefined, metric: 'mood', crewId: f.crewId });
+  }
+  const sleep = recentMean(ctx, f.crewId, 'sleepDuration', 5);
+  const sleepB = ctx.db.baseline(f.crewId, 'sleepDuration');
+  if (Number.isFinite(sleep)) {
+    evidence.push({ label: 'Sleep, last 5 nights', value: formatMetric('sleepDuration', sleep), reference: sleepB ? formatMetric('sleepDuration', sleepB.mean) : undefined, metric: 'sleepDuration', crewId: f.crewId });
+  }
+  const hrv = recentMean(ctx, f.crewId, 'hrv', 7);
+  const hrvB = ctx.db.baseline(f.crewId, 'hrv');
+  if (Number.isFinite(hrv)) {
+    evidence.push({ label: 'HRV, 7-day resting', value: formatMetric('hrv', hrv), reference: hrvB ? formatMetric('hrv', hrvB.mean) : undefined, metric: 'hrv', crewId: f.crewId });
+  }
+  const missed = missedCheckInDays(ctx, f.crewId, 7).length;
+  evidence.push({ label: 'Missed check-ins, 7 days', value: `${missed}` });
+  const eva = nextEvaFor(ctx, f.crewId);
+  const evaDays = eva ? Math.ceil((eva.start - ctx.hour) / H_PER_DAY) : null;
+  if (eva && evaDays !== null && evaDays <= 7) evidence.push({ label: 'Upcoming', value: `${eva.label.split(' ')[0]} in ${evaDays} d` });
+  if (helper) evidence.push({ label: 'On board to help', value: `${helper.name} (${helper.role})` });
+
+  const recommended: RecommendedAction[] = medical
+    ? [
+        { kind: 'escalate', log: 'in-person', label: `Ask ${cmo?.name ?? 'the CMO'} to assess ${who} now`, detail: 'In-person assessment on board; do not wait for Earth.' },
+        { kind: 'message', label: `Message ${who}`, detail: 'Acknowledge the symptoms and ask for a voice call at the next window.' },
+        { kind: 'escalate', log: 'medical', label: 'Request Earth medical consult', detail: 'Specialist review of symptoms and onboard findings.' },
+        { kind: 'countermeasure', countermeasure: 'rest', label: 'Stop exercise and hazardous tasks', detail: `Pause exercise${eva ? ` and ${eva.label.split(' ')[0]} duties` : ''} until cleared.` },
+        { kind: 'escalate', label: `Escalate to ${director}`, detail: 'Flight director decides on schedule changes.' },
+      ]
+    : [
+        { kind: 'message', label: `Message ${who} now`, detail: `Let ${who} know you got the alert and ask for a call at the next window. Arrives after the signal delay.` },
+        { kind: 'escalate', log: 'in-person', label: `Ask ${cdr?.name ?? 'a crewmate'} to check on ${who} in person`, detail: `${who} should not be alone right now.` },
+        { kind: 'escalate', log: 'psych', label: 'Book urgent psychologist conference', detail: 'Private conference with the Earth psychologist at the next window.' },
+        ...(eva && evaDays !== null && evaDays <= 7
+          ? [{ kind: 'countermeasure' as const, countermeasure: 'rest' as const, label: `Review ${eva.label.split(' ')[0]} assignment`, detail: `Hold ${who}’s role until assessed.` }]
+          : []),
+        { kind: 'escalate', label: `Escalate to ${director}`, detail: 'Flight director decides on schedule changes.' },
+      ];
+
+  return {
+    id: `safety:${f.id}`,
+    crewId: f.crewId,
+    severity: 'alert',
+    hazards: medical ? ['distance'] : ['isolation', 'distance'],
+    title: `Urgent: ${who} ${signal}`,
+    summary:
+      `In a private Nova conversation at ${formatClock(f.at)}, ${who} ${signal}. ` +
+      `Nova responded and told ${who} that you were alerted. ` +
+      (medical ? `Get ${cmo?.name ?? 'the crew medical officer'} to ${who} now.` : `Contact ${who} now and make sure ${who} is not alone.`),
+    whyItMatters:
+      `${medical ? 'These symptoms can signal a life-threatening emergency' : 'This is a risk to life'}, and help from Earth is ${formatDelay(ctx.link.delaySeconds)} away each way. ` +
+      `The conversation stays private: Nova shares only the type of risk, which ${who} agreed to before first use.`,
+    detectedAt: f.at,
+    evidence,
+    confidence: 0.95,
+    recommended,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+/**
  * Findings that come from crew mode: Nova safety flags (no transcript, by design),
  * notes the astronaut chose to share, and completed questionnaires.
  */
@@ -409,39 +497,10 @@ function crewModeInsights(ctx: EngineContext): Insight[] {
   const out: Insight[] = [];
   const surgeon = MISSION_CONFIG.team.flightSurgeon;
 
-  for (const f of ctx.db.safetyFlags().filter((x) => x.at <= ctx.hour)) {
-    const who = name(ctx, f.crewId);
-    const medical = f.category === 'medical';
-    out.push({
-      id: `safety:${f.id}`,
-      crewId: f.crewId,
-      severity: 'alert',
-      hazards: medical ? ['distance'] : ['isolation', 'distance'],
-      title: medical ? `Urgent: ${who} reported a medical red flag` : `Urgent: ${who} needs support now`,
-      summary:
-        `Nova’s safety check raised this at ${formatClock(f.at)}. ` +
-        `${medical ? 'The symptoms described need medical attention.' : 'What was said suggests a risk of serious harm.'} ` +
-        `No conversation content is shared, by design. Contact ${who} directly.`,
-      whyItMatters:
-        `Nova is private. It alerts ${surgeon} only when a message suggests a risk of serious harm or an acute medical problem. ` +
-        `${who} was told this before first using Nova, and was told when this alert was sent.`,
-      detectedAt: f.at,
-      evidence: [
-        { label: 'Source', value: 'Nova safety check' },
-        { label: 'Category', value: medical ? 'Acute medical symptoms' : 'Risk of self-harm' },
-        { label: 'Conversation', value: 'Not shared (private)' },
-      ],
-      confidence: 0.95,
-      recommended: [
-        { kind: 'message', label: `Contact ${who} now`, detail: 'Send a direct message and request a voice call at the next window.' },
-        medical
-          ? { kind: 'escalate', label: 'Medical support', detail: 'Ask the crew medical officer or commander to assess in person.' }
-          : { kind: 'escalate', label: 'Psychologist conference', detail: 'Book an urgent private conference with the Earth psychologist.' },
-      ],
-    });
-  }
+  // Include the current quarter-hour: analysis runs per quarter, alerts carry their exact time.
+  for (const f of ctx.db.safetyFlags().filter((x) => x.at <= ctx.hour + 0.25)) out.push(safetyInsight(ctx, f));
 
-  for (const n of ctx.db.sharedNotes().filter((x) => x.at <= ctx.hour)) {
+  for (const n of ctx.db.sharedNotes().filter((x) => x.at <= ctx.hour + 0.25)) {
     const who = name(ctx, n.crewId);
     out.push({
       id: `note:${n.id}`,

@@ -9,6 +9,7 @@ import {
   CrewSummary,
   HAZARDS,
   HazardAssessment,
+  Insight,
   METRICS,
   ROLE_LABEL,
 } from '../../core/models';
@@ -40,6 +41,8 @@ export class CrewCard {
   readonly astronaut = input.required<Astronaut>();
   readonly summary = input<CrewSummary | undefined>(undefined);
   readonly hazards = input<HazardAssessment[]>([]);
+  /** Active Nova safety alert for this astronaut, if any. */
+  readonly urgent = input<Insight | undefined>(undefined);
 
   private readonly telemetry = inject(TelemetryApi);
   protected readonly clock = inject(MissionClock);

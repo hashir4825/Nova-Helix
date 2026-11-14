@@ -1,5 +1,7 @@
 import { Observable } from 'rxjs';
 import {
+  ActionLogEntry,
+  CrewMessage,
   AnswerValue,
   Assignment,
   ChatMessage,
@@ -83,6 +85,16 @@ export abstract class CompanionApi {
   /** Confirm or dismiss a check-in / share proposal card. */
   abstract resolveCard(crewId: string, messageId: string, action: 'confirm' | 'dismiss', edited?: string): Observable<void>;
   abstract clear(crewId: string): Observable<void>;
+}
+
+/** Things the flight surgeon does about a finding, and messages to crew. */
+export abstract class ActionsApi {
+  /** Every logged action (to show "acknowledged" etc. in lists). */
+  abstract log(): Observable<ActionLogEntry[]>;
+  abstract record(entry: Omit<ActionLogEntry, 'id' | 'at' | 'by'>): Observable<ActionLogEntry>;
+  /** Message an astronaut; it arrives after the one-way signal delay. Also logged against the insight. */
+  abstract sendMessage(crewId: string, text: string, insightId?: string): Observable<CrewMessage>;
+  abstract messages(crewId: string): Observable<CrewMessage[]>;
 }
 
 export abstract class AssessmentApi {

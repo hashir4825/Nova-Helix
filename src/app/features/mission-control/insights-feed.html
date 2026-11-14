@@ -37,9 +37,11 @@
   <ol class="list" aria-label="Insights, most severe first">
     @for (ins of visible(); track ins.id) {
       @let who = ins.crewId ? crewById().get(ins.crewId) : undefined;
-      <li>
+      @let urgent = ins.id.startsWith('safety:');
+      @let ack = acked().get(ins.id);
+      <li class="row" [class.urgent]="urgent">
         <a
-          [class]="'item sev-' + ins.severity"
+          [class]="'item sev-' + ins.severity + (urgent ? ' urgent' : '')"
           [routerLink]="[]"
           [queryParams]="{ insight: ins.id }"
           queryParamsHandling="merge"
@@ -58,6 +60,11 @@
               <span class="who">{{ who ? who.name : 'All crew' }}</span>
               <span class="dot" aria-hidden="true"></span>
               <time>{{ ins.detectedAt | relTime: now() }}</time>
+              @if (ack) {
+                <span class="ack"><nh-icon [icon]="icons.check" [size]="12" [stroke]="2.25" />{{ ack }}</span>
+              } @else if (urgent) {
+                <span class="unhandled">Not yet handled</span>
+              }
               <span class="hz">
                 @for (h of ins.hazards; track h) {
                   <nh-icon [icon]="hazardIcon[h]" [size]="13" [label]="hazards[h].label" />
@@ -66,6 +73,18 @@
             </span>
           </span>
         </a>
+        <span class="quick">
+          @if (urgent) {
+            <a class="qbtn respond" [routerLink]="[]" [queryParams]="{ insight: ins.id }" queryParamsHandling="merge">
+              <nh-icon [icon]="icons.alert" [size]="14" />Respond
+            </a>
+          }
+          @if (who) {
+            <a class="qbtn" [routerLink]="['/crew', who.id]" [attr.aria-label]="'Open ' + who.name + '’s profile'" [nhTip]="'Open ' + who.name + '’s full profile'">
+              <nh-icon [icon]="icons.user" [size]="14" />Profile
+            </a>
+          }
+        </span>
       </li>
     }
   </ol>

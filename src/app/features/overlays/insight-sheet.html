@@ -1,0 +1,144 @@
+@let i = insight();
+<nh-sheet [heading]="i?.title ?? 'Finding'" (closed)="closed.emit()">
+  <ng-container sheetEyebrow>
+    @if (i) {
+      <nh-status [status]="i.severity" [nhTip]="statusTip()" />
+      @for (h of i.hazards; track h) {
+        <nh-hazard-tag [hazard]="h" />
+      }
+    }
+  </ng-container>
+
+  @if (i) {
+    @if (urgent()) {
+      <section class="urgent" role="alert">
+        <nh-icon [icon]="icons.alert" [size]="20" />
+        <div>
+          <p class="u-title">Act now</p>
+          <p class="u-body">{{ i.summary }}</p>
+        </div>
+      </section>
+    }
+
+    <!-- Who -->
+    <section class="who">
+      @if (who(); as w) {
+        <span class="avatar" aria-hidden="true">{{ w.name.charAt(0) }}</span>
+        <span class="who-text">
+          <span class="who-name">{{ w.name }}</span>
+          <span class="who-role">{{ roleLabel[w.role] }} · {{ w.callsign }}</span>
+        </span>
+        <a class="profile-btn" [routerLink]="['/crew', w.id]" (click)="closed.emit()">
+          <nh-icon [icon]="icons.user" [size]="16" />Open profile
+        </a>
+      } @else {
+        <span class="avatar" aria-hidden="true">4</span>
+        <span class="who-text"><span class="who-name">Whole crew</span></span>
+      }
+      @if (acknowledged(); as ack) {
+        <span class="ack"><nh-icon [icon]="icons.check" [size]="14" [stroke]="2" />Acknowledged {{ clockOf(ack.at) }}</span>
+      } @else {
+        <button type="button" class="ghost" (click)="acknowledge()">Acknowledge</button>
+      }
+    </section>
+
+    @if (!urgent()) {
+      <p class="summary">{{ i.summary }}</p>
+    }
+
+    <section class="block">
+      <h3>Why it matters</h3>
+      <p class="why">{{ i.whyItMatters }}</p>
+    </section>
+
+    <!-- Evidence -->
+    <section class="block">
+      <h3>{{ urgent() ? 'What we know' : 'Evidence' }}</h3>
+      <dl class="evidence">
+        @for (e of i.evidence; track e.label) {
+          <div class="ev">
+            <dt>{{ e.label }}</dt>
+            <dd>
+              @if (e.metric) {
+                <a
+                  [routerLink]="[]"
+                  [queryParams]="{ metric: (e.crewId ?? i.crewId) + ':' + e.metric, insight: null }"
+                  queryParamsHandling="merge"
+                  nhTip="Open this measurement"
+                  >{{ e.value }}</a
+                >
+              } @else {
+                {{ e.value }}
+              }
+              @if (e.reference) {
+                <span class="ref">normal {{ e.reference }}</span>
+              }
+            </dd>
+          </div>
+        }
+      </dl>
+      @if (urgent()) {
+        <p class="privacy"><nh-icon [icon]="icons.lock" [size]="13" />The conversation with Nova stays private. Only the type of risk is shared, as agreed by the astronaut.</p>
+      }
+    </section>
+
+    <!-- Respond -->
+    <section class="block">
+      <h3>{{ urgent() ? 'Respond' : 'Recommended actions' }}</h3>
+      <ol class="actions">
+        @for (a of i.recommended; track a.label; let n = $index) {
+          @let done = doneFor(a);
+          <li class="action" [class.done]="done">
+            <span class="step">{{ n + 1 }}</span>
+            <span class="a-text">
+              <span class="a-label">{{ a.label }}</span>
+              <span class="a-detail">{{ a.detail }}</span>
+              @if (done) {
+                <span class="a-done"><nh-icon [icon]="icons.check" [size]="13" [stroke]="2" />Done {{ clockOf(done.at) }} by {{ done.by }}</span>
+              }
+            </span>
+            @if (!done && (a.kind !== 'message' || i.crewId)) {
+              <button type="button" class="do" [class.primary]="n === 0" (click)="act(a)">
+                <nh-icon [icon]="kindIcon[a.kind]" [size]="15" />{{ a.kind === 'message' ? 'Write' : a.kind === 'acknowledge' ? 'Acknowledge' : 'Do this' }}
+              </button>
+            }
+          </li>
+          @if (a.kind === 'message' && composing()) {
+            <li class="composer">
+              <label for="msg-draft" class="c-label">Message to {{ who()?.name }} · arrives in about <span class="mono">{{ delay() }}</span></label>
+              <textarea id="msg-draft" rows="4" [value]="draft()" (input)="draft.set($any($event.target).value)"></textarea>
+              <div class="c-actions">
+                <button type="button" class="do primary" (click)="sendMessage()" [disabled]="!draft().trim()"><nh-icon [icon]="icons.send" [size]="15" />Send</button>
+                <button type="button" class="ghost" (click)="composing.set(false)">Cancel</button>
+              </div>
+            </li>
+          }
+        }
+      </ol>
+    </section>
+
+    <!-- Log -->
+    <section class="block">
+      <h3>Action log</h3>
+      <ol class="log">
+        @for (e of timeline(); track e.id) {
+          <li>
+            <span class="l-dot" [class.system]="e.id === 'detected' || e.id === 'arrived'"></span>
+            <span class="l-time mono">{{ when(e.at) }}</span>
+            <span class="l-text">
+              <span class="l-label">{{ e.label }}</span>
+              <span class="l-by">{{ e.by }}</span>
+              @if (e.detail) {
+                <span class="l-detail">{{ e.detail }}</span>
+              }
+            </span>
+          </li>
+        }
+      </ol>
+    </section>
+  } @else if (loading()) {
+    <nh-skeleton h="320px" />
+  } @else {
+    <p class="missing">This finding is no longer active.</p>
+  }
+</nh-sheet>

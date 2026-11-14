@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input } f
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
-import { AssessmentApi, CrewApi } from '../../core/data/apis';
+import { ActionsApi, AssessmentApi, CrewApi } from '../../core/data/apis';
 import { ROLE_LABEL, SEVERITY_RANK, Status } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { Role, SessionStore } from '../../core/state/session';
@@ -78,14 +78,34 @@ export class Profile {
   protected readonly insights = computed(() =>
     (this.allInsights() ?? [])
       .filter((i) => i.crewId === this.crewId() || i.crewId === null)
-      .sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] || b.detectedAt - a.detectedAt),
+      // The astronaut never sees the clinical safety alert about themself; they get the support note instead.
+      .filter((i) => !(this.isAstronaut() && i.id.startsWith('safety:')))
+      .sort((a, b) => urgentRank(b) - urgentRank(a) || SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] || b.detectedAt - a.detectedAt),
   );
+  /** Active Nova safety alert for this astronaut. */
+  protected readonly urgent = computed(() =>
+    (this.allInsights() ?? []).find((i) => i.id.startsWith('safety:') && i.crewId === this.crewId()),
+  );
+  protected readonly surgeon = this.clock.config.team.flightSurgeon;
+  protected readonly helperName = computed(() => {
+    const others = this.crew().filter((a) => a.id !== this.crewId());
+    return (others.find((a) => a.role === 'CDR') ?? others.find((a) => a.role === 'CMO') ?? others[0])?.name ?? 'your crew';
+  });
+
+  private readonly actions = inject(ActionsApi);
+  private readonly inbox = toSignal(toObservable(this.crewId).pipe(switchMap((id) => this.actions.messages(id))), { initialValue: [] });
+  /** Messages from Mission Control, newest first; arrive after the signal delay. */
+  protected readonly messages = computed(() =>
+    [...this.inbox()].sort((a, b) => b.sentAt - a.sentAt).map((m) => ({ ...m, delivered: m.deliverAt <= this.clock.liveHour() })),
+  );
+
   protected readonly attention = computed(() => this.insights().filter((i) => i.severity !== 'info').slice(0, 3));
 
   /** One-sentence reason for the overall status. */
   protected readonly reason = computed(() => {
     const s = this.summary();
     if (!s) return '';
+    if (this.isAstronaut() && this.urgent()) return `${this.surgeon} has been asked to support you.`;
     if (s.status === 'nominal') {
       return this.isAstronaut() ? 'Everything is inside your normal range today.' : 'All signals are inside personal baselines.';
     }
@@ -115,4 +135,8 @@ export class Profile {
 
 
   protected readonly crewWithStatus = computed(() => this.crew().map((a) => ({ ...a, status: this.statusOf(a.id) })));
+}
+
+function urgentRank(i: { id: string }): number {
+  return i.id.startsWith('safety:') ? 1 : 0;
 }
