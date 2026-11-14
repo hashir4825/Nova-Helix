@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { TipDirective } from '../../shared/tooltip/tip.directive';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, switchMap } from 'rxjs';
 import { AssessmentApi, CrewApi, MissionApi } from '../../core/data/apis';
@@ -21,7 +23,7 @@ const INTRO_KEY = 'nh.intro-dismissed';
 
 @Component({
   selector: 'nh-mission-control',
-  imports: [Panel, CrewCard, InsightsFeed, HazardMatrix, MissionHero, Skeleton, HelpHint, Icon],
+  imports: [Panel, CrewCard, InsightsFeed, HazardMatrix, MissionHero, Skeleton, HelpHint, Icon, RouterLink, TipDirective],
   templateUrl: './mission-control.html',
   styleUrl: './mission-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

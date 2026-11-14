@@ -19,6 +19,9 @@
         <h2 id="crew-h">Crew</h2>
         <nh-help [tip]="help.crewSection" label="the crew cards" />
         <span class="section-meta">Live vitals · 24 h trend against each astronaut's own baseline</span>
+        <a class="all-link" routerLink="/crew" nhTip="Open the crew directory to pick a profile">
+          All crew <nh-icon [icon]="icons.chevronRight" [size]="14" />
+        </a>
       </header>
       @switch (crew().state) {
         @case ('ready') {

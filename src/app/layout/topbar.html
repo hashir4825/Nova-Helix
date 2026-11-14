@@ -20,6 +20,28 @@
     </span>
   </div>
 
+  @if (!crewMode()) {
+    <nav class="pages" aria-label="Mission Control pages">
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        ariaCurrentWhenActive="page"
+        nhTip="Mission overview: all crew at a glance, findings and hazard exposure"
+        nhTipPlacement="bottom"
+        >Overview</a
+      >
+      <a
+        routerLink="/crew"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        nhTip="Crew directory: pick an astronaut to open their full profile"
+        nhTipPlacement="bottom"
+        >Crew</a
+      >
+    </nav>
+  }
+
   <div class="spacer"></div>
 
   @let link = clock.link();

@@ -4,8 +4,8 @@
 <div class="page">
   @if (!me) {
     <nav class="crew-nav" aria-label="Astronauts">
-      <a class="back" routerLink="/" nhTip="Back to the crew overview">
-        <nh-icon [icon]="icons.arrowLeft" [size]="16" />Mission Control
+      <a class="back" routerLink="/crew" nhTip="Back to the crew directory">
+        <nh-icon [icon]="icons.arrowLeft" [size]="16" />All crew
       </a>
       <ul class="switch">
         @for (c of crewWithStatus(); track c.id) {

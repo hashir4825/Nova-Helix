@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { MissionClock } from '../core/state/mission-clock';
@@ -16,7 +16,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 @Component({
   selector: 'nh-topbar',
-  imports: [RouterLink, Icon, DelayPipe, TipDirective],
+  imports: [RouterLink, RouterLinkActive, Icon, DelayPipe, TipDirective],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

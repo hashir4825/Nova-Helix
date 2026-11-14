@@ -1,0 +1,92 @@
+<div class="page">
+  <header class="head">
+    <div class="titles">
+      <p class="eyebrow">Mission Control · Flight surgeon {{ team.flightSurgeon }}</p>
+      <div class="title-row">
+        <h1>Crew</h1>
+        <nh-help [tip]="helpTip" label="the crew page" />
+      </div>
+    </div>
+    @if (counts(); as c) {
+      <p class="summary" aria-label="Crew status summary">
+        <span class="mono">{{ c.alert + c.watch + c.nominal }}</span> astronauts ·
+        @if (c.alert) {
+          <nh-status status="alert" [label]="c.alert + ' Alert'" />
+        }
+        @if (c.watch) {
+          <nh-status status="watch" [label]="c.watch + ' Watch'" />
+        }
+        @if (c.nominal) {
+          <nh-status status="nominal" [label]="c.nominal + ' Nominal'" />
+        }
+      </p>
+    }
+  </header>
+
+  @if (cards(); as cards) {
+    <ul class="grid">
+      @for (c of cards; track c.a.id) {
+        <li>
+          <a
+            class="card"
+            [class]="'card s-' + c.status"
+            [routerLink]="['/crew', c.a.id]"
+            [attr.aria-label]="'Open ' + c.a.name + '’s profile. ' + c.role + '. Status ' + c.status + '. ' + c.reason"
+          >
+            <span class="top">
+              <span class="ring">
+                <nh-hazard-ring [assessments]="c.hazards" [size]="76" [labels]="false" [thickness]="4">
+                  <span class="initial" aria-hidden="true">{{ c.a.name.charAt(0) }}</span>
+                </nh-hazard-ring>
+              </span>
+              <span class="who">
+                <span class="name">{{ c.a.name }}</span>
+                <span class="role">{{ c.role }} · {{ c.a.callsign }}</span>
+              </span>
+              <nh-status class="status" [status]="c.status" [nhTip]="c.statusTip" />
+            </span>
+
+            <span class="reason">{{ c.reason }}</span>
+
+            <span class="facts">
+              @if (c.top) {
+                <span class="fact" [nhTip]="{ title: 'Highest hazard', body: c.top.label + ' scores ' + c.top.score + ' of 100.' }">
+                  <nh-icon [icon]="c.top.icon" [size]="14" />
+                  <span class="fact-text">{{ c.top.label }}</span>
+                  <span [class]="'mono s-' + c.top.status">{{ c.top.score }}</span>
+                </span>
+              }
+              <span class="fact" [nhTip]="c.checkInTip">
+                @if (c.checkIn !== null) {
+                  <nh-icon class="ok" [icon]="icons.check" [size]="14" [stroke]="2" />
+                  <span class="fact-text">Checked in <span class="mono">{{ clock24(c.checkIn) }}</span></span>
+                } @else {
+                  <nh-icon class="due" [icon]="icons.clock" [size]="14" />
+                  <span class="fact-text due">Check-in not done</span>
+                }
+              </span>
+              <span class="fact" nhTip="Open findings that need review (Watch or Alert).">
+                <nh-icon [icon]="icons.inbox" [size]="14" />
+                <span class="fact-text">{{ c.openFindings }} open {{ c.openFindings === 1 ? 'finding' : 'findings' }}</span>
+              </span>
+              @if (c.nextEvent; as ev) {
+                <span class="fact">
+                  <nh-icon [icon]="icons.calendar" [size]="14" />
+                  <span class="fact-text">{{ ev.label }} · D{{ ev.day }}</span>
+                </span>
+              }
+            </span>
+
+            <span class="open">Open profile <nh-icon [icon]="icons.chevronRight" [size]="16" /></span>
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="grid">
+      @for (i of [0, 1, 2, 3]; track i) {
+        <nh-skeleton h="260px" />
+      }
+    </div>
+  }
+</div>

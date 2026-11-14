@@ -7,6 +7,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/mission-control/mission-control').then((m) => m.MissionControl),
   },
   {
+    // Flight surgeon's crew directory: pick a member to open their profile.
+    path: 'crew',
+    title: 'Crew · Nova Healix',
+    loadComponent: () => import('./features/crew-directory/crew-directory').then((m) => m.CrewDirectory),
+  },
+  {
     // Flight surgeon (admin) view of any astronaut.
     path: 'crew/:id',
     title: 'Astronaut Profile · Nova Healix',
