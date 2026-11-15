@@ -26,7 +26,7 @@
   // Status tint bleeds softly from the top edge; icon + text carry the meaning.
   background:
     radial-gradient(120% 70% at 0% 0%, var(--tone), transparent 60%),
-    var(--surface-1);
+    var(--surface-card);
   transition: border-color var(--dur-base) var(--ease-out);
 }
 

@@ -47,7 +47,7 @@
   gap: var(--space-4);
   padding: var(--space-7) var(--space-6);
   margin-top: var(--space-5);
-  background: radial-gradient(80% 60% at 0% 0%, var(--crew-soft), transparent 60%), var(--surface-1);
+  background: radial-gradient(80% 60% at 0% 0%, var(--crew-soft), transparent 60%), var(--surface-card);
 
   h1 {
     @include display;

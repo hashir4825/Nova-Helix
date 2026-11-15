@@ -7,9 +7,11 @@
   // ── Space (deep ink with a blue cast, never pure black) ─────────
   --bg: #05070f;
   --surface-0: #080c19; // top bar
-  --surface-1: #0c1223; // cards / panels
-  --surface-2: #111a31; // hover, inset
-  --surface-3: #18233f; // tracks, pressed
+  --surface-1: #0c1223; // solid: sheets, tooltips, menus
+  --surface-2: rgba(19, 29, 54, 0.72); // hover, inset tiles (translucent over cards)
+  --surface-3: rgba(28, 40, 72, 0.8); // tracks, pressed
+  // Cards and panels: translucent so the space backdrop shows through (user decision).
+  --surface-card: rgba(12, 18, 35, 0.58);
   --scrim: rgba(2, 4, 10, 0.66);
   --glass: rgba(12, 18, 35, 0.72); // only for the top bar over the starfield
 
@@ -149,8 +151,9 @@
   --bg: #eef1f8;
   --surface-0: #f8f9fd;
   --surface-1: #ffffff;
-  --surface-2: #f2f4fb;
-  --surface-3: #e3e8f5;
+  --surface-2: rgba(234, 238, 249, 0.8);
+  --surface-3: rgba(220, 227, 244, 0.9);
+  --surface-card: rgba(255, 255, 255, 0.78);
   --scrim: rgba(16, 22, 44, 0.36);
   --glass: rgba(248, 249, 253, 0.82);
 

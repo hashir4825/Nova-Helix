@@ -70,7 +70,7 @@ export const MOBILITY_VALID_DAYS = 7;
       padding: var(--space-5);
       &.due {
         border-color: color-mix(in srgb, var(--crew) 55%, transparent);
-        background: linear-gradient(135deg, var(--crew-soft), transparent 65%), var(--surface-1);
+        background: linear-gradient(135deg, var(--crew-soft), transparent 65%), var(--surface-card);
       }
     }
     .head {

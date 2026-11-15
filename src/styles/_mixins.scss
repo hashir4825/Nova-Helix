@@ -24,7 +24,7 @@
 }
 
 @mixin panel {
-  background: var(--surface-1);
+  background: var(--surface-card);
   border: 1px solid var(--line);
   border-radius: var(--radius-3);
   box-shadow: var(--elev-1);

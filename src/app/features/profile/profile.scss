@@ -43,7 +43,7 @@
   gap: var(--space-1);
   padding: 3px;
   border-radius: var(--radius-round);
-  background: var(--surface-1);
+  background: var(--surface-card);
   border: 1px solid var(--line);
 
   a {
@@ -107,7 +107,7 @@
   border: 1px solid var(--line);
   background:
     radial-gradient(80% 120% at 0% 0%, var(--tone), transparent 60%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 90%, transparent), var(--surface-0));
+    linear-gradient(180deg, var(--surface-card), color-mix(in srgb, var(--surface-0) 55%, transparent));
 
   &.s-watch {
     --tone: var(--watch-soft);

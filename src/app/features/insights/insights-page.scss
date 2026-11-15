@@ -81,7 +81,7 @@
   gap: 2px;
   padding: 3px;
   border-radius: var(--radius-round);
-  background: var(--surface-1);
+  background: var(--surface-card);
   border: 1px solid var(--line);
 }
 
@@ -142,7 +142,7 @@
 
   &.urgent {
     border-color: var(--alert);
-    background: radial-gradient(80% 120% at 0% 0%, var(--alert-soft), transparent 60%), var(--surface-1);
+    background: radial-gradient(80% 120% at 0% 0%, var(--alert-soft), transparent 60%), var(--surface-card);
     .title {
       color: var(--alert);
     }
