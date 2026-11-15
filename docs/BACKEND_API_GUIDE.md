@@ -65,7 +65,7 @@ model types. This leaves the frontend unchanged, and it means the backend does t
 | `GET .../sessions/{sid}`, `GET /api/isolation/{id}` | **Removed** | No transcripts are stored, so there is nothing to fetch. |
 | `GET /api/mobility/method`, `POST/GET /api/mobility/{id}` | **Kept, v2 format** | camelCase, slug ids, nominal/watch/alert, no `?day=`. See [section 12](#12-mobility--balance-check). |
 | `GET /health` | **Kept** | Response fields changed (see [section 5.1](#51-ops)). |
-| None | **Added** | Mission events and timeline, metric series and baseline, live vitals, metric interpretation, hazard history, check-ins, questionnaires and assignments, shared notes, the action log, resolve and reopen. |
+| None | **Added** | Mission events and timeline, metric series and baseline, live vitals, metric interpretation, check-ins, questionnaires and assignments, shared notes, the action log, resolve and reopen. |
 
 ---
 
@@ -121,7 +121,6 @@ them on every request.
 | Telemetry | GET | `/api/crew/{id}/vitals/live` | `LiveVitals` | `TelemetryApi.live` |
 | Telemetry | GET | `/api/crew/{id}/checkins?from&to` | `CheckIn[]` | `TelemetryApi.checkIns` |
 | Assessment | GET | `/api/assessment/hazards?at&autonomous` | `HazardAssessment[]` | `AssessmentApi.hazards` |
-| Assessment | GET | `/api/assessment/hazards/{hazard}/history?crew&fromDay&at&autonomous` | `Sample[]` | `AssessmentApi.hazardHistory` |
 | Assessment | GET | `/api/assessment/crew-summaries?at&autonomous` | `CrewSummary[]` | `AssessmentApi.crewSummaries` |
 | Assessment | GET | `/api/insights?at&autonomous` | `Insight[]` | `AssessmentApi.insights` |
 | Assessment | GET | `/api/crew/{id}/metrics/{metric}/interpretation?at&autonomous` | `MetricInterpretation` | `AssessmentApi.interpretMetric` |
@@ -523,11 +522,6 @@ All five take `at` (mission hour, optional, default now, clamped to now) and `au
 }
 ```
 
-#### GET `/api/assessment/hazards/{hazard}/history?crew=&fromDay=` → `Sample[]`
-
-That hazard's score for one astronaut, evaluated once per day from `fromDay` to the day of `at`
-(`t` = evaluation hour, `v` = score 0–100). Used for the trend sparkline on each hazard tile.
-
 #### GET `/api/assessment/crew-summaries` → `CrewSummary[]`
 
 ```json
@@ -567,7 +561,7 @@ active and resolved findings itself. Sort: safety first, then by severity, then 
 **Resolution rule:** if a resolution exists for the id and the current severity is **not higher** than
 `resolution.severity`, include `resolution`. If the current severity **is higher**, omit `resolution` and
 set `reopened: true` (the finding is active again). Insights from shared Crew Mode data and from safety flags
-are described in [section 7.3](#73-insights).
+are described in [section 7.2](#72-insights).
 
 #### GET `/api/crew/{id}/metrics/{metric}/interpretation` → `MetricInterpretation`
 
@@ -723,7 +717,7 @@ Nova is the astronaut's **private** companion. These rules are product requireme
    - records a `SafetyFlag` `{ id, crewId, at: exact now, category, signal }`, which **contains no text**;
    - returns `safety` in the response.
 
-   The flag becomes the `safety:<flagId>` Alert insight for the flight surgeon only (see 7.3).
+   The flag becomes the `safety:<flagId>` Alert insight for the flight surgeon only (see 7.2).
    **Ambiguous hopelessness** ("what's the point") does not alert: Nova asks directly whether the astronaut has thoughts of
    harming themself and sets `state.pendingSafetyCheck = true`. A "yes" on the next turn raises
    `signal: "confirmed-when-asked"`. The astronaut is told about this exception before first use
@@ -763,7 +757,7 @@ the output types match. Files (all in `src/app/core/mock/`):
 | File | What it does |
 |---|---|
 | `engine/context.ts` | Shared helpers: recent means (resting hours only for vitals), baseline z-scores, `combine` |
-| `engine/hazards.ts` | 0–100 hazard scores with drivers, headline and explanation; daily hazard history |
+| `engine/hazards.ts` | 0–100 hazard scores with drivers, headline and explanation |
 | `engine/insights.ts` | Insight rules, Crew Mode insights (safety, notes, questionnaires), sorting |
 | `engine/interpret.ts` | `MetricInterpretation` for any metric |
 | `mock-database.ts` | Baselines (`baseline()`), check-in series, data store |
@@ -790,11 +784,7 @@ the output types match. Files (all in `src/app/core/mock/`):
 
 - `explanation` is built from the `concern` phrases of the top drivers, with no numbers and no pronouns. It is shown to astronauts.
 
-### 7.2 Hazard history
-
-The same scoring evaluated once per day (`t` = that day's evaluation hour) from `fromDay` to the current day.
-
-### 7.3 Insights
+### 7.2 Insights
 
 Rules (id → trigger), from `engine/insights.ts`:
 
@@ -822,7 +812,7 @@ Rules (id → trigger), from `engine/insights.ts`:
 - always sorted first; a new safety statement always creates a new flag, so a new alert;
 - `SAFETY_SIGNAL_LABEL` is in `src/app/core/models/crew-mode.ts`.
 
-### 7.4 Interpretation
+### 7.3 Interpretation
 
 `engine/interpret.ts`: 7-day mean vs personal baseline (percent and direction), trend from the slope,
 related out-of-range signals as `contributing`, `whyItMatters` and `recommended` from the matching insight
