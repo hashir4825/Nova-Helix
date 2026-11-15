@@ -7,6 +7,6 @@
  * redirect crew check-ins or Nova conversations to another server.
  */
 export const environment = {
-  dataSource: 'mock' as 'mock' | 'api',
+  dataSource: 'api' as 'mock' | 'api',
   apiBaseUrl: 'https://nova-healix-backend-production.up.railway.app',
 };
