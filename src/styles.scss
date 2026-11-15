@@ -22,20 +22,7 @@ html {
 body {
   min-height: 100vh;
   background-color: var(--bg);
-  // Space, through restraint: a static, sparse starfield and two faint horizon glows.
-  background-image:
-    radial-gradient(1100px 520px at 92% -12%, var(--mars-glow), transparent 70%),
-    radial-gradient(900px 480px at -10% -20%, var(--accent-soft), transparent 70%),
-    radial-gradient(1px 1px at 23px 41px, var(--star), transparent 100%),
-    radial-gradient(1px 1px at 157px 112px, var(--star-dim), transparent 100%),
-    radial-gradient(1.5px 1.5px at 211px 19px, var(--star), transparent 100%),
-    radial-gradient(1px 1px at 88px 203px, var(--star-dim), transparent 100%),
-    radial-gradient(1px 1px at 301px 260px, var(--star), transparent 100%),
-    radial-gradient(1px 1px at 377px 77px, var(--star-dim), transparent 100%),
-    radial-gradient(1.5px 1.5px at 12px 331px, var(--star-dim), transparent 100%);
-  background-size: 100% 100%, 100% 100%, 420px 380px, 420px 380px, 420px 380px, 420px 380px, 420px 380px, 420px 380px, 420px 380px;
-  background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat;
-  background-attachment: fixed;
+  // The animated starfield and nebula glows live in <nh-space-backdrop> (app.ts).
   color: var(--text-1);
   font-family: var(--font-sans);
   font-size: var(--type-body);

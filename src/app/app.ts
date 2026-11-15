@@ -5,11 +5,13 @@ import { TooltipHost } from './shared/tooltip/tooltip-host';
 import { OverlayHost } from './features/overlays/overlay-host';
 import { ThemeStore } from './core/state/theme';
 import { ApiStatus } from './core/state/api-status';
+import { SpaceBackdrop } from './shared/ui/space-backdrop';
 
 @Component({
   selector: 'nh-root',
-  imports: [RouterOutlet, Topbar, TooltipHost, OverlayHost],
+  imports: [RouterOutlet, Topbar, TooltipHost, OverlayHost, SpaceBackdrop],
   template: `
+    <nh-space-backdrop />
     <a class="skip-link" href="#main">Skip to content</a>
     <nh-topbar />
     @if (api.unreachable()) {
@@ -36,6 +38,8 @@ import { ApiStatus } from './core/state/api-status';
       border-bottom: 1px solid var(--line);
     }
     main {
+      position: relative;
+      z-index: 1;
       flex: 1;
       outline: none;
     }
