@@ -3,7 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { AssessmentApi, CrewApi } from '../../core/data/apis';
-import { HAZARDS, ROLE_LABEL, SEVERITY_RANK } from '../../core/models';
+import { HAZARDS, ROLE_LABEL, SEVERITY_RANK, STATUS_LABEL } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { SessionStore } from '../../core/state/session';
 import { formatClock } from '../../core/util/format';
@@ -69,7 +69,9 @@ export class CrewDirectory {
         statusTip: STATUS_HELP[status],
         reason: status === 'nominal' ? 'All signals inside personal baselines.' : (finding?.title ?? top?.explanation ?? ''),
         hazards: mine,
-        top: top ? { label: HAZARDS[top.hazard].label, score: top.score, status: top.status, icon: HAZARD_ICON[top.hazard] } : null,
+        top: top
+          ? { key: top.hazard, label: HAZARDS[top.hazard].label, score: top.score, status: top.status, statusLabel: STATUS_LABEL[top.status], headline: top.headline, icon: HAZARD_ICON[top.hazard] }
+          : null,
         openFindings,
         checkIn: s?.checkInHour ?? null,
         checkInTip: s?.checkInHour != null ? HELP.checkInDone(formatClock(s.checkInHour)) : HELP.checkInDue('the morning'),

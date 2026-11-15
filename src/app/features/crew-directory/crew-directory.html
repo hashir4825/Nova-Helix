@@ -31,6 +31,7 @@
             class="card"
             [class]="'card s-' + c.status"
             [routerLink]="['/crew', c.a.id]"
+            [queryParams]="c.top ? { hazard: c.top.key } : {}"
             [attr.aria-label]="'Open ' + c.a.name + '’s profile. ' + c.role + '. Status ' + c.status + '. ' + c.reason"
           >
             <span class="top">
@@ -48,14 +49,26 @@
 
             <span class="reason">{{ c.reason }}</span>
 
-            <span class="facts">
-              @if (c.top) {
-                <span class="fact" [nhTip]="{ title: 'Highest hazard', body: c.top.label + ' scores ' + c.top.score + ' of 100.' }">
-                  <nh-icon [icon]="c.top.icon" [size]="14" />
-                  <span class="fact-text">{{ c.top.label }}</span>
-                  <span [class]="'mono s-' + c.top.status">{{ c.top.score }}</span>
+            @if (c.top; as t) {
+              <span
+                [class]="'peak s-' + t.status"
+                [nhTip]="{ title: 'Highest hazard', body: t.label + ' scores ' + t.score + ' of 100 (' + t.statusLabel + '). Watch from 40, alert from 70.', hint: 'Open the profile for all five hazards and what feeds each one' }"
+              >
+                <span class="peak-icon"><nh-icon [icon]="t.icon" [size]="20" /></span>
+                <span class="peak-text">
+                  <span class="peak-k">Highest hazard</span>
+                  <span class="peak-label">{{ t.label }}</span>
+                  @if (t.headline) {
+                    <span class="peak-headline">{{ t.headline }}</span>
+                  }
                 </span>
-              }
+                <span class="peak-score">
+                  <span class="peak-num mono">{{ t.score }}</span><span class="peak-of mono">/100</span>
+                </span>
+              </span>
+            }
+
+            <span class="facts">
               <span class="fact" [nhTip]="c.checkInTip">
                 @if (c.checkIn !== null) {
                   <nh-icon class="ok" [icon]="icons.check" [size]="14" [stroke]="2" />

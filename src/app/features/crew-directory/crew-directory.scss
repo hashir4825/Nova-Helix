@@ -151,6 +151,70 @@
   line-height: var(--lh-snug);
 }
 
+// Highest hazard: the card's headline figure (data from /api/assessment/hazards).
+.peak {
+  --pc: var(--nominal);
+  --pc-soft: var(--nominal-soft);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+  border-radius: var(--radius-2);
+  background: var(--pc-soft);
+  border: 1px solid color-mix(in srgb, var(--pc) 35%, transparent);
+  &.s-watch {
+    --pc: var(--watch);
+    --pc-soft: var(--watch-soft);
+  }
+  &.s-alert {
+    --pc: var(--alert);
+    --pc-soft: var(--alert-soft);
+  }
+}
+.peak-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pc) 18%, transparent);
+  color: var(--pc);
+}
+.peak-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.peak-k {
+  @include label;
+  color: var(--text-3);
+}
+.peak-label {
+  font-weight: var(--weight-semibold);
+  color: var(--text-1);
+}
+.peak-headline {
+  @include truncate;
+  font-size: var(--type-caption);
+  color: var(--text-2);
+}
+.peak-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  color: var(--pc);
+}
+.peak-num {
+  font-size: var(--type-h1);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+.peak-of {
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}
+
 .facts {
   display: grid;
   gap: var(--space-2);
