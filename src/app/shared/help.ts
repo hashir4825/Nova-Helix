@@ -55,7 +55,6 @@ export const HELP = {
     title: 'Crew Mode',
     body: 'The astronaut’s view: a 30-second daily check-in, assigned questionnaires and messages from Mission Control.',
   },
-  theme: 'Switch between dark and light appearance.',
   crewStatus: {
     title: 'Crew status',
     body: 'How many astronauts are at each level. Each astronaut takes their most serious level across all hazards and findings.',

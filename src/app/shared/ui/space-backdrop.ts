@@ -82,9 +82,6 @@ const DRIFT = [3, 6, 11];
       opacity: 0.6;
       animation: drift-a 74s ease-in-out infinite alternate-reverse;
     }
-    :host-context([data-theme='light']) .nebula {
-      opacity: 0.45;
-    }
     @keyframes drift-a {
       from {
         transform: translate(0, 0) scale(1) rotate(0deg);
@@ -122,7 +119,7 @@ export class SpaceBackdrop implements AfterViewInit {
   private raf = 0;
   private last = 0;
   private nextMeteor = 0;
-  private colors = { star: 'rgba(220,230,255,0.55)', accent: '#4fd8eb', earth: '#4f8dff', mars: '#e0663f', light: false, at: -1 };
+  private colors = { star: 'rgba(220,230,255,0.55)', accent: '#4fd8eb', earth: '#4f8dff', mars: '#e0663f', at: -1 };
 
   /**
    * A faint solar system turning in the lower right, seen at an angle: Sun, Mercury to Jupiter.
@@ -130,7 +127,7 @@ export class SpaceBackdrop implements AfterViewInit {
    * Earth and Mars use the mission's illustration colours.
    */
   private drawSolarSystem(ctx: CanvasRenderingContext2D, time: number): void {
-    const { star, earth, mars, light } = this.colors;
+    const { star, earth, mars } = this.colors;
     // Sun in the right-hand margin; orbits tilted to run up and down along it, so the system
     // stays visible beside the content instead of hiding behind the cards.
     const scale = Math.min(this.h * 0.95, this.w * 0.6);
@@ -140,7 +137,7 @@ export class SpaceBackdrop implements AfterViewInit {
     const rot = -1.2;
     const cr = Math.cos(rot);
     const sr = Math.sin(rot);
-    const layer = light ? 0.4 : 0.75;
+    const layer = 0.75;
 
     // Sun glow.
     const sun = ctx.createRadialGradient(cx, cy, 0, cx, cy, scale * 0.16);
@@ -256,7 +253,6 @@ export class SpaceBackdrop implements AfterViewInit {
         accent: v('--accent', this.colors.accent),
         earth: v('--earth', this.colors.earth),
         mars: v('--mars', this.colors.mars),
-        light: document.documentElement.getAttribute('data-theme') === 'light',
         at: time,
       };
     }

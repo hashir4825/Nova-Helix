@@ -1,5 +1,5 @@
 // Nova Healix design tokens. Every visual value in the app comes from here.
-// Deep-space default; [data-theme='light'] redefines the same tokens.
+// Deep space, dark only (user decision: no light theme).
 
 :root {
   color-scheme: dark;
@@ -143,67 +143,6 @@
   // ── Starfield (static, sparse, barely there) ────────────────────
   --star: rgba(225, 233, 255, 0.85);
   --star-dim: rgba(220, 230, 255, 0.28);
-}
-
-[data-theme='light'] {
-  color-scheme: light;
-
-  --bg: #eef1f8;
-  --surface-0: #f8f9fd;
-  --surface-1: #ffffff;
-  --surface-2: rgba(234, 238, 249, 0.8);
-  --surface-3: rgba(220, 227, 244, 0.9);
-  --surface-card: rgba(255, 255, 255, 0.78);
-  --scrim: rgba(16, 22, 44, 0.36);
-  --glass: rgba(248, 249, 253, 0.82);
-
-  --line: #dfe4f1;
-  --line-strong: #c6cee4;
-  --tick: #b3bdd8;
-
-  --text-1: #0d1430;
-  --text-2: #424d72;
-  --text-3: #5d688d;
-  --text-inverse: #ffffff;
-
-  --accent: #0a7488;
-  --accent-strong: #075e6e;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(10, 116, 136, 0.1);
-  --crew: #6a48d7;
-  --crew-ink: #ffffff;
-  --crew-soft: rgba(106, 72, 215, 0.1);
-  --mars: #c4532f;
-  --mars-glow: rgba(196, 83, 47, 0.12);
-  --earth: #2f6fe0;
-
-  --nominal: #0d8456;
-  --nominal-soft: rgba(13, 132, 86, 0.1);
-  --watch: #b55400;
-  --watch-soft: rgba(181, 84, 0, 0.1);
-  --alert: #c4183f;
-  --alert-soft: rgba(196, 24, 63, 0.09);
-  --info: #4b5f99;
-  --info-soft: rgba(75, 95, 153, 0.1);
-
-  --series-1: #1d2648;
-  --series-2: #0a7488;
-  --baseline-band: rgba(10, 116, 136, 0.09);
-  --baseline-line: rgba(10, 116, 136, 0.45);
-  --event-mark: #7a85a8;
-
-  --heat-0: rgba(13, 132, 86, 0.04);
-  --heat-1: rgba(13, 132, 86, 0.09);
-  --heat-2: rgba(181, 84, 0, 0.09);
-  --heat-3: rgba(181, 84, 0, 0.17);
-  --heat-4: rgba(196, 24, 63, 0.15);
-
-  --elev-1: 0 1px 2px rgba(13, 20, 48, 0.04), 0 8px 24px rgba(13, 20, 48, 0.05);
-  --elev-2: 0 16px 40px rgba(13, 20, 48, 0.14), 0 2px 6px rgba(13, 20, 48, 0.08);
-  --elev-3: 0 28px 72px rgba(13, 20, 48, 0.2), 0 4px 12px rgba(13, 20, 48, 0.1);
-
-  --star: rgba(40, 60, 120, 0.18);
-  --star-dim: rgba(40, 60, 120, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {

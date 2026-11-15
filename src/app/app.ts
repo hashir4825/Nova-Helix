@@ -3,7 +3,6 @@ import { RouterOutlet } from '@angular/router';
 import { Topbar } from './layout/topbar';
 import { TooltipHost } from './shared/tooltip/tooltip-host';
 import { OverlayHost } from './features/overlays/overlay-host';
-import { ThemeStore } from './core/state/theme';
 import { ApiStatus } from './core/state/api-status';
 import { SpaceBackdrop } from './shared/ui/space-backdrop';
 
@@ -47,7 +46,5 @@ import { SpaceBackdrop } from './shared/ui/space-backdrop';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  // Instantiate early so the theme attribute is applied on boot.
-  protected readonly theme = inject(ThemeStore);
   protected readonly api = inject(ApiStatus);
 }

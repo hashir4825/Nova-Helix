@@ -3,7 +3,6 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/ro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { MissionClock } from '../core/state/mission-clock';
-import { ThemeStore } from '../core/state/theme';
 import { SessionStore } from '../core/state/session';
 import { CrewApi } from '../core/data/apis';
 import { Icon } from '../shared/ui/icon';
@@ -27,7 +26,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
 })
 export class Topbar {
   protected readonly clock = inject(MissionClock);
-  protected readonly theme = inject(ThemeStore);
   protected readonly icons = ICON;
   private readonly router = inject(Router);
 

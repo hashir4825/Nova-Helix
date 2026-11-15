@@ -56,7 +56,7 @@ What makes it different:
 |---|---|---|
 | Framework | **Angular 22** (standalone components, signals, `OnPush`, new control flow) | The whole app |
 | Language | **TypeScript 6** (strict, strict templates) | All code |
-| Styling | **SCSS** with design tokens (`src/styles/_tokens.scss`) | Dark/light themes, layout |
+| Styling | **SCSS** with design tokens (`src/styles/_tokens.scss`) | Dark theme, layout |
 | State | Angular **signals** + RxJS 7 | Stores, data streams |
 | Charts | **ECharts 6** via **ngx-echarts 22** (tree-shaken, SVG renderer) | Metric trends with personal baseline bands |
 | Small graphics | Hand-drawn **SVG** and **Canvas** | Hazard rings, sparklines, trajectory, animated space backdrop |
@@ -172,7 +172,7 @@ After changing `angular.json` or adding folders, restart `ng serve`.
 
 Overlays open on top of any screen and can be linked to: `?metric=<crewId>:<metric>` (metric detail with trend and
 interpretation) and `?insight=<id>` (finding detail and actions). Other parameters: `?data=api|mock`,
-`?theme=dark|light`, `?member=<crewId>` (Insights filter).
+`?member=<crewId>` (Insights filter).
 
 ## 6. Project structure
 
@@ -187,7 +187,7 @@ src/
    │  ├─ http/              HTTP implementation of the contracts (backend)
    │  ├─ mock/              demo implementation: seeded generator, analysis engine, rule-based Nova
    │  ├─ models/            TypeScript types shared by everything (= the JSON wire format)
-   │  ├─ state/             signal stores: mission clock, session, theme, API status
+   │  ├─ state/             signal stores: mission clock, session, API status
    │  └─ util/              formatting, signal-delay math, ranges
    ├─ shared/               UI building blocks: icon, status badge, hazard ring, sparkline, charts,
    │                        tooltips/help, sheet, dropdown, animated space backdrop
@@ -222,7 +222,7 @@ vercel.json                 Vercel build and single-page-app routing
 ## 8. Design and accessibility
 
 - Deep-space theme with an animated backdrop (parallax stars, a shooting star every few seconds, drifting nebulae,
-  a faint solar system); translucent cards. Mission Control is cyan, Crew Mode is violet. Light theme included.
+  a faint solar system); translucent cards. Mission Control is cyan, Crew Mode is violet. Dark theme only (by decision).
 - Status is never colour alone: icon + text everywhere (Nominal / Watch / Alert / Info).
 - Tooltips on every number, chart and term, with a "?" help button per section, written for first-time users.
 - Full keyboard use with visible focus; sheets trap focus and return it; `Esc` closes overlays; charts have text labels.

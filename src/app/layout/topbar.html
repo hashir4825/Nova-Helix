@@ -136,14 +136,4 @@
     </a>
   </nav>
 
-  <button
-    type="button"
-    class="icon-btn"
-    (click)="theme.toggle()"
-    [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-    [nhTip]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-    nhTipPlacement="bottom"
-  >
-    <nh-icon [icon]="theme.theme() === 'dark' ? icons.sun : icons.moon" [size]="16" />
-  </button>
 </header>

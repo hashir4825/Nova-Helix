@@ -48,7 +48,6 @@ From left to right:
   are (demo only).
 - **Earth link** with the **signal delay** (for example `5m 32s`): how long a message takes to reach Earth, one way.
 - **Mission Control** (cyan) and **Crew Mode** (violet) buttons: switch between the two views.
-- **Sun/Moon** button: light or dark theme.
 
 ### Getting help anywhere
 
@@ -271,4 +270,4 @@ not your words.
 (`?data=api`, the default on the live site), check-ins, actions and mobility checks are saved on the server.
 
 **The background is distracting.** It's decorative and slow; turning on *reduce motion* in your system settings
-stops it. The light theme also makes it very faint.
+stops it.

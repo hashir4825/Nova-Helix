@@ -1,5 +1,4 @@
 import { DOCUMENT, Injectable, computed, inject } from '@angular/core';
-import { ThemeStore } from '../../core/state/theme';
 
 export interface ChartTokens {
   text1: string;
@@ -23,14 +22,12 @@ export interface ChartTokens {
   fontMono: string;
 }
 
-/** Reads design tokens at runtime so ECharts follows light/dark theme switches. */
+/** Reads design tokens at runtime so ECharts uses the same colours as the rest of the app. */
 @Injectable({ providedIn: 'root' })
 export class ChartTokensService {
   private readonly doc = inject(DOCUMENT);
-  private readonly theme = inject(ThemeStore);
 
   readonly tokens = computed<ChartTokens>(() => {
-    this.theme.theme(); // re-read on theme change
     const cs = getComputedStyle(this.doc.documentElement);
     const v = (n: string) => cs.getPropertyValue(n).trim();
     return {
