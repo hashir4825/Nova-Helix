@@ -63,7 +63,7 @@ model types. This leaves the frontend unchanged, and it means the backend does t
 | `POST .../sessions/{sid}/messages` | **Replaced** by `POST /api/crew/{id}/companion/reply` | Stateless: the client sends recent history and conversation state each time. |
 | `POST .../sessions/{sid}/complete` | **Removed** | Nova conversations are not scored. |
 | `GET .../sessions/{sid}`, `GET /api/isolation/{id}` | **Removed** | No transcripts are stored, so there is nothing to fetch. |
-| `GET /api/mobility/method`, `POST/GET /api/mobility/{id}` | **Kept as built** | Used by the camera check page. Only change: astronaut ids are the slugs. See [section 12](#12-mobility--balance-check). |
+| `GET /api/mobility/method`, `POST/GET /api/mobility/{id}` | **Kept, v2 format** | camelCase, slug ids, nominal/watch/alert, no `?day=`. See [section 12](#12-mobility--balance-check). |
 | `GET /health` | **Kept** | Response fields changed (see [section 5.1](#51-ops)). |
 | None | **Added** | Mission events and timeline, metric series and baseline, live vitals, metric interpretation, hazard history, check-ins, questionnaires and assignments, shared notes, the action log, resolve and reopen. |
 
@@ -137,9 +137,9 @@ them on every request.
 | Actions | POST | `/api/actions` | `ActionLogEntry` (201) | `ActionsApi.record` |
 | Actions | POST | `/api/insights/{insightId}/resolve` | `Resolution` | `ActionsApi.resolve` |
 | Actions | POST | `/api/insights/{insightId}/reopen` | `{ "ok": true }` | `ActionsApi.reopen` |
-| Mobility | GET | `/api/mobility/method` | method (snake_case) | `MobilityApi.method` |
-| Mobility | POST | `/api/mobility/{id}` | submission (snake_case, 201) | `MobilityApi.submit` |
-| Mobility | GET | `/api/mobility/{id}` | history (snake_case) | `MobilityApi.history` |
+| Mobility | GET | `/api/mobility/method` | method | `MobilityApi.method` |
+| Mobility | POST | `/api/mobility/{id}` | submission (201) | `MobilityApi.submit` |
+| Mobility | GET | `/api/mobility/{id}` | history | `MobilityApi.history` |
 
 URL-encode path segments: insight ids contain `:` (`safety%3Asf-ahmad-2`).
 
@@ -922,78 +922,64 @@ failed writes; reads retry silently.
 
 ## 12. Mobility & balance check
 
-Three short movement tests on the astronaut's device (Crew Mode → Check-in → **Mobility & balance check**,
-route `/mobility`). MediaPipe Pose (`@mediapipe/tasks-vision` 1.2.0, PoseLandmarker lite, VIDEO mode) runs in the
-browser and draws the skeleton live; the model and WASM files are served from the frontend's own assets, so it works
-offline. **No video leaves the device**: only the five numbers below are sent. It measures movement, not bone health.
-The measurement logic is a direct port of the backend reference page (`/demo/mobility/`), so the numbers match.
+Three short movement tests on the astronaut's device (Crew Mode → **Mobility check**, route `/mobility`). MediaPipe Pose
+(`@mediapipe/tasks-vision` 1.2.0, PoseLandmarker lite, VIDEO mode) runs in the browser and draws the skeleton live; the model
+and WASM files are served from the frontend's own assets, so it works offline. **No video leaves the device**: only the five
+numbers below are sent. It measures movement, not bone health. The measurement logic is a port of the backend reference page
+(`/demo/mobility/`). Backend reference: `docs/BACKEND_UPDATE.md` §2.1 in the backend repo.
 
-**These endpoints stay exactly as the backend built them** (snake_case fields, `green` / `amber` / `red` levels).
-The frontend maps them in one file (`src/app/core/http/http-mobility.ts`). What changes:
-
-- **Astronaut ids are the slugs** (`hashir`, `ahmad`, `hannan`, `sabaina`), not `A` / `B` / `C`.
-- **The frontend does not send `?day=`.** Use the current mission day (`floor(missionHour / 24) + 1`).
-- **CORS**: the frontend origin must be allowed for `GET` and `POST` (plus the `OPTIONS` preflight).
+Same conventions as the rest of this API: camelCase JSON, slug crew ids, `nominal | watch | alert`, no `?day=` (the server
+uses today's mission day). The frontend maps it in one file (`src/app/core/http/http-mobility.ts`), which also still reads
+the old snake_case / green-amber-red format.
 
 ### GET `/api/mobility/method`
 
-Unchanged. The frontend reads `tests[].label`, `duration_s` and `instructions`, `min_pose_confidence`, all eight `thresholds`
-and `limits` for its info panel.
+Tests (`test`, `label`, `durationS`, `instructions`), `minPoseConfidence`, `thresholds` and `limits`, for the info panel.
+The frontend finds each threshold by meaning (balance / sit / knee / worse-than-first × watch / alert), so either key style works.
 
-### POST `/api/mobility/{id}` → 201
+### POST `/api/mobility/{crewId}` → 201
 
 ```json
-{ "balance_hold_s": 22, "sway_pct_height": 1.4, "sit_to_stand_5x_s": 10.8, "knee_flexion_deg": 112, "pose_confidence": 0.91 }
+{ "balanceHoldS": 22, "swayPctHeight": 1.4, "sitToStandS": 10.8, "kneeFlexionDeg": 112, "poseConfidence": 0.91 }
 ```
 
 Ranges (422 outside them, with a string `detail` the frontend shows as is): balance 0–30 s, sway 0–50 % of body height,
-sit-to-stand above 1 s and up to 120 s, knee flexion 0–150°, pose confidence 0–1.
+sit-to-stand above 1 s and up to 120 s (5 repetitions), knee flexion 0–150°, pose confidence 0–1. Unknown crew: 404.
 
 ```json
 {
-  "check": { "id": "…", "astronaut_id": "hannan", "mission_day": 142, "reliable": true },
+  "check": { "id": "…", "crewId": "ahmad", "day": 142, "at": 3394.85, "measurements": { "balanceHoldS": 22, "…": 0 }, "reliable": true },
   "counted": true,
   "message": "Check saved.",
   "result": {
-    "level": "amber",
+    "status": "watch",
     "tests": [
-      { "test": "balance", "label": "Single-leg balance", "level": "amber",
-        "values": { "balance_hold_s": 16, "sway_pct_height": 1.4 },
-        "baseline": { "balance_hold_s": 24, "sway_pct_height": 1.1 },
-        "change_pct": { "balance_hold_s": 33.3 }, "note": "Balance is worse than the first check." }
+      { "test": "balance", "label": "Single-leg balance", "status": "watch",
+        "values": { "balanceHoldS": 16, "swayPctHeight": 1.4 }, "baseline": { "balanceHoldS": 24, "swayPctHeight": 1.1 },
+        "changePct": { "balanceHoldS": 33.3 }, "note": "Balance is worse than the first check." }
     ],
-    "alert": { "rule": "G.mobility", "level": "amber", "what": "…", "why": "…", "action": "…", "source": "…" },
-    "checks_used": 2, "last_check_day": 142
+    "checksUsed": 2, "lastCheckAt": 3394.85, "lastCheckDay": 142
   }
 }
 ```
 
-- `pose_confidence` below `min_pose_confidence` (0.6): `counted: false`, `result: null`, and a `message` asking for a retake.
+- `poseConfidence` below `minPoseConfidence` (0.6): `counted: false`, `result: null`, and a `message` asking for a retake.
   The frontend shows the message and offers "Retake the check".
-- `change_pct` is "% worse than the first reliable check" (positive = worse). The frontend shows it next to each value.
-- The frontend shows `alert.what` as the headline and `alert.action` as "What you can do" when the level is not green.
+- `baseline` and `changePct` are `null` on the first check. `changePct` is "% worse than the first reliable check" (positive = worse).
+- The result has no headline or advice text; the frontend writes them from the tests ("Movement check flagged: …").
 
-### GET `/api/mobility/{id}`
+### GET `/api/mobility/{crewId}`
 
-`{ astronaut_id, checks[], latest }`. The frontend uses `latest` (same shape as `result` above, or `null`) for the
-"Last check D142 · Watch" line. Each item in `checks` should carry `id`, `mission_day`, `reliable`, `level` and the five
-values (at the top level or under `values`); the frontend reads either.
+`{ crewId, checks[], latest }`. `latest` (same shape as `result`, or `null`) drives the "Last check D142 · Watch" line;
+`checks` items have the same shape as `check` above.
 
-### How it reaches Mission Control (v2 analysis)
+### Where it shows up for Mission Control
 
-The frontend expects the mobility result inside the normal v2 analysis, not on a separate card:
+- **Gravity hazard:** `GET /api/assessment/hazards` includes a driver "Mobility & balance check" once a reliable check exists;
+  the Gravity score moves with it.
+- **Findings:** `GET /api/insights` includes `mobility:<crewId>` (watch or alert) when the latest check is flagged. It resolves
+  and reopens like any other finding.
 
-- **Gravity hazard driver.** Once an astronaut has at least one reliable check, add a driver to their `gravity`
-  `HazardAssessment`: `{ label: "Mobility & balance check", value: "<flagged test labels> · D<day>" or "All 3 tests OK · D<day>",
-  contribution: green 10 / amber 55 / red 85, concern: "balance or leg strength in the movement check has dropped" }`,
-  weight 0.12. Leave it out when there is no check, so existing scores don't change.
-- **Insight `mobility:<crewId>`** when the latest reliable check is amber (`watch`) or red (`alert`): title
-  "Movement check flagged", hazards `["gravity"]`, one evidence row per test (value + first-check reference),
-  recommended actions "Review exercise plan" (countermeasure: exercise) and "Repeat the check in 3 days" (countermeasure: exercise).
-- Reference implementation: `src/app/core/mock/mobility.ts` (scoring), `engine/hazards.ts` (`mobilityDriver`),
-  `engine/insights.ts` (`mobilityCheck`).
-
-**Scoring** (same as the backend): each test is the worse of an absolute cut-off and the change since the first
-reliable check (amber at 25 % worse, red at 50 %). Balance hold: amber under 10 s, red under 5 s. Sit-to-stand: amber over 12 s,
-red over 15 s. Knee flexion: amber under 100°, red under 80°. Hip sway is reported but not scored. The thresholds are
-illustrative, not clinical, and the page says so.
+**Scoring** (illustrative, not clinical, and the page says so): each test is the worse of an absolute cut-off and the change
+since the first reliable check (watch at 25 % worse, alert at 50 %). Balance hold: watch under 10 s, alert under 5 s.
+Sit-to-stand: watch over 12 s, alert over 15 s. Knee flexion: watch under 100°, alert under 80°. Hip sway is reported, not scored.
