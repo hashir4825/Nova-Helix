@@ -117,7 +117,7 @@
             </span>
             @if (!done) {
               <button type="button" class="do" [class.primary]="n === 0" (click)="act(a)">
-                <nh-icon [icon]="kindIcon[a.kind]" [size]="15" />{{ a.kind === 'acknowledge' ? 'Acknowledge' : a.kind === 'contact' ? 'Mark done' : 'Do this' }}
+                <nh-icon [icon]="kindIcon[a.kind] ?? icons.check" [size]="15" />{{ a.kind === 'acknowledge' ? 'Acknowledge' : a.kind === 'contact' ? 'Mark done' : 'Do this' }}
               </button>
             }
           </li>

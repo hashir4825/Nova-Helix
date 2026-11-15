@@ -159,7 +159,7 @@
       <ul class="action-list">
         @for (a of i.recommended; track a.label) {
           <li class="action">
-            <span class="a-icon"><nh-icon [icon]="actionIcon[a.kind]" [size]="16" /></span>
+            <span class="a-icon"><nh-icon [icon]="actionIcon[a.kind] ?? icons.check" [size]="16" /></span>
             <span class="a-text">
               <span class="a-label">{{ a.label }}</span>
               <span class="a-detail">{{ a.detail }}</span>

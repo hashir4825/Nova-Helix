@@ -25,6 +25,7 @@ import {
   MissionEvent,
   Questionnaire,
   QuestionnaireId,
+  RecommendedAction,
   Resolution,
   Sample,
   Severity,
@@ -42,6 +43,18 @@ import { HttpMobilityApi } from './http-mobility';
  */
 
 const id = encodeURIComponent;
+
+const ACTION_KINDS = new Set<string>(['acknowledge', 'contact', 'questionnaire', 'countermeasure', 'escalate']);
+/** Older backends send kind 'message' (crew messaging was removed): treat it as 'contact'; unknown kinds as 'acknowledge'. */
+function normActions<T extends { recommended: RecommendedAction[] }>(x: T): T {
+  return {
+    ...x,
+    recommended: x.recommended.map((a) => {
+      const k = String(a.kind);
+      return ACTION_KINDS.has(k) ? a : { ...a, kind: k === 'message' ? 'contact' : 'acknowledge' };
+    }),
+  };
+}
 const q = (x: AnalysisQuery) => ({ at: x.atHour, autonomous: x.autonomous });
 
 @Injectable({ providedIn: 'root' })
@@ -101,13 +114,13 @@ export class HttpAssessmentApi extends AssessmentApi {
     return this.api.watch<HazardAssessment[]>('/api/assessment/hazards', q(x));
   }
   insights(x: AnalysisQuery): Observable<Insight[]> {
-    return this.api.watch<Insight[]>('/api/insights', q(x));
+    return this.api.watch<Insight[]>('/api/insights', q(x)).pipe(map((l) => l.map(normActions)));
   }
   crewSummaries(x: AnalysisQuery): Observable<CrewSummary[]> {
     return this.api.watch<CrewSummary[]>('/api/assessment/crew-summaries', q(x));
   }
   interpretMetric(x: AnalysisQuery, crewId: string, metric: MetricKey): Observable<MetricInterpretation> {
-    return this.api.watch<MetricInterpretation>(`/api/crew/${id(crewId)}/metrics/${metric}/interpretation`, q(x));
+    return this.api.watch<MetricInterpretation>(`/api/crew/${id(crewId)}/metrics/${metric}/interpretation`, q(x)).pipe(map(normActions));
   }
 }
 
