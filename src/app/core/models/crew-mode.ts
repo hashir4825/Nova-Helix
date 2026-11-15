@@ -149,3 +149,27 @@ export interface SharedNote {
   at: number;
   text: string;
 }
+
+// ── Nova companion wire format (POST /api/crew/{id}/companion/reply) ──
+/** Conversation state Nova needs between turns; the client keeps it and sends it back (the server stores nothing). */
+export interface CompanionState {
+  /** Nova asked a direct safety question and is waiting for the answer. */
+  pendingSafetyCheck: boolean;
+  /** Nova asked the astronaut to describe their day for a check-in. */
+  awaitingCheckIn: boolean;
+}
+
+export interface CompanionRequest {
+  /** The astronaut's new message. Omitted = start of conversation (Nova greets). */
+  text?: string;
+  /** Recent turns for context only, oldest first. Must not be stored or logged by the server. */
+  history: { role: ChatMessage['role']; text: string }[];
+  state: CompanionState;
+}
+
+export interface CompanionTurn {
+  replies: { text: string; card?: ChatCard }[];
+  state: CompanionState;
+  /** Set when the safety exception fired; the server has already raised the alert (category only). */
+  safety?: { category: SafetyCategory; signal: SafetySignal };
+}

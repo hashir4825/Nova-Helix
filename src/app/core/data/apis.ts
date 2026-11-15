@@ -26,8 +26,8 @@ import {
 
 /**
  * Data contracts. Components and stores depend ONLY on these abstract classes.
- * The mock implementations live in core/mock; a real HTTP implementation can be
- * provided instead (see provideMockData in app.config.ts) without touching UI code.
+ * Bound to core/mock (seeded demo data) or core/http (the backend) in app.config.ts.
+ * Each method maps to one endpoint: docs/BACKEND_API_GUIDE.md.
  */
 
 export interface AnalysisQuery {

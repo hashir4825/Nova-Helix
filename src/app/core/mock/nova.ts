@@ -1,4 +1,4 @@
-import { CheckInDraft, ChatCard, SafetyCategory, SafetySignal, Symptom } from '../models';
+import { CheckInDraft, ChatCard, CompanionState, SafetyCategory, SafetySignal, Symptom } from '../models';
 import { formatDelay } from '../util/format';
 import { MockDatabase } from './mock-database';
 import { MISSION_EVENTS, hourToDay } from './mission-plan';
@@ -10,12 +10,7 @@ import { mean, sliceSamples } from './stats';
  * never generated. Nova is supportive, never diagnostic.
  */
 
-export interface NovaState {
-  /** Nova asked a direct safety question and is waiting for the answer. */
-  pendingSafetyCheck: boolean;
-  /** Nova asked the astronaut to describe their day for a check-in. */
-  awaitingCheckIn: boolean;
-}
+export type NovaState = CompanionState;
 
 export interface NovaContext {
   db: MockDatabase;

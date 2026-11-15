@@ -475,7 +475,7 @@ export class MockActionsApi extends ActionsApi {
   }
 }
 
-/** Swap this for provideHttpData() when the real backend exists. */
+/** Seeded demo data. The backend binding is provideHttpData() in core/http. */
 export function provideMockData(): Provider[] {
   return [
     { provide: MissionApi, useExisting: MockMissionApi },
