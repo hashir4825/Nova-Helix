@@ -5,7 +5,7 @@ import { switchMap } from 'rxjs';
 import { ActionsApi, AssessmentApi, CrewApi } from '../../core/data/apis';
 import { ActionKind, ActionLogEntry, LogKind, ROLE_LABEL, RecommendedAction } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
-import { formatClock, formatDelay, formatMissionTime } from '../../core/util/format';
+import { formatClock, formatMissionTime } from '../../core/util/format';
 import { STATUS_HELP } from '../../shared/help';
 import { TipDirective } from '../../shared/tooltip/tip.directive';
 import { HazardTag } from '../../shared/ui/hazard-tag';
@@ -17,7 +17,7 @@ import { StatusBadge } from '../../shared/ui/status-badge';
 
 const KIND_ICON: Record<ActionKind, IconNode> = {
   acknowledge: ICON.check,
-  message: ICON.message,
+  contact: ICON.phone,
   questionnaire: ICON.clipboard,
   countermeasure: ICON.activity,
   escalate: ICON.send,
@@ -25,7 +25,7 @@ const KIND_ICON: Record<ActionKind, IconNode> = {
 
 const LOG_KIND: Record<ActionKind, LogKind> = {
   acknowledge: 'acknowledge',
-  message: 'message',
+  contact: 'contact',
   questionnaire: 'questionnaire',
   countermeasure: 'countermeasure',
   escalate: 'escalate',
@@ -89,36 +89,10 @@ export class InsightSheet {
   protected readonly acknowledged = computed(() => this.logAll().find((e) => e.insightId === this.insightId() && e.kind === 'acknowledge'));
 
   protected doneFor(a: RecommendedAction): ActionLogEntry | undefined {
-    if (a.kind === 'message') return this.logAll().find((e) => e.insightId === this.insightId() && e.kind === 'message');
     return this.logAll().find((e) => e.insightId === this.insightId() && e.label === a.label);
   }
 
-  // ── Message composer ───────────────────────────────────────────
-  protected readonly composing = signal(false);
-  protected readonly draft = signal('');
-
-  protected startMessage(): void {
-    const name = this.who()?.name ?? 'crew';
-    this.draft.set(
-      this.urgent()
-        ? `${name}, it’s ${this.surgeon}. I got Nova’s alert and I’m here for you. Please stay with a crewmate and call me at the next comms window. You are not alone in this.`
-        : `Hi ${name}, it’s ${this.surgeon}. I saw “${this.insight()?.title}”. Can we talk at the next comms window?`,
-    );
-    this.composing.set(true);
-  }
-
-  protected sendMessage(): void {
-    const i = this.insight();
-    const text = this.draft().trim();
-    if (!i?.crewId || !text) return;
-    this.actions.sendMessage(i.crewId, text, i.id).subscribe(() => this.composing.set(false));
-  }
-
   protected act(a: RecommendedAction): void {
-    if (a.kind === 'message') {
-      this.startMessage();
-      return;
-    }
     const i = this.insight();
     if (!i) return;
     this.actions.record({ insightId: i.id, crewId: i.crewId, kind: a.log ?? LOG_KIND[a.kind], label: a.label, detail: a.detail }).subscribe();
@@ -160,8 +134,6 @@ export class InsightSheet {
     const i = this.insight();
     if (i) this.actions.reopen(i.id, i.crewId).subscribe();
   }
-
-  protected readonly delay = computed(() => formatDelay(this.clock.link().delaySeconds));
 
   protected when(h: number): string {
     return formatMissionTime(h);

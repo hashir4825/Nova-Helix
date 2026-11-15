@@ -14,7 +14,6 @@ import {
   CompanionRequest,
   CompanionState,
   CompanionTurn,
-  CrewMessage,
   CrewSummary,
   HazardAssessment,
   HazardKey,
@@ -266,12 +265,6 @@ export class HttpActionsApi extends ActionsApi {
   }
   record(entry: Omit<ActionLogEntry, 'id' | 'at' | 'by'>): Observable<ActionLogEntry> {
     return this.api.post<ActionLogEntry>('/api/actions', entry);
-  }
-  sendMessage(crewId: string, text: string, insightId?: string): Observable<CrewMessage> {
-    return this.api.post<CrewMessage>(`/api/crew/${id(crewId)}/messages`, { text, insightId });
-  }
-  messages(crewId: string): Observable<CrewMessage[]> {
-    return this.api.watch<CrewMessage[]>(`/api/crew/${id(crewId)}/messages`);
   }
   resolve(insightId: string, crewId: string | null, note: string, severity: Severity): Observable<void> {
     return this.api.post<Resolution>(`/api/insights/${id(insightId)}/resolve`, { crewId, note, severity }).pipe(map(() => undefined));

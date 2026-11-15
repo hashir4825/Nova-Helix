@@ -63,7 +63,7 @@ export class Topbar {
   protected readonly crewMode = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => /^\/(me|checkin|nova)(\/|\?|$)/.test(this.router.url)),
+      map(() => /^\/(me|checkin|mobility|nova)(\/|\?|$)/.test(this.router.url)),
     ),
     { initialValue: false },
   );

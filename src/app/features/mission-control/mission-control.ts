@@ -8,11 +8,8 @@ import { HazardAssessment, Status } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { withLoad } from '../../core/util/load';
 import { SessionStore } from '../../core/state/session';
-import { Panel } from '../../shared/ui/panel';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { CrewCard } from './crew-card';
-import { HazardMatrix } from './hazard-matrix';
-import { InsightsFeed } from './insights-feed';
 import { MissionHero } from './mission-hero';
 import { HelpHint } from '../../shared/tooltip/help-hint';
 import { HELP } from '../../shared/help';
@@ -23,7 +20,7 @@ const INTRO_KEY = 'nh.intro-dismissed';
 
 @Component({
   selector: 'nh-mission-control',
-  imports: [Panel, CrewCard, InsightsFeed, HazardMatrix, MissionHero, Skeleton, HelpHint, Icon, RouterLink, TipDirective],
+  imports: [CrewCard, MissionHero, Skeleton, HelpHint, Icon, RouterLink, TipDirective],
   templateUrl: './mission-control.html',
   styleUrl: './mission-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,7 +60,7 @@ export class MissionControl {
 
   protected readonly hazards = toSignal(this.query$.pipe(switchMap(([q]) => this.assess.hazards(q))));
   private readonly allInsights = toSignal(this.query$.pipe(switchMap(([q]) => this.assess.insights(q))));
-  /** Active findings only: resolved ones live on the Insights page. */
+  /** Active findings (for the urgent banner on crew cards). Full list: the Insights page. */
   protected readonly insights = computed(() => this.allInsights()?.filter((i) => !i.resolution));
   protected readonly summaries = toSignal(this.query$.pipe(switchMap(([q]) => this.assess.crewSummaries(q))));
   private readonly events = toSignal(this.missionApi.events(), { initialValue: [] });

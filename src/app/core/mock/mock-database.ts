@@ -1,7 +1,6 @@
 import {
   Resolution,
   ActionLogEntry,
-  CrewMessage,
   Assignment,
   Astronaut,
   Baseline,
@@ -159,7 +158,6 @@ export class MockDatabase {
 
   // ── Mission Control actions ──────────────────────────────────────
   private readonly log: ActionLogEntry[] = [];
-  private readonly outbox: CrewMessage[] = [];
 
   actionLog(insightId?: string): ActionLogEntry[] {
     return insightId ? this.log.filter((e) => e.insightId === insightId) : this.log;
@@ -198,14 +196,6 @@ export class MockDatabase {
     this.bump();
   }
 
-  crewMessages(crewId: string): CrewMessage[] {
-    return this.outbox.filter((m) => m.crewId === crewId);
-  }
-
-  addMessage(m: CrewMessage): void {
-    this.outbox.push(m);
-    this.bump();
-  }
 
   /** Private Nova conversation. Never read by the analysis engine. */
   chat(crewId: string): ChatMessage[] {

@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input } f
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
-import { ActionsApi, AssessmentApi, CrewApi } from '../../core/data/apis';
+import { AssessmentApi, CrewApi } from '../../core/data/apis';
+import { MobilityCta } from '../crew-mode/mobility/mobility-cta';
 import { ROLE_LABEL, SEVERITY_RANK, Status } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { Role, SessionStore } from '../../core/state/session';
@@ -35,6 +36,7 @@ import { VitalsStrip } from './vitals-strip';
     VitalsStrip,
     HazardOverview,
     CheckinHistory,
+    MobilityCta,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
@@ -91,13 +93,6 @@ export class Profile {
     const others = this.crew().filter((a) => a.id !== this.crewId());
     return (others.find((a) => a.role === 'CDR') ?? others.find((a) => a.role === 'CMO') ?? others[0])?.name ?? 'your crew';
   });
-
-  private readonly actions = inject(ActionsApi);
-  private readonly inbox = toSignal(toObservable(this.crewId).pipe(switchMap((id) => this.actions.messages(id))), { initialValue: [] });
-  /** Messages from Mission Control, newest first; arrive after the signal delay. */
-  protected readonly messages = computed(() =>
-    [...this.inbox()].sort((a, b) => b.sentAt - a.sentAt).map((m) => ({ ...m, delivered: m.deliverAt <= this.clock.liveHour() })),
-  );
 
   protected readonly attention = computed(() => this.insights().filter((i) => i.severity !== 'info').slice(0, 3));
 

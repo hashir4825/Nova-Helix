@@ -5,7 +5,8 @@ import { Severity, Status } from './status';
 
 export type ActionKind =
   | 'acknowledge'
-  | 'message'
+  /** Talk with the astronaut at the next comms window (voice). Logged; no text is sent. */
+  | 'contact'
   | 'questionnaire'
   | 'countermeasure'
   | 'escalate';

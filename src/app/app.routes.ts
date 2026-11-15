@@ -40,7 +40,7 @@ export const routes: Routes = [
   },
   {
     // Mobility & balance check: pose tracking on the device, only numbers are sent.
-    path: 'checkin/mobility',
+    path: 'mobility',
     title: 'Mobility check · Nova Healix',
     loadComponent: () => import('./features/crew-mode/mobility/mobility-check').then((m) => m.MobilityCheck),
   },

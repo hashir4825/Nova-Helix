@@ -118,7 +118,7 @@ export interface SafetyFlag {
 }
 
 // ── Mission Control actions ─────────────────────────────────────────
-export type LogKind = 'acknowledge' | 'message' | 'in-person' | 'psych' | 'medical' | 'escalate' | 'countermeasure' | 'questionnaire' | 'resolve' | 'reopen';
+export type LogKind = 'acknowledge' | 'contact' | 'in-person' | 'psych' | 'medical' | 'escalate' | 'countermeasure' | 'questionnaire' | 'resolve' | 'reopen';
 
 export interface ActionLogEntry {
   id: string;
@@ -129,17 +129,6 @@ export interface ActionLogEntry {
   kind: LogKind;
   label: string;
   detail?: string;
-}
-
-/** Message from Mission Control to an astronaut; arrives after the signal delay. */
-export interface CrewMessage {
-  id: string;
-  crewId: string;
-  from: string;
-  text: string;
-  sentAt: number;
-  deliverAt: number;
-  insightId?: string;
 }
 
 /** Text the astronaut explicitly chose to share with the flight surgeon. */

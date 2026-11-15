@@ -6,7 +6,6 @@ import {
   MobilitySubmission,
   Severity,
   ActionLogEntry,
-  CrewMessage,
   AnswerValue,
   Assignment,
   ChatMessage,
@@ -92,14 +91,11 @@ export abstract class CompanionApi {
   abstract clear(crewId: string): Observable<void>;
 }
 
-/** Things the flight surgeon does about a finding, and messages to crew. */
+/** Things the flight surgeon does about a finding. */
 export abstract class ActionsApi {
   /** Every logged action (to show "acknowledged" etc. in lists). */
   abstract log(): Observable<ActionLogEntry[]>;
   abstract record(entry: Omit<ActionLogEntry, 'id' | 'at' | 'by'>): Observable<ActionLogEntry>;
-  /** Message an astronaut; it arrives after the one-way signal delay. Also logged against the insight. */
-  abstract sendMessage(crewId: string, text: string, insightId?: string): Observable<CrewMessage>;
-  abstract messages(crewId: string): Observable<CrewMessage[]>;
   /** Close a finding once handled; it leaves the active views. Reopens itself if it gets more severe. */
   abstract resolve(insightId: string, crewId: string | null, note: string, severity: Severity): Observable<void>;
   abstract reopen(insightId: string, crewId: string | null): Observable<void>;

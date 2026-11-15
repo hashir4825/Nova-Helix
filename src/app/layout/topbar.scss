@@ -214,26 +214,66 @@
   }
 }
 
-@include bp-tablet {
+// ── Responsive: the bar must never be wider than the window ──────
+// Least important text goes first; every hidden label stays in its tooltip / accessible name.
+@media (max-width: 1480px) {
   .bar {
-    gap: var(--space-3);
-    padding: 0 var(--space-4);
+    gap: var(--space-4);
   }
-}
-
-@media (max-width: 1024px) {
-  .wordmark,
-  .link > span:not(.beacon):not(.link-delay):not(.visually-hidden) {
+  .link > span:not(.beacon):not(.link-delay):not(.visually-hidden),
+  .readouts .sep,
+  .readouts .ro:last-child {
     display: none;
   }
 }
 
-@include bp-narrow {
+@media (max-width: 1360px) {
   .mode-text {
     @include visually-hidden;
   }
   .mode {
     padding: 0 var(--space-3);
+  }
+}
+
+@include bp-tablet {
+  .bar {
+    gap: var(--space-3);
+    padding: 0 var(--space-4);
+  }
+  .wordmark {
+    display: none;
+  }
+}
+
+// Narrow: page links move to their own row and scroll inside it if needed.
+@include bp-narrow {
+  .bar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--topbar-h);
+    row-gap: 0;
+    padding-block: var(--space-2) 0;
+  }
+  .pages {
+    order: 10;
+    flex: 1 0 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-block: var(--space-1) var(--space-2);
+  }
+  .link {
+    padding: 0 var(--space-2);
+  }
+}
+
+@media (max-width: 520px) {
+  .readouts,
+  .link-delay {
+    display: none;
+  }
+  .bar {
+    gap: var(--space-2);
   }
 }
 
@@ -295,6 +335,19 @@
   gap: 4px;
   &.active::after {
     background: var(--crew);
+  }
+}
+
+// The camera check is the headline crew feature: always tinted.
+.crew-pages a.cam {
+  gap: 6px;
+  color: var(--crew);
+  background: var(--crew-soft);
+  font-weight: var(--weight-semibold);
+  &:hover,
+  &.active {
+    color: var(--text-1);
+    background: color-mix(in srgb, var(--crew) 26%, transparent);
   }
 }
 

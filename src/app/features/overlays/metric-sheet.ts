@@ -20,7 +20,7 @@ import { StatusBadge } from '../../shared/ui/status-badge';
 
 const ACTION_ICON: Record<ActionKind, IconNode> = {
   acknowledge: ICON.check,
-  message: ICON.message,
+  contact: ICON.phone,
   questionnaire: ICON.clipboard,
   countermeasure: ICON.activity,
   escalate: ICON.send,

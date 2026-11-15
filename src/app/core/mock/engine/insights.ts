@@ -155,7 +155,7 @@ const isolationStress: Rule = (ctx, crewId) => {
     evidence,
     confidence: confidence(signals, 0.5),
     recommended: [
-      { kind: 'message', label: 'Check in privately', detail: 'Send a private, low-pressure message from the flight surgeon.' },
+      { kind: 'contact', label: 'Talk privately', detail: 'A private, low-pressure conversation at the next comms window.' },
       { kind: 'questionnaire', questionnaireId: 'team', label: 'Assign team dynamics questionnaire', detail: 'Short isolation and team-dynamics questionnaire.' },
       { kind: 'countermeasure', countermeasure: 'rest', label: 'Protected off-duty block', detail: 'Schedule 2 h crew-choice time tomorrow.' },
       { kind: 'escalate', label: 'Request psych conference', detail: 'Queue a private conference with the Earth-based psychologist.' },
@@ -194,7 +194,7 @@ const radiationOutlier: Rule = (ctx, crewId) => {
     confidence: 0.92,
     recommended: [
       { kind: 'countermeasure', countermeasure: 'storm-shelter', label: 'Pre-assign shelter role', detail: 'Make another crew member responsible for the medical bay during the next SPE so this astronaut shelters first.' },
-      { kind: 'message', label: 'Review duty cycle', detail: 'Reduce scheduled time in low-shielding modules.' },
+      { kind: 'countermeasure', label: 'Review duty cycle', detail: 'Reduce scheduled time in low-shielding modules.' },
       { kind: 'escalate', label: 'Career dose review', detail: 'Send dosimetry summary to the Earth radiation health officer.' },
     ],
   };
@@ -247,7 +247,7 @@ const fluidShift: Rule = (ctx, crewId) => {
     evidence,
     confidence: confidence(signals, 0.5),
     recommended: [
-      { kind: 'message', label: 'Request ocular exam', detail: 'Ask for fundoscopy, Amsler grid and visual acuity tonight.' },
+      { kind: 'countermeasure', label: 'Request ocular exam', detail: 'Ask for fundoscopy, Amsler grid and visual acuity tonight.' },
       { kind: 'escalate', label: 'Ophthalmology consult', detail: 'Queue imaging review with the Earth ophthalmologist.' },
       { kind: 'countermeasure', countermeasure: 'exercise', label: 'Add LBNP session', detail: 'Lower-body negative pressure, 30 min daily for 5 days.' },
     ],
@@ -286,7 +286,7 @@ const exerciseCompliance: Rule = (ctx, crewId) => {
     confidence: 0.83,
     recommended: [
       { kind: 'countermeasure', countermeasure: 'exercise', label: 'Reschedule exercise', detail: 'Move sessions to a fixed morning slot with a crew partner.' },
-      { kind: 'message', label: 'Ask about barriers', detail: 'Check whether workload, motivation or discomfort is the cause.' },
+      { kind: 'contact', label: 'Ask about barriers', detail: 'At the next comms window, ask whether workload, motivation or discomfort is the cause.' },
     ],
   };
 };
@@ -338,7 +338,7 @@ const workloadHigh: Rule = (ctx, crewId) => {
     primaryMetric: 'workload',
     evidence: [{ label: 'Workload index', value: formatMetric('workload', w.v), reference: formatMetric('workload', b.mean), metric: 'workload', crewId, direction: 'up' }],
     confidence: 0.74,
-    recommended: [{ kind: 'message', label: 'Offer task re-plan', detail: 'Ask which tasks can move after the EVA.' }],
+    recommended: [{ kind: 'countermeasure', label: 'Offer task re-plan', detail: 'Ask which tasks can move after the EVA.' }],
   };
 };
 
@@ -369,7 +369,7 @@ const checkInFlag: Rule = (ctx, crewId) => {
       ...(c.symptoms.length ? [{ label: 'Symptoms', value: c.symptoms.map((s) => SYMPTOM_LABEL[s]).join(', ') }] : []),
     ],
     confidence: 0.7,
-    recommended: [{ kind: 'message', label: 'Follow up', detail: 'Ask for details at the next convenient break.' }],
+    recommended: [{ kind: 'contact', label: 'Follow up', detail: 'Ask for details at the next comms window.' }],
   };
 };
 
@@ -395,7 +395,7 @@ function cabinCo2(ctx: EngineContext): Insight | null {
     evidence: per.map((p) => ({ label: `${name(ctx, p.id)}, 48 h mean`, value: formatMetric('co2', p.v), reference: '3.0 mmHg limit', metric: 'co2', crewId: p.id, direction: 'up' as const })),
     confidence: 0.9,
     recommended: [
-      { kind: 'message', label: 'Crew ventilation advisory', detail: 'Increase fan speed in crew quarters; avoid sleeping near the galley.' },
+      { kind: 'countermeasure', label: 'Crew ventilation advisory', detail: 'Increase fan speed in crew quarters; avoid sleeping near the galley.' },
       { kind: 'escalate', label: 'ECLSS engineering support', detail: 'Send scrubber bed telemetry to the Earth ECLSS team.' },
     ],
   };
@@ -454,13 +454,13 @@ function safetyInsight(ctx: EngineContext, f: SafetyFlag): Insight {
   const recommended: RecommendedAction[] = medical
     ? [
         { kind: 'escalate', log: 'in-person', label: `Ask ${cmo?.name ?? 'the CMO'} to assess ${who} now`, detail: 'In-person assessment on board; do not wait for Earth.' },
-        { kind: 'message', label: `Message ${who}`, detail: 'Acknowledge the symptoms and ask for a voice call at the next window.' },
+        { kind: 'contact', label: `Call ${who}`, detail: 'Acknowledge the symptoms in a voice call at the next comms window.' },
         { kind: 'escalate', log: 'medical', label: 'Request Earth medical consult', detail: 'Specialist review of symptoms and onboard findings.' },
         { kind: 'countermeasure', countermeasure: 'rest', label: 'Stop exercise and hazardous tasks', detail: `Pause exercise${eva ? ` and ${eva.label.split(' ')[0]} duties` : ''} until cleared.` },
         { kind: 'escalate', label: `Escalate to ${director}`, detail: 'Flight director decides on schedule changes.' },
       ]
     : [
-        { kind: 'message', label: `Message ${who} now`, detail: `Let ${who} know you got the alert and ask for a call at the next window. Arrives after the signal delay.` },
+        { kind: 'contact', label: `Call ${who} at the next window`, detail: `Let ${who} know the alert arrived and that support is there. Book the first comms window.` },
         { kind: 'escalate', log: 'in-person', label: `Ask ${cdr?.name ?? 'a crewmate'} to check on ${who} in person`, detail: `${who} should not be alone right now.` },
         { kind: 'escalate', log: 'psych', label: 'Book urgent psychologist conference', detail: 'Private conference with the Earth psychologist at the next window.' },
         ...(eva && evaDays !== null && evaDays <= 7
@@ -514,7 +514,7 @@ function crewModeInsights(ctx: EngineContext): Insight[] {
       detectedAt: n.at,
       evidence: [{ label: 'Source', value: 'Shared from Nova by the astronaut' }],
       confidence: 1,
-      recommended: [{ kind: 'message', label: 'Reply', detail: `Thank ${who} and follow up at a convenient time.` }],
+      recommended: [{ kind: 'contact', label: 'Follow up', detail: `Thank ${who} and follow up at the next comms window.` }],
     });
   }
 
@@ -579,7 +579,7 @@ const mobilityCheck: Rule = (ctx, crewId) => {
     confidence: 0.7,
     recommended: [
       { kind: 'countermeasure', countermeasure: 'exercise', label: 'Review exercise plan', detail: 'Add balance and leg-strength work to the resistive exercise sessions.' },
-      { kind: 'message', label: 'Ask to repeat the check', detail: 'Repeat the mobility check within 3 days, side-on, in good light.' },
+      { kind: 'countermeasure', countermeasure: 'exercise', label: 'Repeat the check in 3 days', detail: 'Schedule a repeat mobility check, side-on, in good light.' },
     ],
   };
 };

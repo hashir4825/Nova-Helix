@@ -43,6 +43,7 @@ import {
   Film,
   PersonStanding,
   Play,
+  Phone,
 } from 'lucide';
 import { HazardKey, Severity, Status } from '../../core/models';
 
@@ -86,6 +87,7 @@ export const ICON = {
   film: Film,
   person: PersonStanding,
   play: Play,
+  phone: Phone,
 } satisfies Record<string, IconNode>;
 
 export const STATUS_ICON: Record<Status | Severity, IconNode> = {

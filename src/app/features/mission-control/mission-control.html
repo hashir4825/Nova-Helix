@@ -4,7 +4,7 @@
       <nh-icon [icon]="icons.pointer" [size]="16" />
       <p>
         <strong>New here?</strong> Hover over (or tab to) anything to see what it means.
-        Click any number, ring or finding to dig into the details.
+        Click any number or ring to dig into the details.
       </p>
       <button type="button" class="intro-close" (click)="dismissIntro()" aria-label="Dismiss tip">
         <nh-icon [icon]="icons.close" [size]="14" />
@@ -47,17 +47,5 @@
         }
       }
     </section>
-
-    <nh-panel class="insights" heading="Insights" [flush]="true">
-      <span panelMeta>Most severe first · <a class="inline-link" routerLink="/insights">View all</a></span>
-      <nh-help panelActions [tip]="help.insightsSection" label="insights" />
-      <nh-insights-feed [insights]="insights()" [crew]="crewList()" [now]="clock.hour()" />
-    </nh-panel>
-
-    <nh-panel class="matrix" heading="Hazard exposure">
-      <span panelMeta>NASA's 5 hazards of human spaceflight · watch 40+ · alert 70+</span>
-      <nh-help panelActions [tip]="help.matrixSection" label="hazard exposure" />
-      <nh-hazard-matrix [crew]="crewList()" [assessments]="hazards()" />
-    </nh-panel>
   </div>
 </div>

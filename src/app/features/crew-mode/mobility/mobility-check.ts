@@ -35,7 +35,7 @@ const SETUP: Record<TestKey, string> = {
   squat_rom: '',
 };
 
-/** Mobility & balance check (`/checkin/mobility`): three movement tests measured on the device. */
+/** Mobility & balance check (`/mobility`): three movement tests measured on the device. */
 @Component({
   selector: 'nh-mobility-check',
   imports: [RouterLink, Icon, Skeleton, StatusBadge, TipDirective, HelpHint],

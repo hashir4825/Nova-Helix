@@ -10,17 +10,10 @@
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--rail-w);
-  grid-template-areas:
-    'crew insights'
-    'matrix insights';
-  grid-template-rows: auto 1fr;
-  gap: var(--space-6) var(--space-5);
-  align-items: start;
+  gap: var(--space-6);
 }
 
 .crew {
-  grid-area: crew;
   min-width: 0;
 }
 
@@ -41,16 +34,7 @@
   color: var(--text-3);
 }
 
-.insights {
-  grid-area: insights;
-  position: sticky;
-  top: calc(var(--topbar-h) + var(--space-5));
-  max-height: calc(100vh - var(--topbar-h) - var(--space-5) * 2);
-}
 
-.matrix {
-  grid-area: matrix;
-}
 
 .crew-grid {
   display: grid;
@@ -91,17 +75,6 @@
   .page {
     padding: var(--space-5) var(--space-4) var(--space-7);
     gap: var(--space-5);
-  }
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'crew'
-      'insights'
-      'matrix';
-  }
-  .insights {
-    position: static;
-    max-height: 520px;
   }
 }
 

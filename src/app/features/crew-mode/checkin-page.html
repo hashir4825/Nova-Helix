@@ -9,6 +9,8 @@
     </span>
   </header>
 
+  <nh-mobility-cta [crewId]="session.astronautId()" />
+
   <div class="layout">
     <!-- ── Daily check-in ────────────────────────────────────── -->
     <section class="card daily" aria-labelledby="daily-h">
@@ -140,21 +142,6 @@
         <nh-skeleton h="220px" />
       }
 
-      <a class="q mobility" routerLink="/checkin/mobility">
-        <span class="q-main">
-          <span class="q-title">Mobility &amp; balance check</span>
-          <span class="q-purpose">Balance, sit-to-stand and squat, measured with the camera. Video stays on this device.</span>
-          <span class="q-meta">
-            <nh-icon [icon]="icons.camera" [size]="13" />
-            3 tests · about 2 min
-            @if (mobility()?.latest; as last) {
-              · last D{{ last.lastCheckDay }}
-              <nh-status [status]="last.status" variant="plain" />
-            }
-          </span>
-        </span>
-        <span class="q-cta">Start <nh-icon [icon]="icons.chevronRight" [size]="16" /></span>
-      </a>
     </section>
   </div>
 </div>

@@ -130,7 +130,7 @@ export function interpretMetric(ctx: EngineContext, crewId: string, metric: Metr
     top?.recommended ??
     (status === 'nominal'
       ? [{ kind: 'acknowledge', label: 'No action needed', detail: 'Keep monitoring at the usual cadence.' }]
-      : def.hazards.slice(0, 1).map((h) => ({ kind: 'message' as const, label: 'Review countermeasure', detail: HAZARDS[h].countermeasures[0] })));
+      : def.hazards.slice(0, 1).map((h) => ({ kind: 'countermeasure' as const, label: 'Review countermeasure', detail: HAZARDS[h].countermeasures[0] })));
 
   const samples = recent.length;
   const confidence = top ? top.confidence : Math.round(Math.min(0.92, 0.55 + Math.min(samples, 40) * 0.008 + (b ? 0.06 : 0)) * 100) / 100;

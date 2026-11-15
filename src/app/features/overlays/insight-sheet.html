@@ -115,22 +115,12 @@
                 <span class="a-done"><nh-icon [icon]="icons.check" [size]="13" [stroke]="2" />Done {{ clockOf(done.at) }} by {{ done.by }}</span>
               }
             </span>
-            @if (!done && (a.kind !== 'message' || i.crewId)) {
+            @if (!done) {
               <button type="button" class="do" [class.primary]="n === 0" (click)="act(a)">
-                <nh-icon [icon]="kindIcon[a.kind]" [size]="15" />{{ a.kind === 'message' ? 'Write' : a.kind === 'acknowledge' ? 'Acknowledge' : 'Do this' }}
+                <nh-icon [icon]="kindIcon[a.kind]" [size]="15" />{{ a.kind === 'acknowledge' ? 'Acknowledge' : a.kind === 'contact' ? 'Mark done' : 'Do this' }}
               </button>
             }
           </li>
-          @if (a.kind === 'message' && composing()) {
-            <li class="composer">
-              <label for="msg-draft" class="c-label">Message to {{ who()?.name }} · arrives in about <span class="mono">{{ delay() }}</span></label>
-              <textarea id="msg-draft" rows="4" [value]="draft()" (input)="draft.set($any($event.target).value)"></textarea>
-              <div class="c-actions">
-                <button type="button" class="do primary" (click)="sendMessage()" [disabled]="!draft().trim()"><nh-icon [icon]="icons.send" [size]="15" />Send</button>
-                <button type="button" class="ghost" (click)="composing.set(false)">Cancel</button>
-              </div>
-            </li>
-          }
         }
       </ol>
     </section>

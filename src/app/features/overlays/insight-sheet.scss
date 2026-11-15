@@ -253,38 +253,6 @@ section + section,
   color: var(--nominal);
 }
 
-.composer {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: var(--radius-2);
-  border: 1px solid var(--accent);
-
-  textarea {
-    width: 100%;
-    padding: var(--space-3);
-    border-radius: var(--radius-2);
-    border: 1px solid var(--line-strong);
-    background: var(--surface-2);
-    color: var(--text-1);
-    font: inherit;
-    resize: vertical;
-    &:focus-visible {
-      outline: var(--focus-ring);
-    }
-  }
-}
-
-.c-label {
-  font-size: var(--type-caption);
-  color: var(--text-2);
-}
-
-.c-actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
 .log {
   display: grid;
   gap: var(--space-3);

@@ -7,7 +7,6 @@ import {
   MobilityMethod,
   MobilitySubmission,
   ActionLogEntry,
-  CrewMessage,
   AnswerValue,
   Assignment,
   ChatMessage,
@@ -442,29 +441,6 @@ export class MockActionsApi extends ActionsApi {
     return of(e);
   }
 
-  sendMessage(crewId: string, text: string, insightId?: string): Observable<CrewMessage> {
-    const at = this.now();
-    const delayH = linkStateAt(MISSION_CONFIG, at, false).delaySeconds / 3600;
-    const m: CrewMessage = { id: `msg-${++this.seq}`, crewId, from: this.surgeon, text, sentAt: at, deliverAt: at + delayH, insightId };
-    this.db.addMessage(m);
-    if (insightId) {
-      this.db.addLog({
-        id: `log-${++this.seq}`,
-        insightId,
-        crewId,
-        at,
-        by: this.surgeon,
-        kind: 'message',
-        label: `Messaged ${this.db.astronaut(crewId)?.name ?? crewId}`,
-        detail: `“${text}” · arrives ${formatDelay(delayH * 3600)} later`,
-      });
-    }
-    return of(m);
-  }
-
-  messages(crewId: string): Observable<CrewMessage[]> {
-    return this.db.changes$.pipe(map(() => [...this.db.crewMessages(crewId)]));
-  }
 
   resolve(insightId: string, crewId: string | null, note: string, severity: Severity): Observable<void> {
     const at = this.now();

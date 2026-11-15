@@ -1,9 +1,7 @@
 <div class="page">
-  <a class="back" routerLink="/checkin"><nh-icon [icon]="icons.arrowLeft" [size]="16" />Check-in</a>
-
   <header class="head">
     <div>
-      <p class="eyebrow">Crew Mode · Gravity</p>
+      <p class="eyebrow">Crew Mode · Camera check · Gravity</p>
       <div class="title-row">
         <h1>Mobility &amp; balance check</h1>
         <nh-help [tip]="helpTip" label="the mobility check" />
@@ -199,7 +197,7 @@
               }
               <p class="muted">Sent. Reaches {{ surgeon }} in about <span class="mono">{{ delay() }}</span>. Check {{ r.checksUsed }}{{ r.checksUsed === 1 ? ': later checks are compared with this one.' : ', compared with your first check.' }}</p>
               <div class="send-actions">
-                <a class="primary" routerLink="/checkin">Done</a>
+                <a class="primary" routerLink="/me">Done</a>
                 <button type="button" class="ghost" (click)="restart()">Do another check</button>
               </div>
             } @else {
