@@ -27,6 +27,7 @@ shows how to run the frontend against your server and what to check.
 9. [Suggested Supabase schema](#9-suggested-supabase-schema)
 10. [Running and checking](#10-running-and-checking)
 11. [Errors](#11-errors)
+12. [Mobility & balance check](#12-mobility--balance-check)
 
 ---
 ## 1. What changed from RIDGE and why
@@ -62,9 +63,9 @@ model types. This leaves the frontend unchanged, and it means the backend does t
 | `POST .../sessions/{sid}/messages` | **Replaced** by `POST /api/crew/{id}/companion/reply` | Stateless: the client sends recent history and conversation state each time. |
 | `POST .../sessions/{sid}/complete` | **Removed** | Nova conversations are not scored. |
 | `GET .../sessions/{sid}`, `GET /api/isolation/{id}` | **Removed** | No transcripts are stored, so there is nothing to fetch. |
-| `GET /api/mobility/method`, `POST/GET /api/mobility/{id}` | **Removed** | Not used by the frontend. If the browser mobility check returns later, its results should be written as `legStrength` / gravity samples. |
+| `GET /api/mobility/method`, `POST/GET /api/mobility/{id}` | **Kept as built** | Used by the camera check page. Only change: astronaut ids are the slugs. See [section 12](#12-mobility--balance-check). |
 | `GET /health` | **Kept** | Response fields changed (see [section 5.1](#51-ops)). |
-| None | **Added** | Mission events and timeline, metric series and baseline, live vitals, metric interpretation, hazard history, check-ins, questionnaires and assignments, shared notes, the action log, crew messages, resolve and reopen. |
+| None | **Added** | Mission events and timeline, metric series and baseline, live vitals, metric interpretation, hazard history, check-ins, questionnaires and assignments, shared notes, the action log, resolve and reopen. |
 
 ---
 
@@ -134,10 +135,11 @@ them on every request.
 | Nova | POST | `/api/crew/{id}/shared-notes` | `SharedNote` (201) | `CompanionApi.resolveCard` (share) |
 | Actions | GET | `/api/actions` | `ActionLogEntry[]` | `ActionsApi.log` |
 | Actions | POST | `/api/actions` | `ActionLogEntry` (201) | `ActionsApi.record` |
-| Actions | GET | `/api/crew/{id}/messages` | `CrewMessage[]` | `ActionsApi.messages` |
-| Actions | POST | `/api/crew/{id}/messages` | `CrewMessage` (201) | `ActionsApi.sendMessage` |
 | Actions | POST | `/api/insights/{insightId}/resolve` | `Resolution` | `ActionsApi.resolve` |
 | Actions | POST | `/api/insights/{insightId}/reopen` | `{ "ok": true }` | `ActionsApi.reopen` |
+| Mobility | GET | `/api/mobility/method` | method (snake_case) | `MobilityApi.method` |
+| Mobility | POST | `/api/mobility/{id}` | submission (snake_case, 201) | `MobilityApi.submit` |
+| Mobility | GET | `/api/mobility/{id}` | history (snake_case) | `MobilityApi.history` |
 
 URL-encode path segments: insight ids contain `:` (`safety%3Asf-ahmad-2`).
 
@@ -272,8 +274,9 @@ interface Evidence {
   direction?: 'up' | 'down' | 'flat';
 }
 
-type ActionKind = 'acknowledge' | 'message' | 'questionnaire' | 'countermeasure' | 'escalate';
-type LogKind = 'acknowledge' | 'message' | 'in-person' | 'psych' | 'medical' | 'escalate'
+type ActionKind = 'acknowledge' | 'contact' | 'questionnaire' | 'countermeasure' | 'escalate';
+// 'contact' = talk with the astronaut at the next comms window (voice). Logged only; no text is sent.
+type LogKind = 'acknowledge' | 'contact' | 'in-person' | 'psych' | 'medical' | 'escalate'
              | 'countermeasure' | 'questionnaire' | 'resolve' | 'reopen';
 interface RecommendedAction {
   kind: ActionKind;
@@ -389,15 +392,6 @@ interface ActionLogEntry {
   kind: LogKind;
   label: string;
   detail?: string;
-}
-interface CrewMessage {
-  id: string;
-  crewId: string;
-  from: string;                 // flight surgeon name
-  text: string;
-  sentAt: number;               // mission hour
-  deliverAt: number;            // sentAt + one-way signal delay (hours)
-  insightId?: string;
 }
 ```
 
@@ -695,18 +689,6 @@ Body: `{ "insightId": "sleep-debt:ahmad", "crewId": "ahmad", "kind": "in-person"
 `kind` is any `LogKind` except `resolve` and `reopen` (those have their own endpoints). The server adds `id`,
 `at` (now, exact) and `by` (the flight surgeon).
 
-#### GET `/api/crew/{id}/messages` → `CrewMessage[]`
-
-All messages to this astronaut, including ones still in transit (`deliverAt` in the future). The
-astronaut's view shows "on its way" until `deliverAt`.
-
-#### POST `/api/crew/{id}/messages` → 201 `CrewMessage`
-
-Body `{ "text": "Ahmad, it's Haleem. …", "insightId": "safety:sf-ahmad-2" }` (`insightId` optional).
-`sentAt` = now, `deliverAt` = now + one-way delay in hours (from `trajectoryAu`).
-If `insightId` is given, **also append** an action log entry:
-`{ kind: "message", label: "Messaged Ahmad", detail: "“<text>” · arrives 5m 32s later" }`.
-
 #### POST `/api/insights/{insightId}/resolve` → `Resolution`
 
 Body `{ "crewId": "ahmad", "note": "Spoke with Ahmad; safe and supported, crewmate with them", "severity": "alert" }`.
@@ -835,7 +817,7 @@ Rules (id → trigger), from `engine/insights.ts`:
 - title: `Urgent: <Name> <SAFETY_SIGNAL_LABEL[signal]>` (e.g. "Urgent: Ahmad expressed a wish to die"). It names a category, never the astronaut's words;
 - evidence: when (exact time + arrival on Earth), what Nova already did, shared-data context (7-day
   mood, sleep last 5 nights, HRV, missed check-ins, upcoming EVA) and who on board can help;
-- recommended: a numbered response protocol (message now, in-person check by a crewmate / CMO, psych conference,
+- recommended: a numbered response protocol (call at the next comms window, in-person check by a crewmate / CMO, psych conference,
   escalate to the flight director);
 - always sorted first; a new safety statement always creates a new flag, so a new alert;
 - `SAFETY_SIGNAL_LABEL` is in `src/app/core/models/crew-mode.ts`.
@@ -881,10 +863,9 @@ The backend is the only client (RLS off, as today). There is **no chat table**.
 | `safety_flags` | id, crew_id, at, category, signal (**no text column**) |
 | `shared_notes` | id, crew_id, at, text |
 | `action_log` | id, insight_id, crew_id, at, by, kind, label, detail |
-| `crew_messages` | id, crew_id, from, text, sent_at, deliver_at, insight_id |
 | `resolutions` | insight_id (pk), at, by, note, severity |
 
-Drop the RIDGE tables `isolation_sessions`, `isolation_messages`, `loneliness_assessments` and `mobility_checks`.
+Keep `mobility_checks` (re-keyed to the slug astronaut ids). There is no messaging between Mission Control and crew (removed). Drop the RIDGE tables `isolation_sessions`, `isolation_messages` and `loneliness_assessments`.
 **Delete any stored chat transcripts.**
 
 ---
@@ -933,6 +914,86 @@ failed writes; reads retry silently.
 |---|---|---|
 | 404 | Unknown astronaut, metric, hazard, assignment or route | `Unknown astronaut 'zed'` |
 | 409 | Questionnaire already submitted | `This questionnaire is already submitted` |
-| 422 | Invalid body or query (check-in values outside 1–5, empty note, unknown `kind` or `severity`, non-numeric `from`/`to`) | `'mood' must be an integer 1-5` |
+| 422 | Invalid body or query (check-in values outside 1–5, empty note, unknown `kind` or `severity`, non-numeric `from`/`to`, mobility values out of range) | `'mood' must be an integer 1-5` |
 | 503 | Database or Gemini unavailable | `Companion unavailable: Gemini rate limit reached, retry shortly` |
 | 500 | Bug | (never include request bodies from the Nova route in error reports) |
+
+---
+
+## 12. Mobility & balance check
+
+Three short movement tests on the astronaut's device (Crew Mode → Check-in → **Mobility & balance check**,
+route `/mobility`). MediaPipe Pose (`@mediapipe/tasks-vision` 1.2.0, PoseLandmarker lite, VIDEO mode) runs in the
+browser and draws the skeleton live; the model and WASM files are served from the frontend's own assets, so it works
+offline. **No video leaves the device**: only the five numbers below are sent. It measures movement, not bone health.
+The measurement logic is a direct port of the backend reference page (`/demo/mobility/`), so the numbers match.
+
+**These endpoints stay exactly as the backend built them** (snake_case fields, `green` / `amber` / `red` levels).
+The frontend maps them in one file (`src/app/core/http/http-mobility.ts`). What changes:
+
+- **Astronaut ids are the slugs** (`hashir`, `ahmad`, `hannan`, `sabaina`), not `A` / `B` / `C`.
+- **The frontend does not send `?day=`.** Use the current mission day (`floor(missionHour / 24) + 1`).
+- **CORS**: the frontend origin must be allowed for `GET` and `POST` (plus the `OPTIONS` preflight).
+
+### GET `/api/mobility/method`
+
+Unchanged. The frontend reads `tests[].label`, `duration_s` and `instructions`, `min_pose_confidence`, all eight `thresholds`
+and `limits` for its info panel.
+
+### POST `/api/mobility/{id}` → 201
+
+```json
+{ "balance_hold_s": 22, "sway_pct_height": 1.4, "sit_to_stand_5x_s": 10.8, "knee_flexion_deg": 112, "pose_confidence": 0.91 }
+```
+
+Ranges (422 outside them, with a string `detail` the frontend shows as is): balance 0–30 s, sway 0–50 % of body height,
+sit-to-stand above 1 s and up to 120 s, knee flexion 0–150°, pose confidence 0–1.
+
+```json
+{
+  "check": { "id": "…", "astronaut_id": "hannan", "mission_day": 142, "reliable": true },
+  "counted": true,
+  "message": "Check saved.",
+  "result": {
+    "level": "amber",
+    "tests": [
+      { "test": "balance", "label": "Single-leg balance", "level": "amber",
+        "values": { "balance_hold_s": 16, "sway_pct_height": 1.4 },
+        "baseline": { "balance_hold_s": 24, "sway_pct_height": 1.1 },
+        "change_pct": { "balance_hold_s": 33.3 }, "note": "Balance is worse than the first check." }
+    ],
+    "alert": { "rule": "G.mobility", "level": "amber", "what": "…", "why": "…", "action": "…", "source": "…" },
+    "checks_used": 2, "last_check_day": 142
+  }
+}
+```
+
+- `pose_confidence` below `min_pose_confidence` (0.6): `counted: false`, `result: null`, and a `message` asking for a retake.
+  The frontend shows the message and offers "Retake the check".
+- `change_pct` is "% worse than the first reliable check" (positive = worse). The frontend shows it next to each value.
+- The frontend shows `alert.what` as the headline and `alert.action` as "What you can do" when the level is not green.
+
+### GET `/api/mobility/{id}`
+
+`{ astronaut_id, checks[], latest }`. The frontend uses `latest` (same shape as `result` above, or `null`) for the
+"Last check D142 · Watch" line. Each item in `checks` should carry `id`, `mission_day`, `reliable`, `level` and the five
+values (at the top level or under `values`); the frontend reads either.
+
+### How it reaches Mission Control (v2 analysis)
+
+The frontend expects the mobility result inside the normal v2 analysis, not on a separate card:
+
+- **Gravity hazard driver.** Once an astronaut has at least one reliable check, add a driver to their `gravity`
+  `HazardAssessment`: `{ label: "Mobility & balance check", value: "<flagged test labels> · D<day>" or "All 3 tests OK · D<day>",
+  contribution: green 10 / amber 55 / red 85, concern: "balance or leg strength in the movement check has dropped" }`,
+  weight 0.12. Leave it out when there is no check, so existing scores don't change.
+- **Insight `mobility:<crewId>`** when the latest reliable check is amber (`watch`) or red (`alert`): title
+  "Movement check flagged", hazards `["gravity"]`, one evidence row per test (value + first-check reference),
+  recommended actions "Review exercise plan" (countermeasure: exercise) and "Repeat the check in 3 days" (countermeasure: exercise).
+- Reference implementation: `src/app/core/mock/mobility.ts` (scoring), `engine/hazards.ts` (`mobilityDriver`),
+  `engine/insights.ts` (`mobilityCheck`).
+
+**Scoring** (same as the backend): each test is the worse of an absolute cut-off and the change since the first
+reliable check (amber at 25 % worse, red at 50 %). Balance hold: amber under 10 s, red under 5 s. Sit-to-stand: amber over 12 s,
+red over 15 s. Knee flexion: amber under 100°, red under 80°. Hip sway is reported but not scored. The thresholds are
+illustrative, not clinical, and the page says so.
