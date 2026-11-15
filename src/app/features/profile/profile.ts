@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { AssessmentApi, CrewApi } from '../../core/data/apis';
 import { MobilitySummary } from '../crew-mode/mobility/mobility-summary';
+import { HazardOverview } from './hazard-overview';
 import { ROLE_LABEL, SEVERITY_RANK, Status } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { Role, SessionStore } from '../../core/state/session';
@@ -35,6 +36,7 @@ import { VitalsStrip } from './vitals-strip';
     VitalsStrip,
     CheckinHistory,
     MobilitySummary,
+    HazardOverview,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
@@ -43,6 +45,8 @@ import { VitalsStrip } from './vitals-strip';
 export class Profile {
   /** Route param (surgeon view). */
   readonly id = input<string>();
+  /** ?hazard=<key>: open that hazard in the hazard panel (links from the Overview table). */
+  readonly hazard = input<string | undefined>();
   /** Route data: who is looking. */
   readonly viewer = input<Role>('surgeon');
 

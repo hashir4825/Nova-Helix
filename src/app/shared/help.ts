@@ -80,6 +80,11 @@ export const HELP = {
     body: 'Findings the analysis engine detects automatically by combining vitals, sleep, radiation, check-ins and questionnaires. Most serious first.',
     hint: 'Click a finding to see the evidence and take action',
   },
+  matrixSection: {
+    title: 'Hazard exposure',
+    body: 'A risk score from 0 to 100 for every astronaut against each of NASA’s five hazards of human spaceflight, computed by the analysis engine from their own data. 40 and above is Watch; 70 and above is Alert.',
+    hint: 'Click a score to open that astronaut’s profile at this hazard',
+  },
   checkInDone: (time: string): TipContent => ({
     title: 'Daily check-in done',
     body: `The astronaut reported mood, sleep, energy and symptoms at ${time} ship time today.`,
@@ -111,7 +116,7 @@ export function hazardScoreTip(name: string, a: HazardAssessment | undefined): T
     title: def ? `${name} · ${def.label}` : name,
     body: a ? `Score ${a.score} of 100: ${STATUS_LABEL[a.status]}. Main contributing signals:` : undefined,
     rows: (a?.drivers ?? []).slice(0, 3).map((d) => ({ label: d.label, value: d.value })),
-    hint: 'Click for hazard detail',
+    hint: 'Click to see what feeds this score',
   };
 }
 

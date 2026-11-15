@@ -110,6 +110,22 @@
       <nh-vitals-strip [crewId]="crewId()" [ownerLabel]="bandOwner()" />
     </section>
 
+    <!-- ── Hazards (GET /api/assessment/hazards) ─────────────── -->
+    <section class="block" aria-labelledby="h-hazards">
+      <header class="block-head">
+        <h2 id="h-hazards">NASA’s 5 hazards of human spaceflight</h2>
+        <nh-help
+          [tip]="{
+            title: 'The 5 hazards',
+            body: 'NASA groups the risks of deep-space travel into five hazards. Each tile shows how ' + (me ? 'you are' : a.name + ' is') + ' doing on that hazard, with the measurements behind it.',
+            hint: 'Click a tile to see what feeds it'
+          }"
+          label="the five hazards"
+        />
+      </header>
+      <nh-hazard-overview [crewId]="crewId()" [assessments]="hazards()" [astronautView]="me" [focus]="hazard()" />
+    </section>
+
     <!-- ── Attention ──────────────────────────────────────────── -->
     <section class="block" aria-labelledby="h-attn">
       <header class="block-head">

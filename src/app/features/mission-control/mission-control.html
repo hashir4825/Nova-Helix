@@ -47,5 +47,11 @@
         }
       }
     </section>
+
+    <nh-panel class="matrix" heading="Hazard exposure">
+      <span panelMeta>NASA's 5 hazards of human spaceflight · watch 40+ · alert 70+</span>
+      <nh-help panelActions [tip]="help.matrixSection" label="hazard exposure" />
+      <nh-hazard-matrix [crew]="crewList()" [assessments]="hazards()" />
+    </nh-panel>
   </div>
 </div>

@@ -86,6 +86,9 @@ Click **Mission Control** in the top bar.
    - The hazard that needs most attention, and today's **check-in** time.
    - A **red banner** if Nova raised a safety alert: click **Respond**.
 3. **All crew** (top right of the crew section) opens the crew directory.
+4. **Hazard exposure** table: every astronaut against NASA's five hazards, scored 0–100 (Watch from 40, Alert from
+   70, with an icon). Hover a score for its main drivers; **click a score** to open that astronaut's profile with
+   that hazard opened.
 
 ### 2.2 Crew (`/crew`)
 
@@ -99,6 +102,9 @@ One card per astronaut with status, the reason, top hazard, check-in, open findi
 - **Live vitals:** heart rate, HRV, blood oxygen, temperature, blood pressure, breathing. Each tile shows the value
   now, the person's normal range and the last 24 hours. Orange numbers are outside the normal range.
   **Click a tile** for the full trend.
+- **NASA's 5 hazards:** one tile per hazard with status, score (0–100), a key figure (for example "319 mSv · 53% of
+  career limit") and a plain-language explanation. **Click a tile** (*What feeds this*) to see every signal behind the
+  score with its contribution, and the countermeasures; click a signal to open its chart.
 - **Findings:** what needs attention, with recommended actions. Click a finding to act on it.
 - **Recent check-ins:** the last 7 days of mood, sleep, energy and symptoms.
 
@@ -162,6 +168,7 @@ Click **Crew Mode** in the top bar. In the demo, pick who you are with the **nam
   date. When there is no check yet, or the last one is 7 or more days old, the card turns violet with
   **Take a new check**.
 - **Live vitals** with your own normal range.
+- **NASA's 5 hazards** in plain language: how you are doing on each, and *What feeds this* (no scores).
 - **What needs attention**, with **What you can do**.
 - **Recent check-ins.**
 

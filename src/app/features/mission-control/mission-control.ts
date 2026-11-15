@@ -10,6 +10,8 @@ import { withLoad } from '../../core/util/load';
 import { SessionStore } from '../../core/state/session';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { CrewCard } from './crew-card';
+import { HazardMatrix } from './hazard-matrix';
+import { Panel } from '../../shared/ui/panel';
 import { MissionHero } from './mission-hero';
 import { HelpHint } from '../../shared/tooltip/help-hint';
 import { HELP } from '../../shared/help';
@@ -20,7 +22,7 @@ const INTRO_KEY = 'nh.intro-dismissed';
 
 @Component({
   selector: 'nh-mission-control',
-  imports: [CrewCard, MissionHero, Skeleton, HelpHint, Icon, RouterLink, TipDirective],
+  imports: [CrewCard, HazardMatrix, Panel, MissionHero, Skeleton, HelpHint, Icon, RouterLink, TipDirective],
   templateUrl: './mission-control.html',
   styleUrl: './mission-control.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

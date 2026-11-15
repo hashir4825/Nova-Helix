@@ -160,11 +160,11 @@ After changing `angular.json` or adding folders, restart `ng serve`.
 
 | URL | Screen | User |
 |---|---|---|
-| `/` | **Overview** (Mission Control): mission day, crew status counts, Earth→Mars trajectory, next event, crew cards with live vitals | Flight surgeon |
+| `/` | **Overview** (Mission Control): mission day, crew status counts, Earth→Mars trajectory, next event, crew cards with live vitals, **hazard exposure table** (crew × 5 hazards) | Flight surgeon |
 | `/crew` | **Crew** directory | Flight surgeon |
-| `/crew/:id` | **Astronaut profile**: status, live vitals, findings, recent check-ins | Flight surgeon |
+| `/crew/:id` | **Astronaut profile**: status, live vitals, **NASA's 5 hazards** (score, headline, explanation, drivers), findings, recent check-ins | Flight surgeon |
 | `/insights` | **Insights**: every finding, filter by crew member, Active / Resolved / All, severity | Flight surgeon |
-| `/me` | **My health**: own status, last mobility result, live vitals, what needs attention | Astronaut |
+| `/me` | **My health**: own status, last mobility result, live vitals, the 5 hazards in plain language, what needs attention | Astronaut |
 | `/mobility` | **Mobility check**: camera tests | Astronaut |
 | `/checkin` | **Daily log**: 30-second check-in and questionnaires | Astronaut |
 | `/checkin/q/:id` | Questionnaire, one question at a time (resumable) | Astronaut |
