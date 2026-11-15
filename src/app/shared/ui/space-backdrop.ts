@@ -122,7 +122,74 @@ export class SpaceBackdrop implements AfterViewInit {
   private raf = 0;
   private last = 0;
   private nextMeteor = 0;
-  private colors = { star: 'rgba(220,230,255,0.55)', accent: '#4fd8eb', at: -1 };
+  private colors = { star: 'rgba(220,230,255,0.55)', accent: '#4fd8eb', earth: '#4f8dff', mars: '#e0663f', light: false, at: -1 };
+
+  /**
+   * A faint solar system turning in the lower right, seen at an angle: Sun, Mercury to Jupiter.
+   * Distances are compressed; periods keep the real order (Earth one turn per ~80 s).
+   * Earth and Mars use the mission's illustration colours.
+   */
+  private drawSolarSystem(ctx: CanvasRenderingContext2D, time: number): void {
+    const { star, earth, mars, light } = this.colors;
+    // Sun in the right-hand margin; orbits tilted to run up and down along it, so the system
+    // stays visible beside the content instead of hiding behind the cards.
+    const scale = Math.min(this.h * 0.95, this.w * 0.6);
+    const cx = this.w - Math.max(70, this.w * 0.055);
+    const cy = this.h * 0.58;
+    const tilt = 0.3;
+    const rot = -1.2;
+    const cr = Math.cos(rot);
+    const sr = Math.sin(rot);
+    const layer = light ? 0.4 : 0.75;
+
+    // Sun glow.
+    const sun = ctx.createRadialGradient(cx, cy, 0, cx, cy, scale * 0.16);
+    sun.addColorStop(0, 'rgba(255, 214, 140, 0.9)');
+    sun.addColorStop(0.12, 'rgba(255, 180, 90, 0.55)');
+    sun.addColorStop(1, 'rgba(255, 150, 60, 0)');
+    ctx.globalAlpha = layer;
+    ctx.fillStyle = sun;
+    ctx.beginPath();
+    ctx.arc(cx, cy, scale * 0.16, 0, Math.PI * 2);
+    ctx.fill();
+
+    const planets = [
+      { d: 0.2, period: 19, r: 1.6, color: star },
+      { d: 0.32, period: 49, r: 2.4, color: 'rgba(240, 210, 160, 0.9)' },
+      { d: 0.46, period: 80, r: 2.8, color: earth },
+      { d: 0.62, period: 150, r: 2.3, color: mars },
+      { d: 0.95, period: 950, r: 4.6, color: 'rgba(225, 190, 150, 0.9)' },
+    ];
+    for (const [i, p] of planets.entries()) {
+      const rx = p.d * scale;
+      const ry = rx * tilt;
+      // Orbit ring.
+      ctx.globalAlpha = layer * 0.22;
+      ctx.strokeStyle = star;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2);
+      ctx.stroke();
+      // Planet, with a soft glow; a fixed start angle per planet so they never line up.
+      const a = (time / p.period) * Math.PI * 2 + i * 1.7;
+      const lx = Math.cos(a) * rx;
+      const ly = Math.sin(a) * ry;
+      const x = cx + lx * cr - ly * sr;
+      const y = cy + lx * sr + ly * cr;
+      // Planets behind the sun look slightly smaller and dimmer.
+      const near = 0.75 + 0.25 * Math.sin(a);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = layer * 0.25 * near;
+      ctx.beginPath();
+      ctx.arc(x, y, p.r * 2.6 * near, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = layer * near;
+      ctx.beginPath();
+      ctx.arc(x, y, p.r * near, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
 
   ngAfterViewInit(): void {
     const canvas = this.canvas().nativeElement;
@@ -183,7 +250,15 @@ export class SpaceBackdrop implements AfterViewInit {
     // Theme colours, re-read about once a second (theme switches apply without a reload).
     if (time - this.colors.at > 1 || time < this.colors.at) {
       const css = getComputedStyle(document.documentElement);
-      this.colors = { star: css.getPropertyValue('--star').trim() || this.colors.star, accent: css.getPropertyValue('--accent').trim() || this.colors.accent, at: time };
+      const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+      this.colors = {
+        star: v('--star', this.colors.star),
+        accent: v('--accent', this.colors.accent),
+        earth: v('--earth', this.colors.earth),
+        mars: v('--mars', this.colors.mars),
+        light: document.documentElement.getAttribute('data-theme') === 'light',
+        at: time,
+      };
     }
     const { star, accent } = this.colors;
     ctx.clearRect(0, 0, this.w, this.h);
@@ -211,14 +286,17 @@ export class SpaceBackdrop implements AfterViewInit {
       ctx.fill();
     }
 
-    // A rare shooting star: every 10–20 s, a short streak that fades.
+    this.drawSolarSystem(ctx, time);
+
+    // Shooting stars: the first about 2 s after load, then every 5–9 s.
+    if (dt && !this.nextMeteor) this.nextMeteor = time + 2;
     if (dt && time > this.nextMeteor) {
-      if (this.nextMeteor) {
+      {
         const angle = (Math.PI / 180) * (200 + Math.random() * 25);
         const speed = 520 + Math.random() * 260;
         this.meteors.push({ x: this.w * (0.35 + Math.random() * 0.65), y: Math.random() * this.h * 0.4, vx: Math.cos(angle) * speed, vy: -Math.sin(angle) * speed, life: 0, max: 0.9 + Math.random() * 0.5 });
       }
-      this.nextMeteor = time + 10 + Math.random() * 10;
+      this.nextMeteor = time + 5 + Math.random() * 4;
     }
     this.meteors = this.meteors.filter((m) => m.life < m.max);
     for (const m of this.meteors) {
