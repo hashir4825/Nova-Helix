@@ -268,7 +268,7 @@ export class MobilityCheck {
     return {
       balanceHoldS: b.values.balance_hold_s ?? 0,
       swayPctHeight: b.values.sway_pct_height ?? 0,
-      sitToStand5xS: s.values.sit_to_stand_5x_s ?? 0,
+      sitToStandS: s.values.sit_to_stand_5x_s ?? 0,
       kneeFlexionDeg: q.values.knee_flexion_deg ?? 0,
       poseConfidence: round((b.conf + s.conf + q.conf) / 3, 3),
     };
@@ -314,7 +314,7 @@ export class MobilityCheck {
   /** Main number of a scored test, with the first-check reference and change. */
   protected resultLine(t: MobilityTestResult): { value: string; ref: string | null; change: string | null } {
     const [k, v] = Object.entries(t.values)[0] ?? ['', 0];
-    const deg = k.endsWith('_deg');
+    const deg = /deg$/i.test(k);
     const f = (x: number) => (deg ? `${x.toFixed(0)}°` : `${x.toFixed(1)} s`);
     const base = t.baseline?.[k];
     const ch = t.changePct[k];

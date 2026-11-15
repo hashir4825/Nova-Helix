@@ -556,14 +556,14 @@ const mobilityCheck: Rule = (ctx, crewId) => {
   const flagged = m.tests.filter((t) => t.status !== 'nominal');
   const fmt = (t: (typeof m.tests)[number]): Evidence => {
     const [k, v] = Object.entries(t.values)[0];
-    const unit = k.endsWith('_deg') ? '°' : ' s';
+    const unit = /deg$/i.test(k) ? '°' : ' s';
     const base = t.baseline?.[k];
-    const dp = k.endsWith('_deg') ? 0 : 1;
+    const dp = /deg$/i.test(k) ? 0 : 1;
     return {
       label: t.label,
       value: `${v.toFixed(dp)}${unit}`,
       reference: base !== undefined ? `first check ${base.toFixed(dp)}${unit}` : undefined,
-      direction: t.status === 'nominal' ? 'flat' : k === 'sit_to_stand_5x_s' ? 'up' : 'down',
+      direction: t.status === 'nominal' ? 'flat' : k === 'sitToStandS' ? 'up' : 'down',
     };
   };
   return {

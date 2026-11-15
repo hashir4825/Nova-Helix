@@ -34,7 +34,7 @@ export function validateMobility(m: MobilityMeasurement): string | null {
   const bad = (v: number, lo: number, hi: number, loOpen = false) => !Number.isFinite(v) || (loOpen ? v <= lo : v < lo) || v > hi;
   if (bad(m.balanceHoldS, 0, 30)) return 'Balance hold must be 0–30 s';
   if (bad(m.swayPctHeight, 0, 50)) return 'Sway must be 0–50% of body height';
-  if (bad(m.sitToStand5xS, 1, 120, true)) return 'Sit-to-stand time must be above 1 s and at most 120 s';
+  if (bad(m.sitToStandS, 1, 120, true)) return 'Sit-to-stand time must be above 1 s and at most 120 s';
   if (bad(m.kneeFlexionDeg, 0, 150)) return 'Knee bend must be 0–150° (higher is a tracking error)';
   if (bad(m.poseConfidence, 0, 1)) return 'Tracking confidence must be 0–1';
   return null;
@@ -68,9 +68,9 @@ export function scoreMobility(m: MobilityMeasurement, first: MobilityMeasurement
       test: 'balance',
       label: 'Single-leg balance',
       status,
-      values: { balance_hold_s: m.balanceHoldS, sway_pct_height: m.swayPctHeight },
-      baseline: first ? { balance_hold_s: first.balanceHoldS, sway_pct_height: first.swayPctHeight } : null,
-      changePct: { ...(dHold !== null ? { balance_hold_s: pct(dHold) } : {}), ...(dSway !== null ? { sway_pct_height: pct(dSway) } : {}) },
+      values: { balanceHoldS: m.balanceHoldS, swayPctHeight: m.swayPctHeight },
+      baseline: first ? { balanceHoldS: first.balanceHoldS, swayPctHeight: first.swayPctHeight } : null,
+      changePct: { ...(dHold !== null ? { balanceHoldS: pct(dHold) } : {}), ...(dSway !== null ? { swayPctHeight: pct(dSway) } : {}) },
       note:
         abs !== 'nominal'
           ? `Held ${m.balanceHoldS.toFixed(1)} s, under the ${abs === 'alert' ? T.balanceHoldAlertS : T.balanceHoldWatchS} s guide.`
@@ -82,22 +82,22 @@ export function scoreMobility(m: MobilityMeasurement, first: MobilityMeasurement
 
   // Sit-to-stand: lower is better.
   {
-    const abs: Status = m.sitToStand5xS > T.sitToStandAlertS ? 'alert' : m.sitToStand5xS > T.sitToStandWatchS ? 'watch' : 'nominal';
-    const d = worseBy(m.sitToStand5xS, first?.sitToStand5xS, true);
+    const abs: Status = m.sitToStandS > T.sitToStandAlertS ? 'alert' : m.sitToStandS > T.sitToStandWatchS ? 'watch' : 'nominal';
+    const d = worseBy(m.sitToStandS, first?.sitToStandS, true);
     const status = worstStatus(abs, changeStatus(d ?? 0));
     tests.push({
       test: 'sit_to_stand',
       label: '5× sit-to-stand',
       status,
-      values: { sit_to_stand_5x_s: m.sitToStand5xS },
-      baseline: first ? { sit_to_stand_5x_s: first.sitToStand5xS } : null,
-      changePct: d !== null ? { sit_to_stand_5x_s: pct(d) } : {},
+      values: { sitToStandS: m.sitToStandS },
+      baseline: first ? { sitToStandS: first.sitToStandS } : null,
+      changePct: d !== null ? { sitToStandS: pct(d) } : {},
       note:
         abs !== 'nominal'
-          ? `${m.sitToStand5xS.toFixed(1)} s, slower than the ${abs === 'alert' ? T.sitToStandAlertS : T.sitToStandWatchS} s guide: leg strength may be dropping.`
+          ? `${m.sitToStandS.toFixed(1)} s, slower than the ${abs === 'alert' ? T.sitToStandAlertS : T.sitToStandWatchS} s guide: leg strength may be dropping.`
           : status !== 'nominal'
             ? 'Slower than the first check.'
-            : `${m.sitToStand5xS.toFixed(1)} s for 5 stand-ups.`,
+            : `${m.sitToStandS.toFixed(1)} s for 5 stand-ups.`,
     });
   }
 
@@ -110,9 +110,9 @@ export function scoreMobility(m: MobilityMeasurement, first: MobilityMeasurement
       test: 'squat_rom',
       label: 'Squat knee bend',
       status,
-      values: { knee_flexion_deg: m.kneeFlexionDeg },
-      baseline: first ? { knee_flexion_deg: first.kneeFlexionDeg } : null,
-      changePct: d !== null ? { knee_flexion_deg: pct(d) } : {},
+      values: { kneeFlexionDeg: m.kneeFlexionDeg },
+      baseline: first ? { kneeFlexionDeg: first.kneeFlexionDeg } : null,
+      changePct: d !== null ? { kneeFlexionDeg: pct(d) } : {},
       note:
         abs !== 'nominal'
           ? `Deepest bend ${m.kneeFlexionDeg.toFixed(0)}°, under the ${abs === 'alert' ? T.kneeFlexionAlertDeg : T.kneeFlexionWatchDeg}° guide.`

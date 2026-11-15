@@ -15,7 +15,7 @@ export interface MobilityMeasurement {
   /** RMS hip-centre sway during the hold, % of body height. */
   swayPctHeight: number;
   /** Time for 5 sit-to-stands, s. */
-  sitToStand5xS: number;
+  sitToStandS: number;
   /** Deepest knee bend over 3 squats, degrees (0 = straight leg). */
   kneeFlexionDeg: number;
   /** Mean keypoint visibility, 0–1. Below the method's minimum the check is saved but not counted. */
@@ -26,7 +26,7 @@ export interface MobilityTestResult {
   test: MobilityTestKey;
   label: string;
   status: Status;
-  /** Measured values by field, e.g. { balance_hold_s: 22 }. */
+  /** Measured values by field, e.g. { balanceHoldS: 22 }. */
   values: Record<string, number>;
   /** The astronaut's first reliable check (personal reference), when there is one. */
   baseline: Record<string, number> | null;
@@ -48,6 +48,8 @@ export interface MobilityResult {
   alert: MobilityAlert | null;
   checksUsed: number;
   lastCheckDay: number;
+  /** Mission hour of the latest counted check, when known. */
+  lastCheckAt?: number;
 }
 
 export interface MobilityCheck {
