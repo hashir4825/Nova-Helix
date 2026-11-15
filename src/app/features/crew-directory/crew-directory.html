@@ -54,17 +54,15 @@
                 [class]="'peak s-' + t.status"
                 [nhTip]="{ title: 'Highest hazard', body: t.label + ' scores ' + t.score + ' of 100 (' + t.statusLabel + '). Watch from 40, alert from 70.', hint: 'Open the profile for all five hazards and what feeds each one' }"
               >
-                <span class="peak-icon"><nh-icon [icon]="t.icon" [size]="20" /></span>
-                <span class="peak-text">
-                  <span class="peak-k">Highest hazard</span>
-                  <span class="peak-label">{{ t.label }}</span>
-                  @if (t.headline) {
-                    <span class="peak-headline">{{ t.headline }}</span>
-                  }
-                </span>
+                <span class="peak-icon"><nh-icon [icon]="t.icon" [size]="18" /></span>
+                <span class="peak-k">Highest hazard</span>
                 <span class="peak-score">
                   <span class="peak-num mono">{{ t.score }}</span><span class="peak-of mono">/100</span>
                 </span>
+                <span class="peak-label">{{ t.label }}</span>
+                @if (t.headline) {
+                  <span class="peak-headline">{{ t.headline }}</span>
+                }
               </span>
             }
 
