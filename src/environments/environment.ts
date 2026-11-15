@@ -8,5 +8,5 @@
  */
 export const environment = {
   dataSource: 'mock' as 'mock' | 'api',
-  apiBaseUrl: 'http://127.0.0.1:8000',
+  apiBaseUrl: 'https://nova-healix-backend-production.up.railway.app',
 };

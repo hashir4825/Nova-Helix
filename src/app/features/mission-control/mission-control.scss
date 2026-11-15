@@ -42,6 +42,13 @@
   gap: var(--gutter);
 }
 
+// Wide screens: the whole crew in one row.
+@media (min-width: 1600px) {
+  .crew-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .error {
   @include panel;
   display: grid;
