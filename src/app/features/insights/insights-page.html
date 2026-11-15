@@ -8,14 +8,10 @@
       </div>
     </div>
 
-    <label class="member">
-      <span class="m-label">Crew member</span>
-      <select [value]="selected()" (change)="setMember($any($event.target).value)">
-        @for (o of memberOptions(); track o.value) {
-          <option [value]="o.value" [selected]="o.value === selected()">{{ o.label }}</option>
-        }
-      </select>
-    </label>
+    <div class="member">
+      <span class="m-label" aria-hidden="true">Crew member</span>
+      <nh-fancy-select align="right" ariaLabel="Crew member" [options]="memberOptions()" [value]="selected()" (valueChange)="setMember($event)" />
+    </div>
   </header>
 
   <div class="controls">

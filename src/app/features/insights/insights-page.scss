@@ -36,30 +36,6 @@
   display: grid;
   gap: var(--space-1);
 
-  select {
-    min-width: 260px;
-    height: 44px;
-    padding: 0 var(--space-6) 0 var(--space-4);
-    border-radius: var(--radius-round);
-    border: 1px solid var(--line-strong);
-    background-color: var(--surface-1);
-    color: var(--text-1);
-    font: inherit;
-    font-weight: var(--weight-semibold);
-    appearance: none;
-    cursor: pointer;
-    background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%), linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
-    background-position: calc(100% - 20px) 55%, calc(100% - 15px) 55%;
-    background-size: 5px 5px;
-    background-repeat: no-repeat;
-    &:focus-visible {
-      outline: var(--focus-ring);
-      outline-offset: 2px;
-    }
-    option {
-      color: #111;
-    }
-  }
 }
 
 .m-label {

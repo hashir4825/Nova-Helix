@@ -74,15 +74,16 @@
   <div class="spacer"></div>
 
   @if (crewMode()) {
-    <label class="who crew-who" nhTip="Demo only: choose which astronaut you are. The landing page will replace this." nhTipPlacement="bottom">
-      <span class="who-initial" aria-hidden="true">{{ astronautName().charAt(0) }}</span>
-      <span class="visually-hidden">Signed in as</span>
-      <select [value]="session.astronautId()" (change)="session.astronautId.set($any($event.target).value)">
-        @for (c of crew(); track c.id) {
-          <option [value]="c.id" [selected]="c.id === session.astronautId()">{{ c.name }}</option>
-        }
-      </select>
-    </label>
+    <nh-fancy-select
+      class="crew-switch"
+      tone="crew"
+      align="right"
+      [compact]="true"
+      ariaLabel="Signed in as (demo: choose an astronaut)"
+      [options]="crewOptions()"
+      [value]="session.astronautId()"
+      (valueChange)="session.astronautId.set($event)"
+    />
   } @else {
     <span class="who" tabindex="0" [nhTip]="{ title: 'Signed in', body: cfg.team.flightSurgeon + ', flight surgeon. Sees every astronaut and receives Nova safety alerts.' }" nhTipPlacement="bottom">
       <span class="who-initial" aria-hidden="true">{{ cfg.team.flightSurgeon.charAt(0) }}</span>

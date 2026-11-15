@@ -3,7 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { ActionsApi, AssessmentApi, CrewApi } from '../../core/data/apis';
-import { HAZARDS, Insight, SEVERITY_LABEL, SEVERITY_RANK, Severity } from '../../core/models';
+import { HAZARDS, Insight, ROLE_LABEL, SEVERITY_LABEL, SEVERITY_RANK, Severity } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { SessionStore } from '../../core/state/session';
 import { formatClock, formatMissionTime } from '../../core/util/format';
@@ -13,6 +13,7 @@ import { Icon } from '../../shared/ui/icon';
 import { HAZARD_ICON, ICON, IconNode, STATUS_ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { RelTimePipe } from '../../shared/pipes';
+import { FancyOption, FancySelect } from '../../shared/ui/fancy-select';
 
 type View = 'active' | 'resolved' | 'all';
 type SevFilter = 'any' | Severity;
@@ -20,7 +21,7 @@ type SevFilter = 'any' | Severity;
 /** All findings, per astronaut, with Active / Resolved history. */
 @Component({
   selector: 'nh-insights-page',
-  imports: [RouterLink, Icon, Skeleton, TipDirective, HelpHint, RelTimePipe],
+  imports: [RouterLink, Icon, Skeleton, TipDirective, HelpHint, RelTimePipe, FancySelect],
   templateUrl: './insights-page.html',
   styleUrl: './insights-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,13 +67,13 @@ export class InsightsPage {
   protected readonly sev = signal<SevFilter>('any');
   protected readonly selected = computed(() => this.member() ?? 'all');
 
-  protected readonly memberOptions = computed(() => {
+  protected readonly memberOptions = computed<FancyOption[]>(() => {
     const list = this.all() ?? [];
     const active = (pred: (i: Insight) => boolean) => list.filter((i) => !i.resolution && pred(i)).length;
     return [
-      { value: 'all', label: `All crew (${active(() => true)} active)` },
-      ...this.crew().map((a) => ({ value: a.id, label: `${a.name} (${active((i) => i.crewId === a.id)} active)` })),
-      { value: 'crew', label: `Whole-crew findings (${active((i) => i.crewId === null)} active)` },
+      { value: 'all', label: 'All crew', sub: 'Every finding', badge: `${active(() => true)} active` },
+      ...this.crew().map((a) => ({ value: a.id, label: a.name, sub: ROLE_LABEL[a.role], initial: a.name.charAt(0), badge: `${active((i) => i.crewId === a.id)} active` })),
+      { value: 'crew', label: 'Whole crew', sub: 'Ship-wide findings, e.g. cabin air', badge: `${active((i) => i.crewId === null)} active` },
     ];
   });
 

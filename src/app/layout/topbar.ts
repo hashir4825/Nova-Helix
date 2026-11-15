@@ -7,6 +7,8 @@ import { ThemeStore } from '../core/state/theme';
 import { SessionStore } from '../core/state/session';
 import { CrewApi } from '../core/data/apis';
 import { Icon } from '../shared/ui/icon';
+import { FancyOption, FancySelect } from '../shared/ui/fancy-select';
+import { ROLE_LABEL } from '../core/models';
 import { ICON } from '../shared/ui/icons';
 import { DelayPipe } from '../shared/pipes';
 import { TipDirective } from '../shared/tooltip/tip.directive';
@@ -18,7 +20,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 @Component({
   selector: 'nh-topbar',
-  imports: [RouterLink, RouterLinkActive, Icon, DelayPipe, TipDirective],
+  imports: [RouterLink, RouterLinkActive, Icon, DelayPipe, TipDirective, FancySelect],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +34,10 @@ export class Topbar {
   protected readonly cfg = this.clock.config;
   protected readonly session = inject(SessionStore);
   protected readonly crew = toSignal(inject(CrewApi).list(), { initialValue: [] });
+  /** Demo astronaut switcher (the landing page will replace it). */
+  protected readonly crewOptions = computed<FancyOption[]>(() =>
+    this.crew().map((a) => ({ value: a.id, label: a.name, sub: ROLE_LABEL[a.role], initial: a.name.charAt(0) })),
+  );
   protected readonly astronautName = computed(() => this.crew().find((c) => c.id === this.session.astronautId())?.name ?? '');
   protected readonly help = HELP;
 
