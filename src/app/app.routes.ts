@@ -33,9 +33,9 @@ export const routes: Routes = [
     data: { viewer: 'astronaut' },
   },
   {
-    // Daily check-in + assigned questionnaires (shared with Mission Control).
+    // Daily log: check-in + assigned questionnaires (shared with Mission Control).
     path: 'checkin',
-    title: 'Check-in · Nova Healix',
+    title: 'Daily log · Nova Healix',
     loadComponent: () => import('./features/crew-mode/checkin-page').then((m) => m.CheckinPage),
   },
   {

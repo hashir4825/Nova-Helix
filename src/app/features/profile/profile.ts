@@ -3,7 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { AssessmentApi, CrewApi } from '../../core/data/apis';
-import { MobilityCta } from '../crew-mode/mobility/mobility-cta';
+import { MobilitySummary } from '../crew-mode/mobility/mobility-summary';
 import { ROLE_LABEL, SEVERITY_RANK, Status } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { Role, SessionStore } from '../../core/state/session';
@@ -18,7 +18,6 @@ import { HAZARD_ICON, ICON, STATUS_ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { StatusBadge } from '../../shared/ui/status-badge';
 import { CheckinHistory } from './checkin-history';
-import { HazardOverview } from './hazard-overview';
 import { VitalsStrip } from './vitals-strip';
 
 @Component({
@@ -34,9 +33,8 @@ import { VitalsStrip } from './vitals-strip';
     ClockPipe,
     RelTimePipe,
     VitalsStrip,
-    HazardOverview,
     CheckinHistory,
-    MobilityCta,
+    MobilitySummary,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',

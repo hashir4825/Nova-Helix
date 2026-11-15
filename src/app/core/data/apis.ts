@@ -103,7 +103,6 @@ export abstract class ActionsApi {
 
 export abstract class AssessmentApi {
   abstract hazards(q: AnalysisQuery): Observable<HazardAssessment[]>;
-  abstract hazardHistory(q: AnalysisQuery, hazard: HazardKey, crewId: string, fromDay: number): Observable<Sample[]>;
   abstract insights(q: AnalysisQuery): Observable<Insight[]>;
   abstract crewSummaries(q: AnalysisQuery): Observable<CrewSummary[]>;
   /** AI interpretation of one metric for one astronaut. */

@@ -33,7 +33,7 @@ import {
   worstStatus,
 } from '../models';
 import { EngineContext } from './engine/context';
-import { assessHazards, hazardHistory } from './engine/hazards';
+import { assessHazards } from './engine/hazards';
 import { detectInsights } from './engine/insights';
 import { HOUR_MS, MISSION_CONFIG, hourToDay } from './mission-plan';
 import { MockDatabase } from './mock-database';
@@ -212,13 +212,6 @@ export class MockAssessmentApi extends AssessmentApi {
 
   insights(q: AnalysisQuery): Observable<Insight[]> {
     return this.stream(q, (a) => a.insights);
-  }
-
-  hazardHistory(q: AnalysisQuery, hazard: HazardKey, crewId: string, fromDay: number): Observable<Sample[]> {
-    return this.db.changes$.pipe(
-      map(() => hazardHistory(this.ctx(q), hazard, crewId, fromDay, hourToDay(q.atHour))),
-      latency(),
-    );
   }
 
   crewSummaries(q: AnalysisQuery): Observable<CrewSummary[]> {

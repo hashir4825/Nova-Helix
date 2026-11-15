@@ -2,14 +2,12 @@
   <header class="head">
     <div>
       <p class="eyebrow">Crew Mode · Day {{ clock.day() }}</p>
-      <h1>Check-in</h1>
+      <h1>Daily log</h1>
     </div>
     <span class="shared" tabindex="0" [nhTip]="sharedTip">
       <nh-icon [icon]="icons.send" [size]="14" />Shared with Mission Control
     </span>
   </header>
-
-  <nh-mobility-cta [crewId]="session.astronautId()" />
 
   <div class="layout">
     <!-- ── Daily check-in ────────────────────────────────────── -->

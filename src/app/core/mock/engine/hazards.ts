@@ -262,12 +262,3 @@ export function assessHazards(ctx: EngineContext): HazardAssessment[] {
 }
 
 /** Daily hazard score history for one crew member (for hazard trend charts). */
-export function hazardHistory(ctx: EngineContext, hazard: HazardKey, crewId: string, fromDay: number, toDay: number, stepDays = 1) {
-  const out: { t: number; v: number }[] = [];
-  for (let d = fromDay; d <= toDay; d += stepDays) {
-    const hour = Math.min(ctx.hour, at(d, 20));
-    const parts = FNS[hazard]({ ...ctx, hour }, crewId);
-    out.push({ t: hour, v: combine(parts.map((p) => ({ c: p.contribution, w: p.w }))) });
-  }
-  return out;
-}

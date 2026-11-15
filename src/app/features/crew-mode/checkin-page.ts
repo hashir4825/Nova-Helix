@@ -13,7 +13,6 @@ import { Icon } from '../../shared/ui/icon';
 import { ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { ScalePicker } from './scale-picker';
-import { MobilityCta } from './mobility/mobility-cta';
 
 const MOOD: QuestionOption[] = [
   { value: 1, label: 'Very low' },
@@ -40,7 +39,7 @@ const SYMPTOMS: Symptom[] = ['headache', 'nausea', 'vision', 'back-pain', 'conge
 
 @Component({
   selector: 'nh-checkin-page',
-  imports: [RouterLink, ScalePicker, Icon, Skeleton, TipDirective, HelpHint, MobilityCta],
+  imports: [RouterLink, ScalePicker, Icon, Skeleton, TipDirective, HelpHint],
   templateUrl: './checkin-page.html',
   styleUrl: './checkin-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -100,9 +100,6 @@ export class HttpAssessmentApi extends AssessmentApi {
   hazards(x: AnalysisQuery): Observable<HazardAssessment[]> {
     return this.api.watch<HazardAssessment[]>('/api/assessment/hazards', q(x));
   }
-  hazardHistory(x: AnalysisQuery, hazard: HazardKey, crewId: string, fromDay: number): Observable<Sample[]> {
-    return this.api.watch<Sample[]>(`/api/assessment/hazards/${hazard}/history`, { ...q(x), crew: crewId, fromDay });
-  }
   insights(x: AnalysisQuery): Observable<Insight[]> {
     return this.api.watch<Insight[]>('/api/insights', q(x));
   }
