@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { combineLatest, switchMap } from 'rxjs';
-import { CrewModeApi, TelemetryApi } from '../../core/data/apis';
+import { CrewModeApi, MobilityApi, TelemetryApi } from '../../core/data/apis';
 import { CheckIn, QuestionOption, SYMPTOM_LABEL, Symptom } from '../../core/models';
 import { MissionClock } from '../../core/state/mission-clock';
 import { SessionStore } from '../../core/state/session';
@@ -13,6 +13,7 @@ import { Icon } from '../../shared/ui/icon';
 import { ICON } from '../../shared/ui/icons';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { ScalePicker } from './scale-picker';
+import { StatusBadge } from '../../shared/ui/status-badge';
 
 const MOOD: QuestionOption[] = [
   { value: 1, label: 'Very low' },
@@ -39,7 +40,7 @@ const SYMPTOMS: Symptom[] = ['headache', 'nausea', 'vision', 'back-pain', 'conge
 
 @Component({
   selector: 'nh-checkin-page',
-  imports: [RouterLink, ScalePicker, Icon, Skeleton, TipDirective, HelpHint],
+  imports: [RouterLink, ScalePicker, Icon, Skeleton, TipDirective, HelpHint, StatusBadge],
   templateUrl: './checkin-page.html',
   styleUrl: './checkin-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,6 +64,8 @@ export class CheckinPage {
   }
 
   private readonly crew$ = toObservable(this.session.astronautId);
+  private readonly mobilityApi = inject(MobilityApi);
+  protected readonly mobility = toSignal(this.crew$.pipe(switchMap((id) => this.mobilityApi.history(id))));
 
   // Form state
   protected readonly mood = signal<number | null>(null);

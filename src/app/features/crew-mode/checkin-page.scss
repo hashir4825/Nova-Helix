@@ -377,6 +377,10 @@
   }
 }
 
+.mobility {
+  margin-top: calc(-1 * var(--space-2));
+}
+
 .q-cta {
   display: inline-flex;
   align-items: center;

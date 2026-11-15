@@ -1,5 +1,9 @@
 import { Observable } from 'rxjs';
 import {
+  MobilityHistory,
+  MobilityMeasurement,
+  MobilityMethod,
+  MobilitySubmission,
   Severity,
   ActionLogEntry,
   CrewMessage,
@@ -108,4 +112,16 @@ export abstract class AssessmentApi {
   abstract crewSummaries(q: AnalysisQuery): Observable<CrewSummary[]>;
   /** AI interpretation of one metric for one astronaut. */
   abstract interpretMetric(q: AnalysisQuery, crewId: string, metric: MetricKey): Observable<MetricInterpretation>;
+}
+
+/**
+ * Mobility & balance check (Gravity hazard). Pose tracking runs on the device;
+ * only the five measured numbers are sent. Shared with Mission Control.
+ */
+export abstract class MobilityApi {
+  /** Tests, thresholds and limits, for the info panel. */
+  abstract method(): Observable<MobilityMethod>;
+  abstract submit(crewId: string, m: MobilityMeasurement): Observable<MobilitySubmission>;
+  /** Check history and the latest scored result. Re-emits on change. */
+  abstract history(crewId: string): Observable<MobilityHistory>;
 }

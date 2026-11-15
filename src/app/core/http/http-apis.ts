@@ -1,7 +1,7 @@
 import { EnvironmentProviders, Injectable, Provider, inject } from '@angular/core';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { BehaviorSubject, Observable, distinctUntilChanged, map, of, shareReplay, timer, switchMap, catchError, EMPTY, finalize } from 'rxjs';
-import { ActionsApi, AnalysisQuery, AssessmentApi, CompanionApi, CrewApi, CrewModeApi, MissionApi, TelemetryApi } from '../data/apis';
+import { ActionsApi, AnalysisQuery, AssessmentApi, CompanionApi, CrewApi, CrewModeApi, MissionApi, MobilityApi, TelemetryApi } from '../data/apis';
 import {
   ActionLogEntry,
   AnswerValue,
@@ -34,6 +34,7 @@ import {
 import { MissionClock } from '../state/mission-clock';
 import { formatDelay } from '../util/format';
 import { API_BASE, ApiClient } from './api-client';
+import { HttpMobilityApi } from './http-mobility';
 
 /*
  * HTTP implementation of the data contracts in core/data/apis.ts.
@@ -292,5 +293,6 @@ export function provideHttpData(baseUrl: string): (Provider | EnvironmentProvide
     { provide: CrewModeApi, useExisting: HttpCrewModeApi },
     { provide: CompanionApi, useExisting: HttpCompanionApi },
     { provide: ActionsApi, useExisting: HttpActionsApi },
+    { provide: MobilityApi, useExisting: HttpMobilityApi },
   ];
 }

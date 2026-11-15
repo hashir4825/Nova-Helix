@@ -1,0 +1,235 @@
+<div class="page">
+  <a class="back" routerLink="/checkin"><nh-icon [icon]="icons.arrowLeft" [size]="16" />Check-in</a>
+
+  <header class="head">
+    <div>
+      <p class="eyebrow">Crew Mode · Gravity</p>
+      <div class="title-row">
+        <h1>Mobility &amp; balance check</h1>
+        <nh-help [tip]="helpTip" label="the mobility check" />
+      </div>
+      <p class="sub">Three movement tests, about 2 minutes. Stand or sit <strong>side-on</strong> to the camera with your whole body in view.</p>
+    </div>
+    <span class="shared" tabindex="0" [nhTip]="sharedTip"><nh-icon [icon]="icons.send" [size]="14" />Shared with Mission Control</span>
+  </header>
+
+  <p class="disclaimer" role="note">
+    <nh-icon [icon]="icons.info" [size]="16" />
+    Decision-support prototype, not a medical device. Measures movement, not bone health. Video stays on this device.
+  </p>
+
+  <div class="layout">
+    <!-- ── Camera stage ─────────────────────────────────────────── -->
+    <section class="stage-card" aria-label="Camera">
+      <div class="stage" [class.mirror]="source() === 'camera'" [class.live]="source() !== null">
+        <video #video playsinline muted aria-hidden="true"></video>
+        <canvas #overlay role="img" aria-label="Body tracking skeleton drawn over the camera image"></canvas>
+
+        @if (source() === null) {
+          <div class="placeholder">
+            <nh-icon [icon]="icons.person" [size]="40" [stroke]="1.25" />
+            <p>Place the device about 2–3 m away, at hip height, with your whole body in frame.</p>
+            <div class="src-actions">
+              <button type="button" class="primary" (click)="useCamera()"><nh-icon [icon]="icons.camera" [size]="16" />Start camera</button>
+              <label class="ghost file">
+                <nh-icon [icon]="icons.film" [size]="16" />Use a recorded video
+                <input type="file" accept="video/*" (change)="useFile($any($event.target))" />
+              </label>
+            </div>
+          </div>
+        } @else if (modelState() === 'loading') {
+          <div class="veil" role="status"><span class="spinner" aria-hidden="true"></span>Loading body tracking…</div>
+        }
+
+        @if (running()) {
+          <div class="banner" role="status" aria-live="polite">
+            @if (countdown() > 0) {
+              <span class="count mono">{{ countdown() }}</span>
+              <span>Get into position</span>
+            } @else {
+              <span>{{ banner() }}</span>
+              @if (progress()) {
+                <span class="mono prog">{{ progress() }}</span>
+              }
+            }
+          </div>
+        } @else if (ready() && tracking() !== 'ok') {
+          <div class="banner hint" role="status">
+            <nh-icon [icon]="icons.person" [size]="16" />
+            {{ tracking() === 'none' ? 'No one in view: step back so your whole body is in the frame' : 'Turn side-on and step back so hips, knees and ankles are visible' }}
+          </div>
+        }
+      </div>
+
+      @if (source() !== null) {
+        <div class="readouts">
+          @let l = live();
+          <span class="ro" tabindex="0" nhTip="Knee bend of the better-tracked leg. 0° is a straight leg.">
+            <span class="ro-k">Knee bend</span><span class="ro-v mono">{{ l?.flex ?? '—' }}{{ l?.flex !== null && l ? '°' : '' }}</span>
+          </span>
+          <span class="ro" tabindex="0" [nhTip]="{ title: 'Tracking', body: 'How clearly the camera sees your hips, knees and ankles. Below 60% the check is saved but not counted.', hint: 'Good light, side-on, whole body in view' }">
+            <span class="ro-k">Tracking</span>
+            <span class="ro-v mono" [class.low]="tracking() === 'poor'">{{ l ? l.conf + '%' : '—' }}</span>
+          </span>
+          <span class="spacer"></span>
+          @if (source() === 'camera') {
+            <span class="src"><nh-icon [icon]="icons.camera" [size]="14" />Camera · not recorded</span>
+          } @else {
+            <span class="src"><nh-icon [icon]="icons.film" [size]="14" />Recorded video</span>
+          }
+          <label class="ghost small file">
+            Change source
+            <input type="file" accept="video/*" (change)="useFile($any($event.target))" />
+          </label>
+        </div>
+      }
+
+      @if (sourceError(); as err) {
+        <p class="error" role="alert"><nh-icon [icon]="icons.alert" [size]="16" />{{ err }}</p>
+      }
+    </section>
+
+    <!-- ── Steps & result ───────────────────────────────────────── -->
+    <section class="panel" aria-labelledby="tests-h">
+      <header class="panel-head">
+        <h2 id="tests-h">Tests</h2>
+        @if (history()?.latest; as last) {
+          <span class="last" tabindex="0" nhTip="Your most recent counted check">Last check D{{ last.lastCheckDay }} <nh-status [status]="last.status" variant="plain" /></span>
+        }
+      </header>
+
+      @if (method() === undefined) {
+        <nh-skeleton h="260px" />
+      } @else {
+        <ol class="steps">
+          @for (s of steps(); track s.test) {
+            @let d = done()[s.test];
+            @let isCurrent = current() === s.test;
+            <li class="step" [class.current]="isCurrent && !submission()" [class.done]="!!d" [class.running]="running() === s.test">
+              <span class="no mono" aria-hidden="true">
+                @if (d) {
+                  <nh-icon [icon]="icons.check" [size]="14" [stroke]="2.5" />
+                } @else {
+                  {{ stepNo[s.test] }}
+                }
+              </span>
+              <div class="step-body">
+                <p class="step-title">{{ s.label }}</p>
+                @if (d) {
+                  <p class="step-result">
+                    <span class="mono">{{ doneValue(s.test) }}</span>
+                    <span class="conf" tabindex="0" nhTip="How clearly the camera tracked you during this test">tracking {{ doneConf(s.test) }}%</span>
+                  </p>
+                } @else if (isCurrent || running() === s.test) {
+                  <p class="step-text">{{ setup[s.test] }} {{ s.instructions }}</p>
+                }
+                @if (failed()[s.test]; as f) {
+                  <p class="step-fail" role="status">{{ f }}</p>
+                }
+              </div>
+              <div class="step-act">
+                @if (running() === s.test) {
+                  <button type="button" class="ghost small" (click)="cancel()">Cancel</button>
+                } @else if (d && !submission()) {
+                  <button type="button" class="ghost small" [disabled]="!ready() || !!running()" (click)="redo(s.test)">Redo</button>
+                } @else if (isCurrent) {
+                  <button type="button" class="primary small" [disabled]="!ready() || !!running()" (click)="startTest(s.test)">
+                    <nh-icon [icon]="icons.play" [size]="14" />{{ failed()[s.test] ? 'Try again' : 'Start' }}
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+
+        @if (!ready() && !submission()) {
+          <p class="muted">Start the camera to begin. Each test starts after a 3-second countdown.</p>
+        }
+
+        @if (measurement(); as m) {
+          @if (!submission()) {
+            <div class="send">
+              <p class="send-title">Ready to send</p>
+              <p class="muted">Only these five numbers go to {{ surgeon }}. No video.</p>
+              <dl class="payload">
+                <div><dt>Balance hold</dt><dd class="mono">{{ m.balanceHoldS }} s</dd></div>
+                <div><dt>Hip sway</dt><dd class="mono">{{ m.swayPctHeight }}% of height</dd></div>
+                <div><dt>5× sit-to-stand</dt><dd class="mono">{{ m.sitToStand5xS }} s</dd></div>
+                <div><dt>Deepest knee bend</dt><dd class="mono">{{ m.kneeFlexionDeg }}°</dd></div>
+                <div><dt>Tracking</dt><dd class="mono">{{ (m.poseConfidence * 100).toFixed(0) }}%</dd></div>
+              </dl>
+              <div class="send-actions">
+                <button type="button" class="primary" [disabled]="submitting()" (click)="send()">
+                  <nh-icon [icon]="icons.send" [size]="16" />{{ submitting() ? 'Sending…' : 'Send results' }}
+                </button>
+                <button type="button" class="ghost" (click)="restart()">Start over</button>
+              </div>
+              @if (submitError(); as err) {
+                <p class="error" role="alert"><nh-icon [icon]="icons.alert" [size]="16" />{{ err }}</p>
+              }
+            </div>
+          }
+        }
+
+        @if (submission(); as sub) {
+          <div class="result" role="status" aria-live="polite">
+            @if (sub.result; as r) {
+              <div class="result-head">
+                <nh-status [status]="r.status" size="lg" />
+                <p class="result-title">{{ r.alert?.what ?? 'Check saved.' }}</p>
+              </div>
+              <ul class="tests">
+                @for (t of r.tests; track t.test) {
+                  @let line = resultLine(t);
+                  <li>
+                    <span class="t-label">{{ t.label }}</span>
+                    <span class="t-val mono" tabindex="0" [nhTip]="{ title: t.label, body: t.note, rows: line.ref ? [{ label: 'First check', value: line.ref }, { label: 'Now', value: line.value }] : [{ label: 'Now', value: line.value }] }">
+                      {{ line.value }}
+                      @if (line.change) {
+                        <span class="t-ch">{{ line.change }}</span>
+                      }
+                    </span>
+                    <nh-status [status]="t.status" variant="plain" />
+                    <span class="t-note">{{ t.note }}</span>
+                  </li>
+                }
+              </ul>
+              @if (r.alert && r.status !== 'nominal') {
+                <p class="todo"><strong>What you can do:</strong> {{ r.alert.action }}</p>
+              }
+              <p class="muted">Sent. Reaches {{ surgeon }} in about <span class="mono">{{ delay() }}</span>. Check {{ r.checksUsed }}{{ r.checksUsed === 1 ? ': later checks are compared with this one.' : ', compared with your first check.' }}</p>
+              <div class="send-actions">
+                <a class="primary" routerLink="/checkin">Done</a>
+                <button type="button" class="ghost" (click)="restart()">Do another check</button>
+              </div>
+            } @else {
+              <div class="result-head retake">
+                <nh-icon [icon]="icons.alert" [size]="20" />
+                <p class="result-title">Not counted</p>
+              </div>
+              <p>{{ sub.message }}</p>
+              <button type="button" class="primary" (click)="restart()"><nh-icon [icon]="icons.reset" [size]="16" />Retake the check</button>
+            }
+          </div>
+        }
+      }
+
+      @if (method(); as m) {
+        <details class="about">
+          <summary>How it works and what is measured</summary>
+          <ul>
+            @for (t of m.tests; track t.test) {
+              <li><strong>{{ t.label }}</strong> ({{ t.durationS }} s): {{ t.instructions }}</li>
+            }
+          </ul>
+          <p>
+            Flagged when balance hold is under <span class="mono">{{ m.thresholds.balanceHoldWatchS }} s</span>, 5 stand-ups take over
+            <span class="mono">{{ m.thresholds.sitToStandWatchS }} s</span>, knee bend is under <span class="mono">{{ m.thresholds.kneeFlexionWatchDeg }}°</span>, or a
+            test is <span class="mono">{{ (m.thresholds.worseThanFirstWatch * 100).toFixed(0) }}%</span> worse than your first check. These limits are illustrative, not clinical.
+          </p>
+          <p>{{ m.limits }}</p>
+        </details>
+      }
+    </section>
+  </div>
+</div>

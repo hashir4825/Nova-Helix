@@ -6,3 +6,4 @@ export * from './mission';
 export * from './insight';
 export * from './checkin';
 export * from './crew-mode';
+export * from './mobility';

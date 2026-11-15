@@ -27,6 +27,16 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "vision_wasm_internal.*",
+                "input": "node_modules/@mediapipe/tasks-vision/wasm",
+                "output": "mediapipe/wasm"
+              },
+              {
+                "glob": "vision_wasm_nosimd_internal.*",
+                "input": "node_modules/@mediapipe/tasks-vision/wasm",
+                "output": "mediapipe/wasm"
               }
             ],
             "styles": [

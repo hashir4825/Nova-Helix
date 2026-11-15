@@ -4,6 +4,7 @@ import { clamp } from '../prng';
 import { MISSION_CONFIG, hourToDay } from '../mission-plan';
 import { QUESTIONNAIRES } from '../questionnaires';
 import { lastAt, mean, sliceSamples } from '../stats';
+import { mobilityAt } from '../mobility';
 import {
   EngineContext,
   H_PER_DAY,
@@ -544,7 +545,46 @@ function crewModeInsights(ctx: EngineContext): Insight[] {
   return out;
 }
 
-const RULES: Rule[] = [sleepDebt, isolationStress, radiationOutlier, fluidShift, exerciseCompliance, boneOnTrack, workloadHigh, checkInFlag];
+// ─────────────────────────────────────────────────────────────────────
+/** Latest mobility & balance check flagged a test (backend rule G.mobility). */
+const mobilityCheck: Rule = (ctx, crewId) => {
+  const checks = ctx.db.mobilityChecks(crewId);
+  const m = mobilityAt(checks, ctx.hour + 0.25); // include checks since the last quarter-hour
+  if (!m || m.status === 'nominal') return null;
+  const last = checks.filter((c) => c.reliable && (c.at ?? 0) <= ctx.hour + 0.25).at(-1);
+  const who = name(ctx, crewId);
+  const flagged = m.tests.filter((t) => t.status !== 'nominal');
+  const fmt = (t: (typeof m.tests)[number]): Evidence => {
+    const [k, v] = Object.entries(t.values)[0];
+    const unit = k.endsWith('_deg') ? '°' : ' s';
+    const base = t.baseline?.[k];
+    const dp = k.endsWith('_deg') ? 0 : 1;
+    return {
+      label: t.label,
+      value: `${v.toFixed(dp)}${unit}`,
+      reference: base !== undefined ? `first check ${base.toFixed(dp)}${unit}` : undefined,
+      direction: t.status === 'nominal' ? 'flat' : k === 'sit_to_stand_5x_s' ? 'up' : 'down',
+    };
+  };
+  return {
+    id: `mobility:${crewId}`,
+    crewId,
+    severity: m.status === 'alert' ? 'alert' : 'watch',
+    hazards: ['gravity'],
+    title: 'Movement check flagged',
+    summary: `${who}'s mobility & balance check on D${m.lastCheckDay} flagged ${flagged.map((t) => t.label.toLowerCase()).join(' and ')}. ${flagged.map((t) => t.note).join(' ')}`,
+    whyItMatters: 'Reduced balance or leg strength raises fall and injury risk on arrival, when gravity returns. The check measures movement only, not bone health.',
+    detectedAt: last?.at ?? ctx.hour,
+    evidence: m.tests.map(fmt),
+    confidence: 0.7,
+    recommended: [
+      { kind: 'countermeasure', countermeasure: 'exercise', label: 'Review exercise plan', detail: 'Add balance and leg-strength work to the resistive exercise sessions.' },
+      { kind: 'message', label: 'Ask to repeat the check', detail: 'Repeat the mobility check within 3 days, side-on, in good light.' },
+    ],
+  };
+};
+
+const RULES: Rule[] = [sleepDebt, isolationStress, radiationOutlier, fluidShift, exerciseCompliance, boneOnTrack, workloadHigh, checkInFlag, mobilityCheck];
 
 export function detectInsights(ctx: EngineContext): Insight[] {
   const out: Insight[] = [];

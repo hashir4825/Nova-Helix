@@ -13,6 +13,7 @@ import {
   SafetyFlag,
   Sample,
   SharedNote,
+  MobilityCheck,
 } from '../models';
 import { CrewBundle, ExerciseSession, generateCrew } from './generator';
 import { BASELINE_FROM_DAY, BASELINE_TO_DAY, CREW_IDS, CrewId, MISSION_CONFIG, MISSION_EVENTS, at } from './mission-plan';
@@ -182,6 +183,18 @@ export class MockDatabase {
 
   reopen(insightId: string): void {
     this.resolutions.delete(insightId);
+    this.bump();
+  }
+
+  // ── Mobility & balance checks (numbers only; no video) ───────────
+  private readonly mobility: MobilityCheck[] = [];
+
+  mobilityChecks(crewId: string): MobilityCheck[] {
+    return this.mobility.filter((c) => c.crewId === crewId);
+  }
+
+  addMobilityCheck(c: MobilityCheck): void {
+    this.mobility.push(c);
     this.bump();
   }
 

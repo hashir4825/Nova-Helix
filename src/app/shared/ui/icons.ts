@@ -38,6 +38,11 @@ import {
   UserRound,
   Users,
   X,
+  Camera,
+  CameraOff,
+  Film,
+  PersonStanding,
+  Play,
 } from 'lucide';
 import { HazardKey, Severity, Status } from '../../core/models';
 
@@ -76,6 +81,11 @@ export const ICON = {
   unplug: Unplug,
   user: UserRound,
   close: X,
+  camera: Camera,
+  cameraOff: CameraOff,
+  film: Film,
+  person: PersonStanding,
+  play: Play,
 } satisfies Record<string, IconNode>;
 
 export const STATUS_ICON: Record<Status | Severity, IconNode> = {

@@ -1,7 +1,11 @@
 import { Injectable, Provider, inject } from '@angular/core';
-import { BehaviorSubject, Observable, delayWhen, distinctUntilChanged, filter, map, of, timer } from 'rxjs';
-import { ActionsApi, AnalysisQuery, AssessmentApi, CompanionApi, CrewApi, CrewModeApi, MissionApi, TelemetryApi } from '../data/apis';
+import { BehaviorSubject, Observable, delayWhen, distinctUntilChanged, filter, map, of, throwError, timer } from 'rxjs';
+import { ActionsApi, AnalysisQuery, AssessmentApi, CompanionApi, CrewApi, CrewModeApi, MissionApi, MobilityApi, TelemetryApi } from '../data/apis';
 import {
+  MobilityHistory,
+  MobilityMeasurement,
+  MobilityMethod,
+  MobilitySubmission,
   ActionLogEntry,
   CrewMessage,
   AnswerValue,
@@ -39,6 +43,7 @@ import { interpretMetric } from './engine/interpret';
 import { linkStateAt } from '../util/link';
 import { formatDelay } from '../util/format';
 import { QUESTIONNAIRES, scoreQuestionnaire } from './questionnaires';
+import { MOBILITY_METHOD, mobilityAt, validateMobility } from './mobility';
 import { NovaContext, NovaState, NovaTurn, novaGreeting, novaRespond } from './nova';
 
 /** Simulated network latency on the first emission only (lets loading states show). */
@@ -475,6 +480,42 @@ export class MockActionsApi extends ActionsApi {
   }
 }
 
+@Injectable({ providedIn: 'root' })
+export class MockMobilityApi extends MobilityApi {
+  private readonly db = inject(MockDb);
+  private seq = 0;
+
+  method(): Observable<MobilityMethod> {
+    return of(MOBILITY_METHOD);
+  }
+
+  submit(crewId: string, m: MobilityMeasurement): Observable<MobilitySubmission> {
+    const invalid = validateMobility(m);
+    if (invalid) return throwError(() => new Error(invalid));
+    const at = (Date.now() - MISSION_CONFIG.launchEpochMs) / HOUR_MS;
+    const reliable = m.poseConfidence >= MOBILITY_METHOD.minPoseConfidence;
+    const check = { id: 'mob-' + crewId + '-' + ++this.seq, crewId, day: hourToDay(at), at, reliable, measurement: m };
+    this.db.addMobilityCheck(check);
+    const result = reliable ? mobilityAt(this.db.mobilityChecks(crewId), at) : null;
+    return of<MobilitySubmission>({
+      check: { ...check, status: result?.status },
+      counted: reliable,
+      message: reliable ? 'Check saved.' : 'Tracking was too unclear to use this check. It was saved but not counted. Retake it in good light, side-on, with your whole body in view.',
+      result,
+    }).pipe(latency(500));
+  }
+
+  history(crewId: string): Observable<MobilityHistory> {
+    return this.db.changes$.pipe(
+      map(() => {
+        const checks = this.db.mobilityChecks(crewId);
+        return { crewId, checks: [...checks], latest: mobilityAt(checks, Infinity) };
+      }),
+      latency(),
+    );
+  }
+}
+
 /** Seeded demo data. The backend binding is provideHttpData() in core/http. */
 export function provideMockData(): Provider[] {
   return [
@@ -485,5 +526,6 @@ export function provideMockData(): Provider[] {
     { provide: CrewModeApi, useExisting: MockCrewModeApi },
     { provide: CompanionApi, useExisting: MockCompanionApi },
     { provide: ActionsApi, useExisting: MockActionsApi },
+    { provide: MobilityApi, useExisting: MockMobilityApi },
   ];
 }

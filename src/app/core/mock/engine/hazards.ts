@@ -3,6 +3,7 @@ import { formatDelay, formatMetric, formatPct } from '../../util/format';
 import { clamp } from '../prng';
 import { at } from '../mission-plan';
 import { lastAt, mean, sliceSamples } from '../stats';
+import { mobilityAt } from '../mobility';
 import {
   EngineContext,
   H_PER_DAY,
@@ -134,7 +135,20 @@ function gravity(ctx: EngineContext, crewId: string): Part[] {
     lowDriver(ctx, crewId, 'visionAcuity', 10, 'Near vision, latest check', 0.12, 'near vision has changed', 45),
     highDriver(ctx, crewId, 'bpSys', 7, 'Systolic BP, 7-day resting mean', 0.08, 'blood pressure has crept up'),
     driver('Back pain reports, 7 days', `${bp}`, bp * 15, 0.08, undefined, 'back pain has been reported'),
+    ...mobilityDriver(ctx, crewId),
   ];
+}
+
+const MOBILITY_CONTRIBUTION: Record<Status, number> = { nominal: 10, watch: 55, alert: 85 };
+
+/** Only present once the astronaut has done a mobility check (keeps scores unchanged before that). */
+function mobilityDriver(ctx: EngineContext, crewId: string): Part[] {
+  // +0.25: analysis runs on quarter-hour boundaries; include checks made since the last one.
+  const m = mobilityAt(ctx.db.mobilityChecks(crewId), ctx.hour + 0.25);
+  if (!m) return [];
+  const flagged = m.tests.filter((t) => t.status !== 'nominal').map((t) => t.label);
+  const value = flagged.length ? `${flagged.join(', ')} · D${m.lastCheckDay}` : `All 3 tests OK · D${m.lastCheckDay}`;
+  return [driver('Mobility & balance check', value, MOBILITY_CONTRIBUTION[m.status], 0.12, undefined, 'balance or leg strength in the movement check has dropped')];
 }
 
 function environment(ctx: EngineContext, crewId: string): Part[] {
